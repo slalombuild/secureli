@@ -1,0 +1,21 @@
+image: python:3.9
+pipelines:
+  default:
+    - step:
+        name: Validate Branch
+        script:
+          - branch=$(bash ./scripts/get-current-branch.sh)
+    - step:
+        name: Scan
+        script:
+          - pipe: atlassian/git-secrets-scan:0.6.1
+    - step:
+        name: Test
+        caches:
+          - pip
+        script:
+          - pip install poetry
+          - poetry install
+          - poetry run poe precommit
+          - poetry run poe coverage
+          - poetry run secureli yeti

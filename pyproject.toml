@@ -1,0 +1,54 @@
+[tool.poetry]
+name = "secureli"
+version = "0.1.0"
+description = "Secure Project Manager"
+authors = ["Tristan Leonard <tristanl@slalom.com>"]
+readme = "README.md"
+
+[tool.poetry.scripts]
+secureli = "secureli.main:app"
+
+[tool.poe.tasks]
+coverage = ["test", { cmd = "coverage report" }]
+docker-build = "docker build -t secureli . --progress=plain --no-cache"
+init = ["install", { cmd = "secureli init -y" }]
+install = "poetry install"
+lint = "black --check ."
+precommit = "pre-commit run -a"
+test = ["init", "lint", { cmd = "coverage run -m pytest" }]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+typer = {version = "^0.6.1", extras = ["all"]}
+pygments = "^2.13.0"
+dependency-injector = {version = "^4.40.0", extras = ["yaml"]}
+pydantic = "^1.10.2"
+pre-commit = "^2.20.0"
+jinja2 = "^3.1.2"
+
+[tool.pytest.ini_options]
+addopts = "-p no:cacheprovider"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.1.3"
+pytest-mock = "^3.10.0"
+coverage = "^6.5.0"
+black = "^22.10.0"
+identify = "^2.5.7"
+poethepoet = "^0.16.4"
+python-semantic-release = "^7.33.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.semantic_release]
+version_toml = [
+    "pyproject.toml:tool.poetry.version"
+]
+major_on_zero = false
+branch = "main"
+upload_to_PyPI = false
+upload_to_release = false
+prerelease = true
+build_command = "pip install poetry && poetry build"
