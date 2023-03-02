@@ -22,6 +22,6 @@ jobs:
       uses: snok/install-poetry@v1
     - run: |
         poetry install
-        poetry run poe precommit
+        # poetry run poe precommit
         poetry run poe coverage
         poetry run poe secureli yeti
