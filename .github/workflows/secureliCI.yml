@@ -18,9 +18,9 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.9"
-        cache: 'poetry'
+    - name: Install and configure Poetry
+      uses: snok/install-poetry@v1
     - run: |
-        pip install poetry
         poetry install
         poetry run poe precommit
         poetry run poe coverage
