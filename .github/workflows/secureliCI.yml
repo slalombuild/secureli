@@ -20,6 +20,7 @@ jobs:
         python-version: "3.9"
         cache: 'poetry'
     - run: |
+        pip install poetry
         poetry install
         poetry run poe precommit
         poetry run poe coverage
