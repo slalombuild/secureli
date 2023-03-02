@@ -46,9 +46,9 @@ build-backend = "poetry.core.masonry.api"
 version_toml = [
     "pyproject.toml:tool.poetry.version"
 ]
-major_on_zero = false
-branch = "main"
+major_on_zero = true
+branch = "feature/stft-133-semantic"
 upload_to_PyPI = false
 upload_to_release = false
-prerelease = true
+prerelease = false
 build_command = "pip install poetry && poetry build"
