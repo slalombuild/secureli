@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: Validate Branch name
+      run: ./scripts/get-current-branch.sh
     - name: Set up Python 3.9
       id: setup-python
       uses: actions/setup-python@v3
