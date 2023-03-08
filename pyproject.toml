@@ -47,9 +47,9 @@ version_toml = [
     "pyproject.toml:tool.poetry.version"
 ]
 major_on_zero = true
-branch = "feature/stft-133-semantic"
+branch = "main"
 upload_to_PyPI = false
 upload_to_release = false
 upload_to_repository = false
-prerelease = false
+prerelease = true
 build_command = "pip install poetry && poetry build"

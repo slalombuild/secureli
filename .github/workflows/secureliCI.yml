@@ -43,15 +43,10 @@ jobs:
 
   Release:
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/feature/stft-133-semantic'
-    # && !contains(github.event.head_commit.message, 'chore(release):')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     concurrency: release
-
     steps:
-      # - uses: actions/setup-python@v2
-      #   with:
-      #     python-version: 3.9
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -59,9 +54,3 @@ jobs:
         uses: relekang/python-semantic-release@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Semantic Release
-      #   run: |
-      #     pip install python-semantic-release
-      #     git config user.name github-actions
-      #     git config user.email github-actions@github.com
-      #     semantic-release publish -v DEBUG
