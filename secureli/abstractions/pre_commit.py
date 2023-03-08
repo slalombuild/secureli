@@ -191,6 +191,32 @@ class PreCommitAbstraction:
         repos = [create_repo(raw_repo) for raw_repo in config.get("repos", [])]
         return HookConfiguration(repos=repos)
 
+    def get_current_configuration(self):
+        """
+        Returns the contents of the .pre-commit-config.yaml file.  Note that this should be used to
+        see the current state and not be used for any desired state actions.
+        :return: Dictionary containing the contents of the .pre-commit-config.yaml file
+        """
+        path_to_pre_commit_file = Path(".pre-commit-config.yaml")
+
+        with open(path_to_pre_commit_file, "r") as f:
+            data = yaml.safe_load(f)
+            return data
+
+    def validate_config(self, language: str) -> bool:
+        """
+        Validates that the current configuration matches the expected configuration generated
+        by secureli.
+        :param language: The language to validate against
+        :return: Returns a boolean indicating whether the configs match
+        """
+        current_config = self.get_current_configuration()
+        generated_config = yaml.safe_load(
+            self._calculate_combined_configuration_data(language=language)
+        )
+
+        return current_config == generated_config
+
     def execute_hooks(
         self, all_files: bool = False, hook_id: Optional[str] = None
     ) -> ExecuteResult:

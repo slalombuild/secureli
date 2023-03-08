@@ -18,6 +18,7 @@ from secureli.services.language_analyzer import LanguageAnalyzerService, Analyze
 from secureli.services.language_support import LanguageSupportService
 from secureli.services.scanner import ScannerService, ScanMode
 from secureli.services.updater import UpdaterService
+from secureli.abstractions.pre_commit import PreCommitAbstraction
 
 
 class VerifyOutcome(str, Enum):
@@ -56,6 +57,7 @@ class ActionDependencies:
         scanner: ScannerService,
         secureli_config: SecureliConfigRepository,
         updater: UpdaterService,
+        pre_commit: PreCommitAbstraction,
     ):
         self.echo = echo
         self.language_analyzer = language_analyzer
@@ -63,6 +65,7 @@ class ActionDependencies:
         self.scanner = scanner
         self.secureli_config = secureli_config
         self.updater = updater
+        self.pre_commit = pre_commit
 
 
 class Action(ABC):
@@ -86,6 +89,13 @@ class Action(ABC):
         if not config.overall_language or not config.version_installed:
             return self._install_secureli(folder_path, always_yes)
         else:
+            valid_config = self.action_deps.pre_commit.validate_config(
+                language=config.overall_language
+            )
+            if not valid_config:
+                # TODO: Add update
+                print("Configs do not match")
+
             available_version = self.action_deps.language_support.version_for_language(
                 config.overall_language
             )
