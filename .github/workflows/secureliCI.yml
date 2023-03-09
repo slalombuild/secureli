@@ -31,7 +31,7 @@ jobs:
         run: |
           poetry run poe precommit
           poetry run poe coverage
-          secureli yeti
+          poetry run poe secureli yeti
       - name: Python Semantic Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: relekang/python-semantic-release@master
