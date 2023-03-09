@@ -123,6 +123,7 @@ class Container(containers.DeclarativeContainer):
     updater_service = providers.Factory(
         UpdaterService,
         pre_commit=pre_commit_abstraction,
+        config=secureli_config_repository,
     )
 
     # Actions

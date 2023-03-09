@@ -114,7 +114,7 @@ class PreCommitAbstraction:
 
     def version_for_language(self, language: str) -> str:
         """
-        Calculates a hash of the pre-commit file for the given language to be used as part
+        Calculates a hash of the generated pre-commit file for the given language to be used as part
         of the overall installed configuration.
         :param language: The language specified
         :raises LanguageNotSupportedError if the associated pre-commit file for the language is not found
@@ -247,8 +247,6 @@ class PreCommitAbstraction:
                 current_config=yaml.safe_load(current_config),
                 expected_config=yaml.safe_load(generated_config),
             )
-        else:
-            print("expected {} matches current {}".format(expected_hash, current_hash))
 
         return ValidateConfigResult(successful=config_matches, output=output)
 

@@ -89,18 +89,18 @@ class Action(ABC):
         if not config.overall_language or not config.version_installed:
             return self._install_secureli(folder_path, always_yes)
         else:
-            validation_result = self.action_deps.pre_commit.validate_config(
-                language=config.overall_language
-            )
-            if not validation_result.successful:
-                self.action_deps.echo.print(validation_result.output)
-
-            current_config_hash = self.action_deps.pre_commit.get_current_config_hash()
-            version_match = config.version_installed == current_config_hash
-
             available_version = self.action_deps.language_support.version_for_language(
                 config.overall_language
             )
+
+            # Validates the current .pre-commit-config.yaml against the generated config
+            config_validation_result = self.action_deps.pre_commit.validate_config(
+                language=config.overall_language
+            )
+            if not config_validation_result.successful:
+                self.action_deps.echo.print(config_validation_result.output)
+                return self._upgrade_secureli(config, available_version, always_yes)
+
             if available_version != config.version_installed:
                 return self._upgrade_secureli(config, available_version, always_yes)
 
@@ -123,7 +123,7 @@ class Action(ABC):
         :return: The new SecureliConfig after upgrade or None if upgrading did not complete
         """
         self.action_deps.echo.print(
-            f"The version installed is {config.version_installed}, but the latest is {available_version}"
+            f"The config version installed is {config.version_installed}, but the latest is {available_version}"
         )
         response = always_yes or self.action_deps.echo.confirm(
             "Upgrade now?",
