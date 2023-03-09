@@ -27,27 +27,13 @@ jobs:
         run: |
           pip install poetry
           poetry install
-      - name: Python Semantic Release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/stft-133-semantic-version'
-        uses: relekang/python-semantic-release@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run Tests
         run: |
           poetry run poe precommit
           poetry run poe coverage
           poetry run poe secureli yeti
-
-  # Release:
-  #   needs: build
-  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-  #   runs-on: ubuntu-latest
-  #   concurrency: release
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         fetch-depth: 0
-  #     - name: Python Semantic Release
-  #       uses: relekang/python-semantic-release@master
-  #       with:
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Python Semantic Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: relekang/python-semantic-release@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
