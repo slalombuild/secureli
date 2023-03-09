@@ -47,7 +47,7 @@ version_toml = [
     "pyproject.toml:version"
 ]
 major_on_zero = true
-branch = "main"
+branch = "feature/stft-133-semantic-version"
 upload_to_PyPI = false
 upload_to_release = false
 upload_to_repository = false
