@@ -4,36 +4,43 @@ import os
 from jinja2 import Environment, FileSystemLoader
 
 # Set necessary top level vars
-environment = Environment(loader=FileSystemLoader("templates/"))
+environment = Environment(loader=FileSystemLoader("templates/"), autoescape=True)
 template = environment.get_template("formula.txt")
-filename = 'secureli.rb'
-secureliVersion = "0.1.0" # Hard-coded for testing purposes, this should be retrieved as an ENV in the pipeline
-secureliSha256 = "9910509c0f82f63ecf12146a9842f6c424c5849d559d3824915a310270d38867" # Generated at runtime when tarball is published
+filename = "secureli.rb"
+secureliVersion = "0.1.0"  # Hard-coded for testing purposes, this should be retrieved as an ENV in the pipeline
+secureliSha256 = "9910509c0f82f63ecf12146a9842f6c424c5849d559d3824915a310270d38867"  # Generated at runtime when tarball is published. You can potentially use the shasum command to get this at CI runtime
+secureliPackageUrl = "https://github.com/slalombuild/homebrew-secureli/releases/download/0.0.2/secureli-0.0.2.tar.gz"  # Can be pulled down during CI runtime.
 secureliPackageDependencies = []
 
 secureliPackageNamesCmd="poetry show --only main | sed 's/(!)//' | awk -F ' ' '{print $1}'"
 secureliPackageVersionsCmd="poetry show --only main | sed 's/(!)//' | awk -F ' ' '{print $2}'"
-                                       
+
+# TODO: Implement the subprocess command differently
+# According to bandit, setting shell=True for subprocess is not a best practice but I was unable to get this working any other way during the time I was working on this feature
 getSecureliPackageNames = subprocess.check_output(secureliPackageNamesCmd, shell=True)
 getSecureliPackageVersions = subprocess.check_output(secureliPackageVersionsCmd, shell=True)
 
 decodedSecureliPackageNames = getSecureliPackageNames.decode('utf-8').split()
 decodedSecureliPackageVersions = getSecureliPackageVersions.decode('utf-8').split()
-    
-# This loops through all packages that secureli requires to be properly built 
+
+# This loops through all packages that secureli requires to be properly built
 # It then outputs the package information to a dictionary that will be templated into a Homebrew formula for end-user consumption
-for packageName,packageVersion in zip(decodedSecureliPackageNames, decodedSecureliPackageVersions):
+for packageName, packageVersion in zip(
+    decodedSecureliPackageNames, decodedSecureliPackageVersions
+):
     # print(f"The package name is {packageName} with version {packageVersion}")
-    packagePayload = requests.get(f"https://pypi.org/pypi/{packageName}/{packageVersion}/json")
+    packagePayload = requests.get(
+        f"https://pypi.org/pypi/{packageName}/{packageVersion}/json"
+    )
     packagePayloadJsonDict = packagePayload.json()
 
-    filteredPayload = {k:v for (k,v) in packagePayloadJsonDict.items() if 'urls' in k}
+    filteredPayload = {k: v for (k, v) in packagePayloadJsonDict.items() if "urls" in k}
 
     # Load all the retrieved package info into a dictionary
     data = {
-        'packageName': packageName, 
-        'packageurl': filteredPayload['urls'][1]['url'],
-        'sha256': filteredPayload['urls'][1]['digests']['sha256']
+        "packageName": packageName,
+        "packageUrl": filteredPayload["urls"][1]["url"],
+        "sha256": filteredPayload["urls"][1]["digests"]["sha256"],
     }
     secureliPackageDependencies.append(data)
 
@@ -42,9 +49,10 @@ for packageName,packageVersion in zip(decodedSecureliPackageNames, decodedSecure
 context = {
     "secureliPackageDependencies": secureliPackageDependencies,
     "secureliVersion": secureliVersion,
-    "secureliSha256": secureliSha256 
+    "secureliSha256": secureliSha256,
+    "secureliPackageUrl": secureliPackageUrl,
 }
 
 with open(filename, mode="w", encoding="utf-8") as message:
     message.write(template.render(context))
-    print(f'File named {filename} has been created')
+    print(f"File named {filename} has been created")
