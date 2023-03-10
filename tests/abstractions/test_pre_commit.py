@@ -2,6 +2,7 @@ from subprocess import CompletedProcess
 from unittest.mock import MagicMock
 
 import pytest
+import yaml
 from pytest_mock import MockerFixture
 
 from secureli.abstractions.pre_commit import (
@@ -42,6 +43,25 @@ def mock_data_loader() -> MagicMock:
 
 
 @pytest.fixture()
+def mock_open_config(mocker: MockerFixture) -> MagicMock:
+    mock_open = mocker.mock_open(
+        read_data="""
+    exclude: some-exclude-regex
+    repos:
+    - hooks:
+      - id: some-test-hook
+      repo: xyz://some-test-repo-url
+      rev: 1.0.0
+    - hooks:
+      - id: some-other-test-hook
+      repo: xyz://some-other-test-repo-url
+      rev: 1.0.0
+    """
+    )
+    mocker.patch("builtins.open", mock_open)
+
+
+@pytest.fixture()
 def mock_subprocess(mocker: MockerFixture) -> MagicMock:
     mock_subprocess = MagicMock()
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
@@ -55,6 +75,16 @@ def mock_hashlib(mocker: MockerFixture) -> MagicMock:
     mock_md5 = MagicMock()
     mock_hashlib.md5.return_value = mock_md5
     mock_md5.hexdigest.return_value = "mock-hash-code"
+    mocker.patch("secureli.abstractions.pre_commit.hashlib", mock_hashlib)
+    return mock_hashlib
+
+
+@pytest.fixture()
+def mock_hashlib_no_match(mocker: MockerFixture) -> MagicMock:
+    mock_hashlib = MagicMock()
+    mock_md5 = MagicMock()
+    mock_hashlib.md5.return_value = mock_md5
+    mock_md5.hexdigest.side_effect = ["first-hash-code", "second-hash-code"]
     mocker.patch("secureli.abstractions.pre_commit.hashlib", mock_hashlib)
     return mock_hashlib
 
@@ -599,9 +629,122 @@ def test_that_pre_commit_does_not_identify_a_security_hook_if_config_uses_matchi
     assert hook_id is None
 
 
+def test_that_get_current_config_returns_config_data(
+    pre_commit: PreCommitAbstraction, mock_open_config: MagicMock
+):
+    config = pre_commit.get_current_configuration()
+
+    assert config["exclude"] == "some-exclude-regex"
+
+
+##### validate_config #####
+def test_that_validate_config_returns_no_output_on_config_match(
+    pre_commit: PreCommitAbstraction,
+    mock_hashlib: MagicMock,
+    mock_data_loader: MagicMock,
+):
+    validation_result = pre_commit.validate_config("Python")
+
+    assert validation_result.successful
+    assert validation_result.output == ""
+
+
+def test_that_validate_config_detects_mismatched_configs(
+    pre_commit: PreCommitAbstraction,
+    mock_hashlib_no_match: MagicMock,
+    mock_data_loader: MagicMock,
+    mock_open_config: MagicMock,
+):
+    mock_data_loader.return_value = '{"exclude": "some-exclude-regex","repos":[{"hooks":[{"id":"some-test-hook"}],"repo":"xyz://some-test-repo-url","rev":"1.0.1"}]}'
+    validation_result = pre_commit.validate_config("Python")
+
+    assert not validation_result.successful
+
+
+def test_that_validate_config_detects_mismatched_hook_versions(
+    pre_commit: PreCommitAbstraction,
+    mock_hashlib_no_match: MagicMock,
+    mock_data_loader: MagicMock,
+    mock_open_config: MagicMock,
+):
+    load_return_value = """
+    exclude: some-exclude-regex
+    repos:
+    - hooks:
+      - id: some-test-hook
+      repo: xyz://some-test-repo-url
+      rev: 1.0.1
+    - hooks:
+      - id: some-other-test-hook
+      repo: xyz://some-other-test-repo-url
+      rev: 1.0.0
+    """
+    mock_data_loader.return_value = load_return_value
+    validation_result = pre_commit.validate_config("Python")
+    output_by_line = validation_result.output.splitlines()
+
+    assert (
+        output_by_line[-1]
+        == "Expected xyz://some-test-repo-url to be rev 1.0.1 but it is configured to rev 1.0.0"
+    )
+
+
+def test_that_validate_config_detects_extra_repos(
+    pre_commit: PreCommitAbstraction,
+    mock_hashlib_no_match: MagicMock,
+    mock_data_loader: MagicMock,
+    mock_open_config: MagicMock,
+):
+    load_return_value = """
+    exclude: some-exclude-regex
+    repos:
+    - hooks:
+      - id: some-test-hook
+      repo: xyz://some-test-repo-url
+      rev: 1.0.0
+    """
+    mock_data_loader.return_value = load_return_value
+    validation_result = pre_commit.validate_config("Python")
+    output_by_line = validation_result.output.splitlines()
+
+    assert output_by_line[-3] == "Found unexpected repos in .pre-commit-config.yaml:"
+    assert output_by_line[-2] == "- xyz://some-other-test-repo-url"
+
+
+def test_that_validate_config_detects_missing_repos(
+    pre_commit: PreCommitAbstraction,
+    mock_hashlib_no_match: MagicMock,
+    mock_data_loader: MagicMock,
+    mock_open_config: MagicMock,
+):
+    load_return_value = """
+    exclude: some-exclude-regex
+    repos:
+    - hooks:
+      - id: some-test-hook
+      repo: xyz://some-test-repo-url
+      rev: 1.0.0
+    - hooks:
+      - id: some-other-test-hook
+      repo: xyz://some-other-test-repo-url
+      rev: 1.0.0
+    - hooks:
+      - id: some-third-test-hook
+      repo: xyz://some-third-test-repo-url
+      rev: 1.0.0
+    """
+    mock_data_loader.return_value = load_return_value
+    validation_result = pre_commit.validate_config("Python")
+    output_by_line = validation_result.output.splitlines()
+
+    assert (
+        output_by_line[-3]
+        == "Some expected repos were misssing from .pre-commit-config.yaml:"
+    )
+    assert output_by_line[-2] == "- xyz://some-third-test-repo-url"
+
+
 ##### autoupdate_hooks #####
-
-
 def test_that_pre_commit_autoupdate_hooks_executes_successfully(
     pre_commit: PreCommitAbstraction,
     mock_subprocess: MagicMock,

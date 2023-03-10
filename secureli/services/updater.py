@@ -66,13 +66,16 @@ class UpdaterService:
             language=secureli_config.overall_language
         )
         if not install_result.successful:
-            output = "Failed to update .pre-commit-config.yaml prior to hook install\n"
+            output += "Failed to update .pre-commit-config.yaml prior to hook install\n"
             return UpdateResult(successful=install_result.successful, output=output)
 
         hook_install_result = self.pre_commit.install_hooks()
         output += hook_install_result.output
 
-        if hook_install_result.successful and not output:
+        if (
+            hook_install_result.successful
+            and output == "Updating .pre-commit-config.yaml...\n"
+        ):
             output += "No changes necessary.\n"
 
         if hook_install_result.successful and hook_install_result.output:

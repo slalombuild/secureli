@@ -8,6 +8,7 @@ from secureli.repositories.secureli_config import SecureliConfig
 from secureli.services.language_analyzer import AnalyzeResult, SkippedFile
 from secureli.actions.action import Action, ActionDependencies
 from secureli.services.language_support import LanguageMetadata
+from secureli.abstractions.pre_commit import ValidateConfigResult
 
 test_folder_path = Path("does-not-matter")
 
@@ -32,6 +33,7 @@ def action_deps(
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
+    mock_pre_commit: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -40,6 +42,7 @@ def action_deps(
         mock_scanner,
         mock_secureli_config,
         mock_updater,
+        mock_pre_commit,
     )
 
 
@@ -244,3 +247,22 @@ def test_that_initialize_repo_is_aborted_by_the_user_if_the_process_is_canceled(
     action.verify_install(test_folder_path, reset=False, always_yes=False)
 
     mock_echo.error.assert_called_with("User canceled install process")
+
+
+def test_that_verify_install_updates_if_config_validation_fails(
+    action: Action,
+    mock_pre_commit: MagicMock,
+    mock_language_support: MagicMock,
+):
+    mock_pre_commit.validate_config.return_value = ValidateConfigResult(
+        successful=False, output="Configs don't match"
+    )
+    mock_language_support.apply_support.return_value = LanguageMetadata(
+        version="abc123", security_hook_id=None
+    )
+
+    verify_result = action.verify_install(
+        test_folder_path, reset=False, always_yes=True
+    )
+
+    assert verify_result.outcome == "upgrade-succeeded"

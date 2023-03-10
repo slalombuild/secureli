@@ -29,6 +29,7 @@ def action_deps(
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
+    mock_pre_commit: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -37,6 +38,7 @@ def action_deps(
         mock_scanner,
         mock_secureli_config,
         mock_updater,
+        mock_pre_commit,
     )
 
 
@@ -80,3 +82,26 @@ def test_that_update_action_handles_failed_execution(
     update_action.update_hooks()
 
     mock_echo.print.assert_called_with("Failed to update")
+
+
+def test_that_latest_flag_initiates_update(
+    update_action: UpdateAction,
+    mock_updater: MagicMock,
+    mock_echo: MagicMock,
+):
+    results = update_action.update_hooks(latest=True)
+
+    mock_echo.print.assert_called_with("Hooks successfully updated to latest version")
+
+
+def test_that_latest_flag_handles_failed_update(
+    update_action: UpdateAction,
+    mock_updater: MagicMock,
+    mock_echo: MagicMock,
+):
+    mock_updater.update_hooks.return_value = UpdateResult(
+        successful=False, output="Update failed"
+    )
+    results = update_action.update_hooks(latest=True)
+
+    mock_echo.print.assert_called_with("Update failed")

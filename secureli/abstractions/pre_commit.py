@@ -232,7 +232,7 @@ class PreCommitAbstraction:
         generated_config = self._calculate_combined_configuration_data(
             language=language
         )
-        current_hash = self._hash_config(current_config)
+        current_hash = self.get_current_config_hash()
         expected_hash = self._hash_config(generated_config)
         output = ""
 
@@ -741,8 +741,8 @@ class PreCommitAbstraction:
         :param expected_config: The expected (generated) configuration as a dict
         :return: Returns a string containing the differences between the two configs.
         """
-        current_config_repos = current_config["repos"]
-        expected_config_repos = expected_config["repos"]
+        current_config_repos = current_config.get("repos", [])
+        expected_config_repos = expected_config.get("repos", [])
         output = "Comparing current .pre-commit-config.yaml to expected configuration\n"
 
         length_of_repos_lists_match = len(current_config_repos) == len(
