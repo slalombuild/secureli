@@ -52,7 +52,6 @@ class ScanAction(Action):
 
         scan_result = self.scanner.scan_repo(scan_mode, specific_test)
         details = scan_result.output or "Unknown output during scan"
-        self.echo.print(details)
         if not scan_result.successful:
             self.echo.print(details)
             self.logging.failure(LogAction.scan, details)
