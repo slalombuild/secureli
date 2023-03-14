@@ -35,5 +35,5 @@ jobs:
     - name: Python Semantic Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: relekang/python-semantic-release@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
