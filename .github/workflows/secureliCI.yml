@@ -13,27 +13,27 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - name: Validate Branch name
-      run: ./scripts/get-current-branch.sh
-    - name: Set up Python 3.9
-      id: setup-python
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.9"
-    - name: Set Up Project
-      run: |
-        pip install poetry
-        poetry install
-    - name: Run Tests
-      run: |
-        poetry run poe precommit
-        poetry run poe coverage
-        poetry run secureli yeti
-    - name: Python Semantic Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      uses: relekang/python-semantic-release@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Validate Branch name
+        run: ./scripts/get-current-branch.sh
+      - name: Set up Python 3.9
+        id: setup-python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.9"
+      - name: Set Up Project
+        run: |
+          pip install poetry
+          poetry install
+      - name: Run Tests
+        run: |
+          poetry run poe precommit
+          poetry run poe coverage
+          poetry run secureli yeti
+      - name: Python Semantic Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: relekang/python-semantic-release@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
