@@ -26,6 +26,7 @@ jobs:
       - name: Set Up Project
         run: |
           pip install poetry
+          pip install pre-commit
           poetry install
       - name: Run Tests
         run: |
