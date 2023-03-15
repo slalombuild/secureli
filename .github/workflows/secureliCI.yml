@@ -28,7 +28,6 @@ jobs:
           pip install poetry
           pip install pre-commit
           pre-commit --version
-          grep ^INSTALL .git/hooks/pre-commit
           head -1 $(which pre-commit)
           poetry install
       # - name: Run Tests
