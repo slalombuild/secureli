@@ -47,7 +47,7 @@ version_toml = [
     "pyproject.toml:tool.poetry.version"
 ]
 major_on_zero = true
-branch = "main"
+branch = "feature/stft-133-test-version"
 upload_to_PyPI = false
 upload_to_release = false
 upload_to_repository = false
