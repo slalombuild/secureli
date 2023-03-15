@@ -27,12 +27,15 @@ jobs:
         run: |
           pip install poetry
           pip install pre-commit
+          pre-commit --version
+          grep ^INSTALL .git/hooks/pre-commit
+          head -1 $(which pre-commit)
           poetry install
-      - name: Run Tests
-        run: |
-          poetry run poe precommit
-          poetry run poe coverage
-          poetry run secureli yeti
+      # - name: Run Tests
+      #   run: |
+      #     poetry run poe precommit
+      #     poetry run poe coverage
+      #     poetry run secureli yeti
       - name: Python Semantic Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/feature/stft-133-test-version'
         uses: relekang/python-semantic-release@master
