@@ -738,10 +738,10 @@ def test_that_validate_config_detects_missing_repos(
     output_by_line = validation_result.output.splitlines()
 
     assert (
-        output_by_line[-3]
+        output_by_line[-4]
         == "Some expected repos were misssing from .pre-commit-config.yaml:"
     )
-    assert output_by_line[-2] == "- xyz://some-third-test-repo-url"
+    assert output_by_line[-3] == "- xyz://some-third-test-repo-url"
 
 
 ##### autoupdate_hooks #####

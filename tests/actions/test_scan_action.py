@@ -89,7 +89,7 @@ def test_that_scan_repo_scans_if_installed(
     mock_scanner.scan_repo.assert_called_once()
 
 
-def test_that_scan_repo_stop_scan_if_upgrade_canceled(
+def test_that_scan_repo_continue_scan_if_upgrade_canceled(
     scan_action: ScanAction,
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
@@ -104,7 +104,7 @@ def test_that_scan_repo_stop_scan_if_upgrade_canceled(
 
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
 
-    mock_scanner.scan_repo.assert_not_called()
+    mock_scanner.scan_repo.assert_called_once()
 
 
 def test_that_scan_repo_does_not_scan_if_not_installed(
