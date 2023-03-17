@@ -14,8 +14,6 @@ class ScanAction(Action):
     halting_outcomes = [
         VerifyOutcome.INSTALL_FAILED,
         VerifyOutcome.INSTALL_CANCELED,
-        VerifyOutcome.UPGRADE_CANCELED,
-        VerifyOutcome.UPGRADE_FAILED,
     ]
 
     def __init__(

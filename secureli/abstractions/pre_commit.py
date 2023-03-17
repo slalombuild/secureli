@@ -665,8 +665,8 @@ class PreCommitAbstraction:
         output = ""
 
         for repo in expected_repos_dict:
-            expected_rev = expected_repos_dict[repo]
-            current_rev = current_repos_dict[repo]
+            expected_rev = expected_repos_dict.get(repo)
+            current_rev = current_repos_dict.get(repo)
             if expected_rev != current_rev:
                 output += (
                     "Expected {} to be rev {} but it is configured to rev {}\n".format(
@@ -749,15 +749,15 @@ class PreCommitAbstraction:
             expected_config_repos
         )
 
-        if length_of_repos_lists_match:
-            output += self._process_mismatched_repo_versions(
-                current_repos=current_config_repos,
-                expected_repos=expected_config_repos,
-            )
-        else:
+        if not length_of_repos_lists_match:
             output += self._process_repo_list_length_mismatch(
                 current_repos=self._get_list_of_repo_urls(current_config_repos),
                 expected_repos=self._get_list_of_repo_urls(expected_config_repos),
             )
+
+        output += self._process_mismatched_repo_versions(
+            current_repos=current_config_repos,
+            expected_repos=expected_config_repos,
+        )
 
         return output

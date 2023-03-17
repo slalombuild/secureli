@@ -93,15 +93,18 @@ class Action(ABC):
                 config.overall_language
             )
 
+            # Check for a new version and prompt for upgrade if available
+            if available_version != config.version_installed:
+                return self._upgrade_secureli(config, available_version, always_yes)
+
             # Validates the current .pre-commit-config.yaml against the generated config
             config_validation_result = self.action_deps.pre_commit.validate_config(
                 language=config.overall_language
             )
+
+            # If config mismatch between available version and current version prompt for upgrade
             if not config_validation_result.successful:
                 self.action_deps.echo.print(config_validation_result.output)
-                return self._upgrade_secureli(config, available_version, always_yes)
-
-            if available_version != config.version_installed:
                 return self._upgrade_secureli(config, available_version, always_yes)
 
             self.action_deps.echo.print(
