@@ -45,4 +45,8 @@ jobs:
     - name: Set up Homebrew
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     - name: Set up Securli
-      run: brew --version
+      uses: izumin5210/action-homebrew-tap@releases/v0
+      with:
+        tap: slalombuild/secureli
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tap-token: ${{ secrets.TAP_GITHUB_TOKEN }}
