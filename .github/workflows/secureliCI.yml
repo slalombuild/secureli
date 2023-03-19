@@ -49,4 +49,4 @@ jobs:
       with:
         tap: slalombuild/secureli
         token: ${{ secrets.GITHUB_TOKEN }}
-        tap-token: ${{ secrets.TAP_GITHUB_TOKEN }}
+        tap-token: ${{ secrets.GITHUB_TOKEN }}
