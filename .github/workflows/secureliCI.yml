@@ -38,3 +38,11 @@ jobs:
       uses: relekang/python-semantic-release@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  test-osx:
+    runs-on: macos-latest
+    steps:
+    - name: Set up Homebrew
+      run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    - name: Set up Securli
+      run: brew --version

@@ -11,7 +11,7 @@ secureli = "secureli.main:app"
 [tool.poe.tasks]
 coverage = ["test", { cmd = "coverage report" }]
 docker-build-app = "docker build -t secureli . --no-cache"
-docker-build-homebrew = "docker build -t homebrew . -f homebrew_Dockerfile --no-cache"
+docker-build-homebrew = "docker build --build-arg mytoken=$HOMEBREW_GITHUB_API_TOKEN -t homebrew . -f homebrew_Dockerfile --no-cache --progress=plain"
 init = ["install", { cmd = "secureli init -y" }]
 install = "poetry install"
 lint = "black --check ."
