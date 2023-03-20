@@ -848,23 +848,23 @@ def test_that_pre_commit_autoupdate_hooks_converts_repos_when_repos_is_a_string(
     assert "--repo string" in mock_subprocess.run.call_args_list[0].args[0]
 
 
-##### install_hooks #####
-def test_that_pre_commit_install_hooks_executes_successfully(
+##### update #####
+def test_that_pre_commit_update_executes_successfully(
     pre_commit: PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.install_hooks()
+    execute_result = pre_commit.update()
 
     assert execute_result.successful
 
 
-def test_that_pre_commit_install_hooks_properly_handles_failed_executions(
+def test_that_pre_commit_update_properly_handles_failed_executions(
     pre_commit: PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    execute_result = pre_commit.install_hooks()
+    execute_result = pre_commit.update()
 
     assert not execute_result.successful
 

@@ -42,7 +42,7 @@ class UpdateAction(Action):
                 self.logging.success(LogAction.update)
         else:
             self.echo.print("Beginning update...")
-            install_result = self.updater.install_hooks()
+            install_result = self.updater.update()
             details = install_result.output or "Unknown output during hook installation"
             self.echo.print(details)
             if not install_result.successful:

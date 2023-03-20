@@ -28,6 +28,9 @@ class VerifyOutcome(str, Enum):
     UPGRADE_CANCELED = "upgrade-canceled"
     UPGRADE_SUCCEEDED = "upgrade-succeeded"
     UPGRADE_FAILED = "upgrade-failed"
+    UPDATE_CANCELED = "update-canceled"
+    UPDATE_SUCCEEDED = "update-succeeded"
+    UPDATE_FAILED = "update-failed"
     UP_TO_DATE = "up-to-date"
 
 
@@ -105,7 +108,7 @@ class Action(ABC):
             # If config mismatch between available version and current version prompt for upgrade
             if not config_validation_result.successful:
                 self.action_deps.echo.print(config_validation_result.output)
-                return self._upgrade_secureli(config, available_version, always_yes)
+                return self._update_secureli(always_yes)
 
             self.action_deps.echo.print(
                 f"SeCureLI is installed and up-to-date (language = {config.overall_language})"
@@ -239,3 +242,29 @@ class Action(ABC):
             config=config,
             analyze_result=analyze_result,
         )
+
+    def _update_secureli(self, always_yes: bool):
+        """
+        Prompts the user to update to the latest secureli install.
+        :param always_yes: Assume "Yes" to all prompts
+        :return: Outcome of update
+        """
+        update_prompt = "Would you like to update your pre-commit configuration to the latest secureli config?\n"
+        update_prompt += "This will reset any manual changes that may have been made to the .pre-commit-config.yaml file.\n"
+        update_prompt += "Proceed?"
+        update_confirmed = always_yes or self.action_deps.echo.confirm(
+            update_prompt, default_response=True
+        )
+
+        if not update_confirmed:
+            self.action_deps.echo.print("\nUpdate declined.\n")
+            return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)
+
+        update_result = self.action_deps.updater.update()
+        details = update_result.output
+        self.action_deps.echo.print(details)
+
+        if update_result.successful:
+            return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
+        else:
+            return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)

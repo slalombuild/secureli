@@ -17,7 +17,7 @@ def mock_scanner() -> MagicMock:
 def mock_updater() -> MagicMock:
     mock_updater = MagicMock()
     mock_updater.update_hooks.return_value = UpdateResult(successful=True)
-    mock_updater.install_hooks.return_value = UpdateResult(successful=True)
+    mock_updater.update.return_value = UpdateResult(successful=True)
     return mock_updater
 
 
@@ -61,7 +61,7 @@ def test_that_update_action_executes_successfully(
     mock_updater: MagicMock,
     mock_echo: MagicMock,
 ):
-    mock_updater.install_hooks.return_value = UpdateResult(
+    mock_updater.update.return_value = UpdateResult(
         successful=True, output="Some update performed"
     )
 
@@ -75,7 +75,7 @@ def test_that_update_action_handles_failed_execution(
     mock_updater: MagicMock,
     mock_echo: MagicMock,
 ):
-    mock_updater.install_hooks.return_value = UpdateResult(
+    mock_updater.update.return_value = UpdateResult(
         successful=False, output="Failed to update"
     )
 

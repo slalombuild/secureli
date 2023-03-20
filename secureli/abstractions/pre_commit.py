@@ -348,7 +348,7 @@ class PreCommitAbstraction:
         else:
             return ExecuteResult(successful=True, output=output)
 
-    def install_hooks(self) -> ExecuteResult:
+    def update(self) -> ExecuteResult:
         """
         Installs the hooks defined in pre-commit-config.yml.
         :return: ExecuteResult, indicating success or failure.

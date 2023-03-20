@@ -8,6 +8,7 @@ from secureli.repositories.secureli_config import SecureliConfig
 from secureli.services.language_analyzer import AnalyzeResult, SkippedFile
 from secureli.actions.action import Action, ActionDependencies
 from secureli.services.language_support import LanguageMetadata
+from secureli.services.updater import UpdateResult
 from secureli.abstractions.pre_commit import ValidateConfigResult
 
 test_folder_path = Path("does-not-matter")
@@ -253,16 +254,44 @@ def test_that_verify_install_updates_if_config_validation_fails(
     action: Action,
     mock_pre_commit: MagicMock,
     mock_language_support: MagicMock,
+    mock_updater: MagicMock,
+    mock_secureli_config: MagicMock,
 ):
     mock_pre_commit.validate_config.return_value = ValidateConfigResult(
         successful=False, output="Configs don't match"
     )
-    mock_language_support.apply_support.return_value = LanguageMetadata(
-        version="abc123", security_hook_id=None
+    mock_language_support.version_for_language.return_value = "abc123"
+    mock_secureli_config.load.return_value = SecureliConfig(
+        overall_language="PreviousLang", version_installed="abc123"
+    )
+    mock_updater.update.return_value = UpdateResult(
+        successful=True, output="Some output"
     )
 
     verify_result = action.verify_install(
         test_folder_path, reset=False, always_yes=True
     )
 
-    assert verify_result.outcome == "upgrade-succeeded"
+    assert verify_result.outcome == "update-succeeded"
+
+
+def test_that_update_secureli_handles_declined_update(
+    action: Action,
+    mock_echo: MagicMock,
+):
+    mock_echo.confirm.return_value = False
+    update_result = action._update_secureli(always_yes=False)
+
+    assert update_result.outcome == "update-canceled"
+
+
+def test_that_update_secureli_handles_failed_update(
+    action: Action,
+    mock_updater: MagicMock,
+):
+    mock_updater.update.return_value = UpdateResult(
+        successful=False, outcome="update failed"
+    )
+    update_result = action._update_secureli(always_yes=False)
+
+    assert update_result.outcome == "update-failed"
