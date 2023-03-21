@@ -48,10 +48,10 @@ jobs:
       run: brew install gh
     - name: Set up Securli
       run: |
-        echo $taptoken > securelitoken.txt
+        echo $HOMEBREW_GITHUB_API_TOKEN > securelitoken.txt
         gh auth login --with-token --git-protocol https -h github.com < securelitoken.txt
         gh auth setup-git
         brew tap slalombuild/secureli
         brew install secureli
       env:
-        taptoken: ${{ secrets.TAP_TOKEN }}
+        HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.TAP_TOKEN }}
