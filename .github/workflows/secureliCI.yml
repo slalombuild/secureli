@@ -52,6 +52,6 @@ jobs:
         gh auth login --with-token --git-protocol https -h github.com < securelitoken.txt
         gh auth setup-git
         brew tap slalombuild/secureli
-        brew install secureli
+        HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install secureli
       env:
         HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.TAP_TOKEN }}
