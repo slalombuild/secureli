@@ -56,4 +56,4 @@ jobs:
       env:
         HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.TAP_TOKEN }}
     - name: Init Secureli
-      run: secureli init -y
+      run: secureli init --yes
