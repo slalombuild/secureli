@@ -2,6 +2,7 @@ FROM debian
 WORKDIR app
 ARG mytoken
 ENV HOMEBREW_GITHUB_API_TOKEN=$mytoken
+ENV GITHUB_TOKEN=$mytoken
 
 # Install deps
 RUN apt-get update && apt-get autoclean && \
@@ -16,10 +17,11 @@ RUN useradd -m -s /bin/bash linuxbrew && \
 
 RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
-# RUN brew install gh
+RUN brew install gh
 # RUN brew install pre-commit
 RUN echo $mytoken > securelitoken.txt && \
     gh auth login --with-token --git-protocol https -h github.com < securelitoken.txt && \
-    gh auth setup-git && \
-    brew tap slalombuild/secureli && brew install secureli && \
+   # gh auth setup-git && \
+    brew tap slalombuild/secureli && \
+    HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install secureli && \
     mkdir secureli && cd secureli && secureli init
