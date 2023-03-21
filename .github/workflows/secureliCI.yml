@@ -44,9 +44,12 @@ jobs:
     steps:
     - name: Set up Homebrew
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    - name: Install GH
+      run: brew install gh
     - name: Set up Securli
-      uses: izumin5210/action-homebrew-tap@releases/v0
-      with:
-        tap: slalombuild/secureli
-        token: ${{ secrets.GITHUB_TOKEN }}
-        tap-token: ${{ secrets.TAP_TOKEN }}
+      run: |
+        echo $taptoken > securelitoken.txt
+        gh auth login --with-token --git-protocol https -h github.com < securelitoken.txt
+        gh auth setup-git
+      env:
+        taptoken: ${{ secrets.TAP_TOKEN }}
