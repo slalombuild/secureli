@@ -51,5 +51,6 @@ jobs:
         echo $taptoken > securelitoken.txt
         gh auth login --with-token --git-protocol https -h github.com < securelitoken.txt
         gh auth setup-git
+        brew install secureli
       env:
         taptoken: ${{ secrets.TAP_TOKEN }}
