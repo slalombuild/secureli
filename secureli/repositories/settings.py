@@ -129,9 +129,42 @@ class SecureliFile(BaseModel):
 
     repo_files: Optional[RepoFilesSettings]
     echo: Optional[EchoSettings]
-    language_support: Optional[LanguageSupportSettings]
-    pre_commit: Optional[PreCommitSettings]
+    language_support: Optional[LanguageSupportSettings] = Field(default=None)
+    pre_commit: Optional[PreCommitSettings] = Field(default=None)
 
 
 class SecureliRepository:
-    """ """
+    """
+    Represents the .secureli.yaml file in the root directory.  Saves and loads data from the file.
+    """
+
+    def __init__(self):
+        self.secureli_file_path = Path(".") / ".secureli.yaml"
+
+    def save(self, settings: SecureliFile):
+        """
+        Saves changes to the settings file
+        :param settings: The populated settings file to save
+        """
+        # Removes empty keys to prevent type errors
+        settings_dict = {
+            key: value for (key, value) in settings.dict().items() if value is not None
+        }
+
+        # Converts EchoLevel to string
+        settings_dict["echo"]["level"] = "{}".format(settings_dict["echo"]["level"])
+
+        with open(self.secureli_file_path, "w") as f:
+            yaml.dump(settings_dict, f)
+
+    def load(self) -> SecureliFile:
+        """
+        Reads the contents of the .secureli.yaml file and returns it
+        :return: SecureliFile containing the contents of the settings file
+        """
+        if not self.secureli_file_path.exists():
+            return SecureliFile()
+
+        with open(self.secureli_file_path, "r") as f:
+            data = yaml.safe_load(f)
+            return SecureliFile.parse_obj(data)

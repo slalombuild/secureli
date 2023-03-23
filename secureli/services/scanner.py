@@ -1,8 +1,10 @@
 from enum import Enum
 from typing import Optional
+from pathlib import Path
 
 import pydantic
 import re
+import yaml
 
 from secureli.abstractions.pre_commit import PreCommitAbstraction
 
@@ -16,13 +18,12 @@ class ScanMode(str, Enum):
     ALL_FILES = "all-files"
 
 
-class ScanResult(pydantic.BaseModel):
+class OutputParseErrors(str, Enum):
     """
-    The results of calling scan_repo
+    Possible errors when parsing scan output
     """
 
-    successful: bool
-    output: Optional[str] = None
+    REPO_NOT_FOUND = "repo-not-found"
 
 
 class Failure(pydantic.BaseModel):
@@ -30,8 +31,19 @@ class Failure(pydantic.BaseModel):
     Represents the details of a failed rule from a scan
     """
 
+    repo: str
     id: str
     file: str
+
+
+class ScanResult(pydantic.BaseModel):
+    """
+    The results of calling scan_repo
+    """
+
+    successful: bool
+    output: Optional[str] = None
+    failures: list[Failure]
 
 
 class ScanOuput(pydantic.BaseModel):
@@ -65,11 +77,10 @@ class ScannerService:
         execute_result = self.pre_commit.execute_hooks(all_files, hook_id=specific_test)
         parsed_output = self._parse_scan_ouput(output=execute_result.output)
 
-        for failure in parsed_output.failures:
-            print("{} hook failed on file {}".format(failure.id, failure.file))
-
         return ScanResult(
-            successful=execute_result.successful, output=execute_result.output
+            successful=execute_result.successful,
+            output=execute_result.output,
+            failures=parsed_output.failures,
         )
 
     def _parse_scan_ouput(self, output: str = "") -> ScanOuput:
@@ -81,22 +92,32 @@ class ScannerService:
         """
         failures = []
         failure_indexes = []
+        config_data = self._get_config()
 
+        # Split the output up by each line and record the index of each failure
         output_by_line = output.split("\n")
         for index, line in enumerate(output_by_line):
             if line.find("Failed") != -1:
                 failure_indexes.append(index)
 
+        # Process each failure
         for failure_index in failure_indexes:
+            # Remove ANSI encoding and record hook id
             id_with_encoding = output_by_line[failure_index + 1].split(": ")[1]
             id = self._remove_ansi_from_string(id_with_encoding)
+
+            # Retrieve repo url for failure
+            repo = self._find_repo_from_id(hook_id=id, config=config_data)
+
+            # Capture all output lines for this failure
             failure_output_list = self._get_single_failure_output(
                 failure_start=failure_index, output_by_line=output_by_line
             )
+            # Capture files that failed
             files = self._find_file_names(failure_output_list=failure_output_list)
 
             for file in files:
-                failures.append(Failure(id=id, file=file))
+                failures.append(Failure(id=id, file=file, repo=repo))
 
         return ScanOuput(failures=failures)
 
@@ -141,7 +162,37 @@ class ScannerService:
         :param string: A string that needs to be processed
         :return: A string that has had its ANSI encoding removed
         """
-        ansi_regexp = r"/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/"
+        ansi_regexp = r"(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]"
         clean_string = re.sub(ansi_regexp, "", string)
 
         return clean_string
+
+    def _find_repo_from_id(self, hook_id: str, config: dict):
+        """
+        Retrieves the repo URL that a hook ID belongs to and returns it
+        :param linter_id: The hook id we want to retrieve the repo url for
+        :config: A dict containing the contents of the .pre-commit-config.yaml file
+        :return: The repo url our hook id belongs to
+        """
+        repos = config.get("repos")
+
+        for repo in repos:
+            hooks = repo["hooks"]
+            repo = repo["repo"]
+
+            for hook in hooks:
+                if hook["id"] == hook_id:
+                    print("Found url {} for id {}".format(repo, hook_id))
+                    return repo
+
+        return OutputParseErrors.REPO_NOT_FOUND
+
+    def _get_config(self):
+        """
+        Gets the contents of the .pre-commit-config file and returns it as a dict
+        :return: Dict containing the contents of the .pre-commit-config.yaml file
+        """
+        path_to_config = Path(".pre-commit-config.yaml")
+        with open(path_to_config, "r") as f:
+            data = yaml.safe_load(f)
+            return data
