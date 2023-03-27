@@ -23,7 +23,6 @@ typer = {version = "^0.6.1", extras = ["all"]}
 pygments = "^2.13.0"
 dependency-injector = {version = "^4.40.0", extras = ["yaml"]}
 pydantic = "^1.10.2"
-pre-commit = "^2.20.0"
 jinja2 = "^3.1.2"
 
 [tool.pytest.ini_options]
@@ -37,6 +36,7 @@ black = "^22.10.0"
 identify = "^2.5.7"
 poethepoet = "^0.16.4"
 python-semantic-release = "^7.33.1"
+pre-commit = "^2.20.0"
 
 [build-system]
 requires = ["poetry-core"]
