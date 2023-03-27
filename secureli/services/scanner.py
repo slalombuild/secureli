@@ -152,7 +152,8 @@ class ScannerService:
                 file_name = regexp.match(word)
 
                 if file_name:
-                    file_names.append(file_name.group(0))
+                    clean_file_name = self._remove_ansi_from_string(file_name.group(0))
+                    file_names.append(clean_file_name)
 
         return file_names
 

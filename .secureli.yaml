@@ -1,12 +1,11 @@
-repo_files:
-  max_file_size: 1000000
-  exclude_file_patterns:
-    - .idea/
-  ignored_file_extensions:
-    - .pyc
-    - .drawio
-    - .png
-    - .jpg
-
 echo:
   level: ERROR
+repo_files:
+  exclude_file_patterns:
+  - .idea/
+  ignored_file_extensions:
+  - .pyc
+  - .drawio
+  - .png
+  - .jpg
+  max_file_size: 1000000

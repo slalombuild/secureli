@@ -98,9 +98,9 @@ class PreCommitHook(BaseSettings):
     """
 
     id: str
-    arguments: Optional[list[str]] = Field(default=None)
-    additional_args: Optional[list[str]] = Field(default=None)
-    exclude_file_patterns: Optional[list[str]] = Field(default=None)
+    arguments: Optional[list[str]] = Field(default=[])
+    additional_args: Optional[list[str]] = Field(default=[])
+    exclude_file_patterns: Optional[list[str]] = Field(default=[])
 
 
 class PreCommitRepo(BaseSettings):

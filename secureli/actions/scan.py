@@ -81,7 +81,6 @@ class ScanAction(Action):
 
         failure_count = len(scan_result.failures)
         if failure_count > 0:
-            print("failures: {}".format(scan_result.failures))
             ignore_result = self._process_failures(
                 scan_result.failures, always_yes=always_yes
             )
@@ -133,6 +132,13 @@ class ScanAction(Action):
                     settings = self._add_ignore_for_failure(
                         failure=failure, always_yes=always_yes, settings_file=settings
                     )
+
+            update_result = self.apply_config_changes()
+
+            if update_result.outcome == VerifyOutcome.UPGRADE_SUCCEEDED:
+                self.echo.print("Ignore rules successfully applied")
+            else:
+                self.echo.print("Failed to apply ignore rules")
 
         self.settings.save(settings=settings)
 
@@ -200,11 +206,7 @@ class ScanAction(Action):
         pre_commit_settings = settings_file.pre_commit
         repos = pre_commit_settings.repos
         repo_settings_index = next(
-            (
-                index
-                for (index, repo) in enumerate(repos)
-                if repo["repo"] == failure.repo
-            ),
+            (index for (index, repo) in enumerate(repos) if repo.url == failure.repo),
             None,
         )
 
@@ -235,25 +237,19 @@ class ScanAction(Action):
         pre_commit_settings = settings_file.pre_commit
         repos = pre_commit_settings.repos
         repo_settings_index = next(
-            (
-                index
-                for (index, repo) in enumerate(repos)
-                if repo["repo"] == failure.rep
-            ),
+            (index for (index, repo) in enumerate(repos) if repo.url == failure.repo),
             None,
         )
 
         if repo_settings_index:
             repo_settings = pre_commit_settings.repos[repo_settings_index]
         else:
-            repo_settings = PreCommitRepo(
-                url=failure.repo, suppressed_hook_ids=[failure.id]
-            )
+            repo_settings = PreCommitRepo(url=failure.repo)
             repos.append(repo_settings)
 
         hooks = repo_settings.hooks
         hook_settings_index = next(
-            (index for (index, hook) in enumerate(hooks) if hook["id"] == failure.id),
+            (index for (index, hook) in enumerate(hooks) if hook.id == failure.id),
             None,
         )
 
