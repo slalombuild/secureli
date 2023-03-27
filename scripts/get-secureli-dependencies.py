@@ -12,13 +12,11 @@ secureliSha256 = "9910509c0f82f63ecf12146a9842f6c424c5849d559d3824915a310270d388
 secureliPackageUrl = "https://github.com/slalombuild/homebrew-secureli/releases/download/0.0.2/secureli-0.0.2.tar.gz"  # Can be pulled down during CI runtime.
 secureliPackageDependencies = []
 
-secureliPackageNamesCmd="poetry show --only main | sed 's/(!)//' | awk -F ' ' '{print $1}'"
-secureliPackageVersionsCmd="poetry show --only main | sed 's/(!)//' | awk -F ' ' '{print $2}'"
+secureliPackageNamesCmd="poetry show --only main | awk '{print $1}'"
+secureliPackageVersionsCmd="poetry show --only main | awk '{print $2}'"
 
-# TODO: Implement the subprocess command differently
-# According to bandit, setting shell=True for subprocess is not a best practice but I was unable to get this working any other way during the time I was working on this feature
-getSecureliPackageNames = subprocess.check_output(secureliPackageNamesCmd, shell=True)
-getSecureliPackageVersions = subprocess.check_output(secureliPackageVersionsCmd, shell=True)
+getSecureliPackageNames = subprocess.check_output(secureliPackageNamesCmd, shell=True) # nosec B602, B607
+getSecureliPackageVersions = subprocess.check_output(secureliPackageVersionsCmd, shell=True) # nosec B602, B607
 
 decodedSecureliPackageNames = getSecureliPackageNames.decode('utf-8').split()
 decodedSecureliPackageVersions = getSecureliPackageVersions.decode('utf-8').split()
