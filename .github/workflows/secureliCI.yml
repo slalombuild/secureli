@@ -39,7 +39,7 @@ jobs:
       with:
         github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
         additional_options: --noop
-    - name: Python Semantic Version Release
+    - name: SemVer Version Release
       if: github.ref == 'refs/heads/main'
       uses: relekang/python-semantic-release@master
       with:
