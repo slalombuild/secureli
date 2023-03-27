@@ -3,11 +3,7 @@
 
 name: secureliCI
 
-on:
-  push:
-    branches:
-      - main
-      - feature/**
+on: [push, pull_request]
 
 jobs:
   build:
@@ -32,26 +28,16 @@ jobs:
         poetry run poe precommit
         poetry run poe coverage
         poetry run secureli yeti
-    - name: Python Semantic Release
+    # A NOOP run on feature branches
+    - name: Verify SemVer Release
       if: github.ref != 'refs/heads/main'
       uses: relekang/python-semantic-release@master
       with:
         github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
         additional_options: --noop
-
-    # - name: Semantic Release Verify
-    #   if: github.ref != 'refs/heads/main'
-    #   run: |
-    #     export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
-    #     pip install python-semantic-release
-    #     git config user.name github-actions
-    #     git config user.email github-actions@github.com
-    #     semantic-release publish --noop
-    # - name: Semantic Release
-    #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    #   run: |
-    #     export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
-    #     pip install python-semantic-release
-    #     git config user.name github-actions
-    #     git config user.email github-actions@github.com
-    #     semantic-release publish
+    - name: Python Semantic Version Release
+      if: github.ref == 'refs/heads/main'
+      uses: relekang/python-semantic-release@master
+      with:
+        github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+        additional_options: --noop
