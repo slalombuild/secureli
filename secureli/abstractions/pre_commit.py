@@ -259,9 +259,9 @@ class PreCommitAbstraction:
         :return: Returns a hash derived from the
         """
         config_data = yaml.dump(self.get_current_configuration())
-        hash = self._hash_config(config_data)
+        config_hash = self._hash_config(config_data)
 
-        return hash
+        return config_hash
 
     def execute_hooks(
         self, all_files: bool = False, hook_id: Optional[str] = None
@@ -615,9 +615,11 @@ class PreCommitAbstraction:
         Creates an MD5 hash from a config string
         :return: A hash string
         """
-        hash = hashlib.md5(config.encode("utf8"), usedforsecurity=False).hexdigest()
+        config_hash = hashlib.md5(
+            config.encode("utf8"), usedforsecurity=False
+        ).hexdigest()
 
-        return hash
+        return config_hash
 
     def _get_list_of_repo_urls(self, repo_list: list[dict]) -> list[str]:
         """

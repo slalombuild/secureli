@@ -86,10 +86,9 @@ def test_that_update_action_handles_failed_execution(
 
 def test_that_latest_flag_initiates_update(
     update_action: UpdateAction,
-    mock_updater: MagicMock,
     mock_echo: MagicMock,
 ):
-    results = update_action.update_hooks(latest=True)
+    update_action.update_hooks(latest=True)
 
     mock_echo.print.assert_called_with("Hooks successfully updated to latest version")
 
@@ -102,6 +101,6 @@ def test_that_latest_flag_handles_failed_update(
     mock_updater.update_hooks.return_value = UpdateResult(
         successful=False, output="Update failed"
     )
-    results = update_action.update_hooks(latest=True)
+    update_action.update_hooks(latest=True)
 
     mock_echo.print.assert_called_with("Update failed")
