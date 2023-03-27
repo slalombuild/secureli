@@ -86,10 +86,12 @@ class ScanAction(Action):
             )
 
             if ignore_result.changes_made:
-                # Install changes from
-                self.verify_install(
-                    folder_path=folder_path, reset=False, always_yes=True
-                )
+                update_result = self.apply_config_changes()
+
+                if update_result.outcome == VerifyOutcome.UPGRADE_SUCCEEDED:
+                    self.echo.print("\nIgnore rules successfully applied")
+                else:
+                    self.echo.print("Failed to apply ignore rules")
 
         if not scan_result.successful:
             self.logging.failure(LogAction.scan, details)
@@ -133,13 +135,6 @@ class ScanAction(Action):
                         failure=failure, always_yes=always_yes, settings_file=settings
                     )
 
-            update_result = self.apply_config_changes()
-
-            if update_result.outcome == VerifyOutcome.UPGRADE_SUCCEEDED:
-                self.echo.print("Ignore rules successfully applied")
-            else:
-                self.echo.print("Failed to apply ignore rules")
-
         self.settings.save(settings=settings)
 
         return IgnoreResult(changes_made=changes_made)
@@ -165,7 +160,7 @@ class ScanAction(Action):
             failure.file
         )
 
-        self.echo.print("Adding an ignore rule for: {}".format(failure.id))
+        self.echo.print("Adding an ignore rule for: {}\n".format(failure.id))
 
         if always_yes or self.echo.confirm(
             message=ignore_repo_prompt, default_response=False
