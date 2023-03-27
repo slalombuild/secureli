@@ -18,16 +18,6 @@ from secureli.repositories.settings import (
     PreCommitHook,
 )
 
-from pydantic import BaseModel
-
-
-class IgnoreResult(BaseModel):
-    """
-    Result of calling self._process_failures
-    """
-
-    changes_made: bool
-
 
 class ScanAction(Action):
     """The action for the secureli `scan` command, orchestrating services and outputs results"""
@@ -81,17 +71,7 @@ class ScanAction(Action):
 
         failure_count = len(scan_result.failures)
         if failure_count > 0:
-            ignore_result = self._process_failures(
-                scan_result.failures, always_yes=always_yes
-            )
-
-            if ignore_result.changes_made:
-                update_result = self.apply_config_changes()
-
-                if update_result.outcome == VerifyOutcome.UPGRADE_SUCCEEDED:
-                    self.echo.print("\nIgnore rules successfully applied")
-                else:
-                    self.echo.print("Failed to apply ignore rules")
+            self._process_failures(scan_result.failures, always_yes=always_yes)
 
         if not scan_result.successful:
             self.logging.failure(LogAction.scan, details)
@@ -103,14 +83,13 @@ class ScanAction(Action):
         self,
         failures: list[Failure],
         always_yes: bool,
-    ) -> IgnoreResult:
+    ):
         """
         Processes any failures found during the scan.
         :param failures: List of Failure objects representing linter failures
         :param always_yes: Assume "Yes" to all prompts
         """
         settings = self.settings.load()
-        changes_made = False
 
         ignore_fail_prompt = "Failures detected during scan.\n"
         ignore_fail_prompt += "Add an ignore rule?"
@@ -118,7 +97,6 @@ class ScanAction(Action):
         # Ask if the user wants to ignore a failure
         if always_yes or self.echo.confirm(ignore_fail_prompt, default_response=False):
             # verify pre_commit exists in settings file.
-            changes_made = True
             if not settings.pre_commit:
                 settings.pre_commit = PreCommitSettings()
 
@@ -136,8 +114,6 @@ class ScanAction(Action):
                     )
 
         self.settings.save(settings=settings)
-
-        return IgnoreResult(changes_made=changes_made)
 
     def _add_ignore_for_failure(
         self,
@@ -160,7 +136,7 @@ class ScanAction(Action):
             failure.file
         )
 
-        self.echo.print("Adding an ignore rule for: {}\n".format(failure.id))
+        self.echo.print("\nAdding an ignore rule for: {}\n".format(failure.id))
 
         if always_yes or self.echo.confirm(
             message=ignore_repo_prompt, default_response=False
