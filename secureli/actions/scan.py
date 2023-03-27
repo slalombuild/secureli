@@ -128,12 +128,14 @@ class ScanAction(Action):
         :param always_yes: Assume "Yes" to all prompts
         :param settings_file: SecureliFile representing the contents of the .secureli.yaml file
         """
-        ignore_repo_prompt = "Ignore this failure across all files?\n"
-        ignore_repo_prompt += "Confirming will suppress the {} hook.\n".format(
-            failure.id
+        ignore_repo_prompt = "You can add an ignore rule for just this file, or you can add an ignore rule for all files.\n"
+        ignore_repo_prompt += (
+            "Would you like to ignore this failure for all files?".format(failure.id)
         )
-        ignore_repo_prompt += "Declining will only add an ignore for {}".format(
-            failure.file
+        ignore_file_prompt = (
+            "\nWould you like to ignore this failure for just the {} file?".format(
+                failure.file
+            )
         )
 
         self.echo.print("\nAdding an ignore rule for: {}\n".format(failure.id))
@@ -147,10 +149,16 @@ class ScanAction(Action):
                 failure=failure, settings_file=settings_file
             )
         else:
-            self.echo.print("Adding an ignore for {}".format(failure.file))
-            modified_settings = self._ignore_one_file(
-                failure=failure, settings_file=settings_file
-            )
+            if always_yes or self.echo.confirm(ignore_file_prompt, False):
+                self.echo.print("Adding an ignore for {}".format(failure.file))
+                modified_settings = self._ignore_one_file(
+                    failure=failure, settings_file=settings_file
+                )
+            else:
+                self.echo.print(
+                    "\nSkipping {} failure on {}".format(failure.id, failure.file)
+                )
+                modified_settings = settings_file
 
         return modified_settings
 
