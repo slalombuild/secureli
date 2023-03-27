@@ -124,7 +124,7 @@ class ScanAction(Action):
 
             for failure in failures:
                 add_ignore_for_id = self.echo.confirm(
-                    "Would you like to add an ignore for the {} failure on {}?".format(
+                    "\nWould you like to add an ignore for the {} failure on {}?".format(
                         failure.id, failure.file
                     )
                 )
