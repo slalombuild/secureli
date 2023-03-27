@@ -18,6 +18,16 @@ from secureli.repositories.settings import (
     PreCommitHook,
 )
 
+from pydantic import BaseModel
+
+
+class IgnoreResult(BaseModel):
+    """
+    Result of calling self._process_failures
+    """
+
+    changes_made: bool
+
 
 class ScanAction(Action):
     """The action for the secureli `scan` command, orchestrating services and outputs results"""
@@ -72,7 +82,15 @@ class ScanAction(Action):
         failure_count = len(scan_result.failures)
         if failure_count > 0:
             print("failures: {}".format(scan_result.failures))
-            self._process_failures(scan_result.failures, always_yes=always_yes)
+            ignore_result = self._process_failures(
+                scan_result.failures, always_yes=always_yes
+            )
+
+            if ignore_result.changes_made:
+                # Install changes from
+                self.verify_install(
+                    folder_path=folder_path, reset=False, always_yes=True
+                )
 
         if not scan_result.successful:
             self.logging.failure(LogAction.scan, details)
@@ -84,13 +102,14 @@ class ScanAction(Action):
         self,
         failures: list[Failure],
         always_yes: bool,
-    ):
+    ) -> IgnoreResult:
         """
         Processes any failures found during the scan.
         :param failures: List of Failure objects representing linter failures
         :param always_yes: Assume "Yes" to all prompts
         """
         settings = self.settings.load()
+        changes_made = False
 
         ignore_fail_prompt = "Failures detected during scan.\n"
         ignore_fail_prompt += "Add an ignore rule?"
@@ -98,12 +117,13 @@ class ScanAction(Action):
         # Ask if the user wants to ignore a failure
         if always_yes or self.echo.confirm(ignore_fail_prompt, default_response=False):
             # verify pre_commit exists in settings file.
+            changes_made = True
             if not settings.pre_commit:
                 settings.pre_commit = PreCommitSettings()
 
             for failure in failures:
                 add_ignore_for_id = self.echo.confirm(
-                    "Would you like to add an ignore the {} failure on {}?".format(
+                    "Would you like to add an ignore for the {} failure on {}?".format(
                         failure.id, failure.file
                     )
                 )
@@ -115,6 +135,8 @@ class ScanAction(Action):
                     )
 
         self.settings.save(settings=settings)
+
+        return IgnoreResult(changes_made=changes_made)
 
     def _add_ignore_for_failure(
         self,
@@ -129,7 +151,13 @@ class ScanAction(Action):
         :param always_yes: Assume "Yes" to all prompts
         :param settings_file: SecureliFile representing the contents of the .secureli.yaml file
         """
-        ignore_repo_prompt = "Ignore this error across all files?"
+        ignore_repo_prompt = "Ignore this failure across all files?\n"
+        ignore_repo_prompt += "Confirming will suppress the {} hook.\n".format(
+            failure.id
+        )
+        ignore_repo_prompt += "Declining will only add an ignore for {}".format(
+            failure.file
+        )
 
         self.echo.print("Adding an ignore rule for: {}".format(failure.id))
 
@@ -143,7 +171,9 @@ class ScanAction(Action):
             )
         else:
             self.echo.print("Adding an ignore for {}".format(failure.file))
-            modified_settings = settings_file
+            modified_settings = self._ignore_one_file(
+                failure=failure, settings_file=settings_file
+            )
 
         return modified_settings
 
@@ -169,12 +199,11 @@ class ScanAction(Action):
         """
         pre_commit_settings = settings_file.pre_commit
         repos = pre_commit_settings.repos
-        failure_repo_url = failure.repo
         repo_settings_index = next(
             (
                 index
                 for (index, repo) in enumerate(repos)
-                if repo["repo"] == failure_repo_url
+                if repo["repo"] == failure.repo
             ),
             None,
         )
@@ -203,3 +232,44 @@ class ScanAction(Action):
          :param failure: Failure object representing the failed hook
          :param settings_file: SecureliFile representing the contents of the .secureli.yaml file
         """
+        pre_commit_settings = settings_file.pre_commit
+        repos = pre_commit_settings.repos
+        repo_settings_index = next(
+            (
+                index
+                for (index, repo) in enumerate(repos)
+                if repo["repo"] == failure.rep
+            ),
+            None,
+        )
+
+        if repo_settings_index:
+            repo_settings = pre_commit_settings.repos[repo_settings_index]
+        else:
+            repo_settings = PreCommitRepo(
+                url=failure.repo, suppressed_hook_ids=[failure.id]
+            )
+            repos.append(repo_settings)
+
+        hooks = repo_settings.hooks
+        hook_settings_index = next(
+            (index for (index, hook) in enumerate(hooks) if hook["id"] == failure.id),
+            None,
+        )
+
+        if hook_settings_index:
+            hook_settings = hooks[hook_settings_index]
+            if failure.file not in hook_settings.exclude_file_patterns:
+                hook_settings.exclude_file_patterns.append(failure.file)
+            else:
+                self.echo.print(
+                    "An ignore rule is already present for the {} file".format(
+                        failure.file
+                    )
+                )
+        else:
+            hook_settings = PreCommitHook(id=failure.id)
+            hook_settings.exclude_file_patterns.append(failure.file)
+            repo_settings.hooks.append(hook_settings)
+
+        return settings_file

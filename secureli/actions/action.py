@@ -100,6 +100,38 @@ class Action(ABC):
                 config=config,
             )
 
+    def apply_config_changes(
+        self,
+    ) -> VerifyResult:
+        """
+        Applies any changes made to the .secureli.yaml file by rebuilding
+        the .pre-commit-config.yaml file and saving it.
+        :return: Outcome of upgrading the pre-commit config
+        """
+        config = self.action_deps.secureli_config.load()
+
+        try:
+            metadata = self.action_deps.language_support.apply_support(
+                config.overall_language
+            )
+
+            # Update config with new version installed and save it
+            config.version_installed = metadata.version
+            self.action_deps.secureli_config.save(config)
+            self.action_deps.echo.print("SeCureLI has been upgraded successfully")
+            return VerifyResult(
+                outcome=VerifyOutcome.UPGRADE_SUCCEEDED,
+                config=config,
+            )
+        except InstallFailedError:
+            self.action_deps.echo.error(
+                "SeCureLI could not be upgraded due to an error"
+            )
+            return VerifyResult(
+                outcome=VerifyOutcome.UPGRADE_FAILED,
+                config=config,
+            )
+
     def _upgrade_secureli(
         self, config: SecureliConfig, available_version: str, always_yes: bool
     ) -> VerifyResult:
