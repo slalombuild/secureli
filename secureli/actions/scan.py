@@ -181,7 +181,9 @@ class ScanAction(Action):
             None,
         )
 
-        if repo_settings_index:
+        print("Repo settings index: {}".format(repo_settings_index))
+
+        if repo_settings_index is not None:
             repo_settings = pre_commit_settings.repos[repo_settings_index]
             if failure.id not in repo_settings.suppressed_hook_ids:
                 repo_settings.suppressed_hook_ids.append(failure.id)
@@ -212,7 +214,9 @@ class ScanAction(Action):
             None,
         )
 
-        if repo_settings_index:
+        print("Repo settings index: {}".format(repo_settings_index))
+
+        if repo_settings_index is not None:
             repo_settings = pre_commit_settings.repos[repo_settings_index]
         else:
             repo_settings = PreCommitRepo(url=failure.repo)
@@ -224,7 +228,7 @@ class ScanAction(Action):
             None,
         )
 
-        if hook_settings_index:
+        if hook_settings_index is not None:
             hook_settings = hooks[hook_settings_index]
             if failure.file not in hook_settings.exclude_file_patterns:
                 hook_settings.exclude_file_patterns.append(failure.file)
