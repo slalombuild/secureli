@@ -32,11 +32,26 @@ jobs:
         poetry run poe precommit
         poetry run poe coverage
         poetry run secureli yeti
-    - name: Semantic Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      run: |
-        export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
-        pip install python-semantic-release
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        semantic-release publish
+    - name: Python Semantic Release
+      if: github.ref != 'refs/heads/main'
+      uses: relekang/python-semantic-release@master
+      with:
+        github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+        additional_options: --noop
+
+    # - name: Semantic Release Verify
+    #   if: github.ref != 'refs/heads/main'
+    #   run: |
+    #     export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+    #     pip install python-semantic-release
+    #     git config user.name github-actions
+    #     git config user.email github-actions@github.com
+    #     semantic-release publish --noop
+    # - name: Semantic Release
+    #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    #   run: |
+    #     export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+    #     pip install python-semantic-release
+    #     git config user.name github-actions
+    #     git config user.email github-actions@github.com
+    #     semantic-release publish
