@@ -41,10 +41,8 @@ class UpdateAction(Action):
                 self.echo.print("Hooks successfully updated to latest version")
                 self.logging.success(LogAction.update)
         else:
-            self.echo.print(
-                "Updating hooks to the version defined in pre-commit-config.yaml..."
-            )
-            install_result = self.updater.install_hooks()
+            self.echo.print("Beginning update...")
+            install_result = self.updater.update()
             details = install_result.output or "Unknown output during hook installation"
             self.echo.print(details)
             if not install_result.successful:
