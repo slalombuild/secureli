@@ -14,7 +14,7 @@ test_folder_path = Path("does-not-matter")
 @pytest.fixture()
 def mock_scanner() -> MagicMock:
     mock_scanner = MagicMock()
-    mock_scanner.scan_repo.return_value = ScanResult(successful=True)
+    mock_scanner.scan_repo.return_value = ScanResult(successful=True, failures=[])
     return mock_scanner
 
 
@@ -47,12 +47,14 @@ def action_deps(
 def scan_action(
     action_deps: ActionDependencies,
     mock_logging_service: MagicMock,
+    mock_settings_repository: MagicMock,
 ) -> ScanAction:
     return ScanAction(
         action_deps=action_deps,
         echo=action_deps.echo,
         logging=mock_logging_service,
         scanner=action_deps.scanner,
+        settings_repository=mock_settings_repository,
     )
 
 
@@ -62,7 +64,7 @@ def test_that_scan_repo_errors_if_not_successful(
     mock_echo: MagicMock,
 ):
     mock_scanner.scan_repo.return_value = ScanResult(
-        successful=False, output="Bad Error"
+        successful=False, output="Bad Error", failures=[]
     )
 
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)

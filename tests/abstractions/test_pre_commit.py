@@ -9,7 +9,7 @@ from secureli.abstractions.pre_commit import (
     LanguageNotSupportedError,
     InstallFailedError,
 )
-from secureli.settings import (
+from secureli.repositories.settings import (
     PreCommitSettings,
     PreCommitRepo,
     PreCommitHook,
