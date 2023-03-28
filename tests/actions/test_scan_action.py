@@ -32,6 +32,7 @@ def action_deps(
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
+    mock_pre_commit: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -40,6 +41,7 @@ def action_deps(
         mock_scanner,
         mock_secureli_config,
         mock_updater,
+        mock_pre_commit,
     )
 
 
@@ -89,7 +91,7 @@ def test_that_scan_repo_scans_if_installed(
     mock_scanner.scan_repo.assert_called_once()
 
 
-def test_that_scan_repo_scans_if_upgrade_canceled(
+def test_that_scan_repo_continue_scan_if_upgrade_canceled(
     scan_action: ScanAction,
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,

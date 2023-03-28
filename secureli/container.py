@@ -126,6 +126,7 @@ class Container(containers.DeclarativeContainer):
     updater_service = providers.Factory(
         UpdaterService,
         pre_commit=pre_commit_abstraction,
+        config=secureli_config_repository,
     )
 
     # Actions
@@ -138,6 +139,7 @@ class Container(containers.DeclarativeContainer):
         scanner=scanner_service,
         secureli_config=secureli_config_repository,
         updater=updater_service,
+        pre_commit=pre_commit_abstraction,
     )
 
     """The Yeti Action, used to render the yeti_data using the echo"""
