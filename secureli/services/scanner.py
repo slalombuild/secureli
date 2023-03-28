@@ -97,7 +97,9 @@ class ScannerService:
         # Split the output up by each line and record the index of each failure
         output_by_line = output.split("\n")
         for index, line in enumerate(output_by_line):
+            print("Checking line: {}".format(line))
             if line.find("Failed") != -1:
+                print("Found failure")
                 failure_indexes.append(index)
 
         # Process each failure
@@ -118,6 +120,8 @@ class ScannerService:
 
             for file in files:
                 failures.append(Failure(id=id, file=file, repo=repo))
+
+        print("Failures: {}".format(failures))
 
         return ScanOuput(failures=failures)
 
@@ -183,7 +187,6 @@ class ScannerService:
 
             for hook in hooks:
                 if hook["id"] == hook_id:
-                    print("Found url {} for id {}".format(repo, hook_id))
                     return repo
 
         return OutputParseErrors.REPO_NOT_FOUND
