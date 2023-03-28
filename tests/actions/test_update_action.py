@@ -17,7 +17,7 @@ def mock_scanner() -> MagicMock:
 def mock_updater() -> MagicMock:
     mock_updater = MagicMock()
     mock_updater.update_hooks.return_value = UpdateResult(successful=True)
-    mock_updater.install_hooks.return_value = UpdateResult(successful=True)
+    mock_updater.update.return_value = UpdateResult(successful=True)
     return mock_updater
 
 
@@ -29,6 +29,7 @@ def action_deps(
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
+    mock_pre_commit: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -37,6 +38,7 @@ def action_deps(
         mock_scanner,
         mock_secureli_config,
         mock_updater,
+        mock_pre_commit,
     )
 
 
@@ -59,7 +61,7 @@ def test_that_update_action_executes_successfully(
     mock_updater: MagicMock,
     mock_echo: MagicMock,
 ):
-    mock_updater.install_hooks.return_value = UpdateResult(
+    mock_updater.update.return_value = UpdateResult(
         successful=True, output="Some update performed"
     )
 
@@ -73,10 +75,32 @@ def test_that_update_action_handles_failed_execution(
     mock_updater: MagicMock,
     mock_echo: MagicMock,
 ):
-    mock_updater.install_hooks.return_value = UpdateResult(
+    mock_updater.update.return_value = UpdateResult(
         successful=False, output="Failed to update"
     )
 
     update_action.update_hooks()
 
     mock_echo.print.assert_called_with("Failed to update")
+
+
+def test_that_latest_flag_initiates_update(
+    update_action: UpdateAction,
+    mock_echo: MagicMock,
+):
+    update_action.update_hooks(latest=True)
+
+    mock_echo.print.assert_called_with("Hooks successfully updated to latest version")
+
+
+def test_that_latest_flag_handles_failed_update(
+    update_action: UpdateAction,
+    mock_updater: MagicMock,
+    mock_echo: MagicMock,
+):
+    mock_updater.update_hooks.return_value = UpdateResult(
+        successful=False, output="Update failed"
+    )
+    update_action.update_hooks(latest=True)
+
+    mock_echo.print.assert_called_with("Update failed")
