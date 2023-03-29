@@ -24,4 +24,5 @@ RUN echo $mytoken > securelitoken.txt && \
    # gh auth setup-git && \
     brew tap slalombuild/secureli && \
     HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install secureli && \
-    mkdir secureli && cd secureli && secureli init
+    mkdir secureli && cd secureli && secureli init && \
+    rm -f securelitoken.txt
