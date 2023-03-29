@@ -32,7 +32,23 @@ jobs:
         poetry run poe precommit
         poetry run poe coverage
         poetry run secureli yeti
-
+    - name: Semantic Release
+      if: github.ref == 'refs/heads/main'
+      run: |
+        export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
+        pip install python-semantic-release
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        semantic-release publish
+    # A NOOP run on feature branches
+    - name: Verify Semantic Release
+      if: github.ref != 'refs/heads/main'
+      run: |
+        export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
+        pip install python-semantic-release
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        semantic-release publish --noop
   test-osx:
     runs-on: macos-latest
     steps:
@@ -52,20 +68,3 @@ jobs:
   #This can be uncommented when we start testing an actual repo. Secureli no worky without git
   # - name: Init Secureli
   #   run: secureli init --yes && echo $?
-    - name: Semantic Release
-      if: github.ref == 'refs/heads/main'
-      run: |
-        export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
-        pip install python-semantic-release
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        semantic-release publish
-    # A NOOP run on feature branches
-    - name: Verify Semantic Release
-      if: github.ref != 'refs/heads/main'
-      run: |
-        export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
-        pip install python-semantic-release
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        semantic-release publish --noop
