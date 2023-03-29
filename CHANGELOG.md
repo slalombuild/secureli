@@ -2,10 +2,17 @@
 
 <!--next-version-placeholder-->
 
-## v0.0.2 (2023-03-15)
+## v0.1.1 (2023-03-29)
+
+
+## v0.1.0 (2023-03-28)
+### Feature
+* STFT-57 - Prompt for update on linter version mismatch ([#3](https://github.com/slalombuild/secureli/issues/3)) ([`78b353b`](https://github.com/slalombuild/secureli/commit/78b353b2bb9bdd20d3f9385649e851087f1e845a))
+
 ### Fix
-* Version bump test ([`5b496f9`](https://github.com/slalombuild/secureli/commit/5b496f91e127820b39b71692b2afa652bbeaed19))
-* Version bump test ([`e57be41`](https://github.com/slalombuild/secureli/commit/e57be4142bdfee2a23806d4e5943d68fe1ff1b4e))
+* Testing version ([`09b8b10`](https://github.com/slalombuild/secureli/commit/09b8b10c677a22a94c0fd530256471c453aeb6e1))
+* Testing version bump ([`d32381f`](https://github.com/slalombuild/secureli/commit/d32381faf63445a060369500160a79cf77a8e33c))
+* Testing version bump ([`0dc1227`](https://github.com/slalombuild/secureli/commit/0dc1227a6f04f6b3b1f1219af73fedb3f0b070f6))
 
 ## v0.0.1 (2023-03-15)
 ### Fix
