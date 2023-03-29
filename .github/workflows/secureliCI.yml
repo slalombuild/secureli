@@ -55,7 +55,7 @@ jobs:
     - name: Semantic Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
-        export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+        export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
         pip install python-semantic-release
         git config user.name github-actions
         git config user.email github-actions@github.com
