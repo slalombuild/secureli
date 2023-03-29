@@ -2,6 +2,9 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.1 (2023-03-29)
+
+
 ## v0.1.0 (2023-03-28)
 ### Feature
 * STFT-57 - Prompt for update on linter version mismatch ([#3](https://github.com/slalombuild/secureli/issues/3)) ([`78b353b`](https://github.com/slalombuild/secureli/commit/78b353b2bb9bdd20d3f9385649e851087f1e845a))
