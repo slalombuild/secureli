@@ -97,9 +97,7 @@ class ScannerService:
         # Split the output up by each line and record the index of each failure
         output_by_line = output.split("\n")
         for index, line in enumerate(output_by_line):
-            print("Checking line: {}".format(line))
             if line.find("Failed") != -1:
-                print("Found failure")
                 failure_indexes.append(index)
 
         # Process each failure
@@ -147,8 +145,7 @@ class ScannerService:
         :param output_by_line: List containing the scan output delimited by newlines
         :return: Returns the file name that caused the failure.
         """
-        # regexp = re.compile(r"(\S*?\.\S*)")
-        regexp = re.compile(r"^(?!http:|https)[a-z0-9-/]+\.+[a-z][^:\s]*")
+        regexp = re.compile(r"^(?!http:|https)[a-z0-9-_/]+\.+[a-z][^:\s]*")
         file_names = []
         for line in failure_output_list:
             words = line.split()
