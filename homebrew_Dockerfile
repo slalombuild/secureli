@@ -1,3 +1,5 @@
+# The auth in this file doesn't work yet. I'm still working on it but I wanted to get the init
+
 FROM debian
 WORKDIR app
 ARG mytoken

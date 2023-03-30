@@ -66,6 +66,11 @@ jobs:
         rm -f securelitoken.txt
       env:
         HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.TAP_TOKEN }}
+    - name: Checkout private tools
+      uses: actions/checkout@v3
+      with:
+        repository: pypa/pip
+        path: pip
   #This can be uncommented when we start testing an actual repo. Secureli no worky without git
-  # - name: Init Secureli
-  #   run: secureli init --yes && echo $?
+    - name: Init Secureli
+      run: cd pip && secureli init --yes && echo $?
