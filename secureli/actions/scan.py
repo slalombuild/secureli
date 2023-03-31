@@ -95,7 +95,14 @@ class ScanAction(Action):
         ignore_fail_prompt += "Add an ignore rule?"
 
         # Ask if the user wants to ignore a failure
-        if always_yes or self.echo.confirm(ignore_fail_prompt, default_response=False):
+        if always_yes:
+            always_yes_warning = "Hook failures were detected but the scan was initiated with the 'yes' flag.\n"
+            always_yes_warning += "SeCureLI cannot automatically add ignore rules with the 'yes' flag enabled.\n"
+            always_yes_warning += "Re-run your scan without the 'yes' flag to add an ignore rule for one of the\n"
+            always_yes_warning += "detected failures."
+
+            self.echo.print(always_yes_warning)
+        elif self.echo.confirm(ignore_fail_prompt, default_response=False):
             # verify pre_commit exists in settings file.
             if not settings.pre_commit:
                 settings.pre_commit = PreCommitSettings()
@@ -113,7 +120,7 @@ class ScanAction(Action):
                         failure=failure, always_yes=always_yes, settings_file=settings
                     )
 
-        self.settings.save(settings=settings)
+            self.settings.save(settings=settings)
 
     def _add_ignore_for_failure(
         self,
@@ -189,8 +196,6 @@ class ScanAction(Action):
             None,
         )
 
-        print("Repo settings index: {}".format(repo_settings_index))
-
         if repo_settings_index is not None:
             repo_settings = pre_commit_settings.repos[repo_settings_index]
             if failure.id not in repo_settings.suppressed_hook_ids:
@@ -221,8 +226,6 @@ class ScanAction(Action):
             (index for (index, repo) in enumerate(repos) if repo.url == failure.repo),
             None,
         )
-
-        print("Repo settings index: {}".format(repo_settings_index))
 
         if repo_settings_index is not None:
             repo_settings = pre_commit_settings.repos[repo_settings_index]
