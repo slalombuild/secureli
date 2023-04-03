@@ -40,3 +40,23 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         semantic-release publish
+    # A NOOP run on feature branches
+    - name: Verify Semantic Release
+      if: github.ref != 'refs/heads/main'
+      run: |
+        export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
+        pip install python-semantic-release
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        semantic-release publish --noop
+    # - name: Verify SemVer Release
+    #   if: github.ref != 'refs/heads/main'
+    #   uses: relekang/python-semantic-release@master
+    #   with:
+    #     github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+    #     additional_options: --noop
+    # - name: SemVer Version Release
+    #   if: github.ref == 'refs/heads/main'
+    #   uses: relekang/python-semantic-release@master
+    #   with:
+    #     github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}

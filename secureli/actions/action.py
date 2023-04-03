@@ -18,6 +18,7 @@ from secureli.services.language_analyzer import LanguageAnalyzerService, Analyze
 from secureli.services.language_support import LanguageSupportService
 from secureli.services.scanner import ScannerService, ScanMode
 from secureli.services.updater import UpdaterService
+from secureli.abstractions.pre_commit import PreCommitAbstraction
 
 
 class VerifyOutcome(str, Enum):
@@ -27,6 +28,9 @@ class VerifyOutcome(str, Enum):
     UPGRADE_CANCELED = "upgrade-canceled"
     UPGRADE_SUCCEEDED = "upgrade-succeeded"
     UPGRADE_FAILED = "upgrade-failed"
+    UPDATE_CANCELED = "update-canceled"
+    UPDATE_SUCCEEDED = "update-succeeded"
+    UPDATE_FAILED = "update-failed"
     UP_TO_DATE = "up-to-date"
 
 
@@ -56,6 +60,7 @@ class ActionDependencies:
         scanner: ScannerService,
         secureli_config: SecureliConfigRepository,
         updater: UpdaterService,
+        pre_commit: PreCommitAbstraction,
     ):
         self.echo = echo
         self.language_analyzer = language_analyzer
@@ -63,6 +68,7 @@ class ActionDependencies:
         self.scanner = scanner
         self.secureli_config = secureli_config
         self.updater = updater
+        self.pre_commit = pre_commit
 
 
 class Action(ABC):
@@ -89,8 +95,20 @@ class Action(ABC):
             available_version = self.action_deps.language_support.version_for_language(
                 config.overall_language
             )
+
+            # Check for a new version and prompt for upgrade if available
             if available_version != config.version_installed:
                 return self._upgrade_secureli(config, available_version, always_yes)
+
+            # Validates the current .pre-commit-config.yaml against the generated config
+            config_validation_result = self.action_deps.pre_commit.validate_config(
+                language=config.overall_language
+            )
+
+            # If config mismatch between available version and current version prompt for upgrade
+            if not config_validation_result.successful:
+                self.action_deps.echo.print(config_validation_result.output)
+                return self._update_secureli(always_yes)
 
             self.action_deps.echo.print(
                 f"SeCureLI is installed and up-to-date (language = {config.overall_language})"
@@ -111,7 +129,7 @@ class Action(ABC):
         :return: The new SecureliConfig after upgrade or None if upgrading did not complete
         """
         self.action_deps.echo.print(
-            f"The version installed is {config.version_installed}, but the latest is {available_version}"
+            f"The config version installed is {config.version_installed}, but the latest is {available_version}"
         )
         response = always_yes or self.action_deps.echo.confirm(
             "Upgrade now?",
@@ -224,3 +242,29 @@ class Action(ABC):
             config=config,
             analyze_result=analyze_result,
         )
+
+    def _update_secureli(self, always_yes: bool):
+        """
+        Prompts the user to update to the latest secureli install.
+        :param always_yes: Assume "Yes" to all prompts
+        :return: Outcome of update
+        """
+        update_prompt = "Would you like to update your pre-commit configuration to the latest secureli config?\n"
+        update_prompt += "This will reset any manual changes that may have been made to the .pre-commit-config.yaml file.\n"
+        update_prompt += "Proceed?"
+        update_confirmed = always_yes or self.action_deps.echo.confirm(
+            update_prompt, default_response=True
+        )
+
+        if not update_confirmed:
+            self.action_deps.echo.print("\nUpdate declined.\n")
+            return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)
+
+        update_result = self.action_deps.updater.update()
+        details = update_result.output
+        self.action_deps.echo.print(details)
+
+        if update_result.successful:
+            return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
+        else:
+            return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)

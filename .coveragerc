@@ -1,0 +1,13 @@
+[run]
+branch = True
+source = secureli
+
+[report]
+fail_under = 90
+omit =
+    tests/*
+    */__init__.py
+exclude_lines:
+    pragma: no cover
+    @abstractmethod
+    if __name__ == "__main__":
