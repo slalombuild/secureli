@@ -12,21 +12,28 @@ secureliSha256 = os.getenv(secureliShaSum)
 secureliPackageUrl = f"https://github.com/slalombuild/homebrew-secureli/releases/download/{secureliVersion}/secureli-{secureliVersion}.tar.gz"
 secureliPackageDependencies = []
 
-secureliPackageNamesCmd="poetry show --only main | awk '{print $1}'"
-secureliPackageVersionsCmd="poetry show --only main | awk '{print $2}'"
+secureliPackageNamesCmd = "poetry show --only main | awk '{print $1}'"
+secureliPackageVersionsCmd = "poetry show --only main | awk '{print $2}'"
 
-getSecureliPackageNames = subprocess.check_output(secureliPackageNamesCmd, shell=True) # nosec B602, B607
-getSecureliPackageVersions = subprocess.check_output(secureliPackageVersionsCmd, shell=True) # nosec B602, B607
+getSecureliPackageNames = subprocess.check_output(
+    secureliPackageNamesCmd, shell=True  # nosec B602, B607
+)
 
-decodedSecureliPackageNames = getSecureliPackageNames.decode('utf-8').split()
-decodedSecureliPackageVersions = getSecureliPackageVersions.decode('utf-8').split()
+getSecureliPackageVersions = subprocess.check_output(  # nosec B602, B607
+    secureliPackageVersionsCmd, shell=True
+)
+
+decodedSecureliPackageNames = getSecureliPackageNames.decode("utf-8").split()
+decodedSecureliPackageVersions = getSecureliPackageVersions.decode("utf-8").split()
 
 # This loops through all packages that secureli requires to be properly built
 # It then outputs the package information to a dictionary that will be templated into a Homebrew formula for end-user consumption
 for packageName, packageVersion in zip(
     decodedSecureliPackageNames, decodedSecureliPackageVersions
 ):
-    print(f"The necessary package retrieved from poetry is {packageName} with version {packageVersion}")
+    print(
+        f"The necessary package retrieved from poetry is {packageName} with version {packageVersion}"
+    )
     packagePayload = requests.get(
         f"https://pypi.org/pypi/{packageName}/{packageVersion}/json"
     )
@@ -53,4 +60,4 @@ context = {
 
 with open(filename, mode="w", encoding="utf-8") as message:
     message.write(template.render(context))
-    print(f"File named {filename} has been created")
+    print(f"Homebrew formula file called {filename} has been created")
