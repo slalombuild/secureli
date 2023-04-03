@@ -7,11 +7,11 @@ class Secureli < Formula
     url "{{ secureliPackageUrl }}", :using => GitHubPrivateRepositoryReleaseDownloadStrategy
     version "{{ secureliVersion }}"
     sha256 "{{ secureliSha256 }}"
-    
+
     depends_on "pre-commit"
 
     depends_on "python@3.9"
-    
+
     {% for package in secureliPackageDependencies %}
     resource "{{ package.packageName }}" do
         url "{{ package.packageUrl}}"
