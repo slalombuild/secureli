@@ -7,9 +7,9 @@ from jinja2 import Environment, FileSystemLoader
 environment = Environment(loader=FileSystemLoader("templates/"), autoescape=True)
 template = environment.get_template("formula.txt")
 filename = "secureli.rb"
-secureliVersion = "0.1.0"  # Hard-coded for testing purposes, this should be retrieved as an ENV in the pipeline
-secureliSha256 = "9910509c0f82f63ecf12146a9842f6c424c5849d559d3824915a310270d38867"  # Generated at runtime when tarball is published. You can potentially use the shasum command to get this at CI runtime
-secureliPackageUrl = "https://github.com/slalombuild/homebrew-secureli/releases/download/0.0.2/secureli-0.0.2.tar.gz"  # Can be pulled down during CI runtime.
+secureliVersion = os.getenv(secureliVersion)
+secureliSha256 = os.getenv(secureliShaSum)
+secureliPackageUrl = f"https://github.com/slalombuild/homebrew-secureli/releases/download/{secureliVersion}/secureli-{secureliVersion}.tar.gz"
 secureliPackageDependencies = []
 
 secureliPackageNamesCmd="poetry show --only main | awk '{print $1}'"
@@ -26,7 +26,7 @@ decodedSecureliPackageVersions = getSecureliPackageVersions.decode('utf-8').spli
 for packageName, packageVersion in zip(
     decodedSecureliPackageNames, decodedSecureliPackageVersions
 ):
-    # print(f"The package name is {packageName} with version {packageVersion}")
+    print(f"The necessary package retrieved from poetry is {packageName} with version {packageVersion}")
     packagePayload = requests.get(
         f"https://pypi.org/pypi/{packageName}/{packageVersion}/json"
     )
@@ -34,7 +34,7 @@ for packageName, packageVersion in zip(
 
     filteredPayload = {k: v for (k, v) in packagePayloadJsonDict.items() if "urls" in k}
 
-    # Load all the retrieved package info into a dictionary
+    # Load all the retrieved package info from pypi into a dictionary
     data = {
         "packageName": packageName,
         "packageUrl": filteredPayload["urls"][1]["url"],
@@ -46,7 +46,7 @@ for packageName, packageVersion in zip(
 # Context will then be passed into the Jinja template renderer to create the homebrew file
 context = {
     "secureliPackageDependencies": secureliPackageDependencies,
-    "secureliVersion": secureliVersion,
+    "secureliVersion": secureliVersion.decode(),
     "secureliSha256": secureliSha256,
     "secureliPackageUrl": secureliPackageUrl,
 }

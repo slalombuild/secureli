@@ -9,8 +9,9 @@ class Secureli < Formula
     sha256 "{{ secureliSha256 }}"
     
     depends_on "pre-commit"
-    depends_on "python@3.9"
 
+    depends_on "python@3.9"
+    
     {% for package in secureliPackageDependencies %}
     resource "{{ package.packageName }}" do
         url "{{ package.packageUrl}}"
