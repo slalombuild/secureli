@@ -52,7 +52,7 @@ jobs:
         git add homebrew-secureli
         git commit -m "Creating pull request with latest Secureli formula off ${secureliVersion}"
         gh release create ${secureliVersion} --generate-notes
-        gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation" --repo slalombuild/homebrew-secureli
+        gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation" --repo https://github.com/slalombuild/homebrew-secureli.git
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
