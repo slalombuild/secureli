@@ -41,6 +41,8 @@ jobs:
         git config user.email github-actions@github.com
         semantic-release publish
     - name: Secureli Homebrew Formula
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         export secureliVersion=$(poetry version | awk '{print $2}')
         poetry build
