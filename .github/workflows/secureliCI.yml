@@ -47,14 +47,16 @@ jobs:
         poetry build
         export secureliShaSum=$(sha256sum dist/secureli-${secureliVersion}.tar.gz | awk '{print $1}')
         export secureliVersion=$(poetry version | awk '{print $2}')
+        git config --global user.email "secureli-automation@slalom.com"
+        git config --global user.name "Secureli Automation"
         pip install requests jinja2
         gh repo clone https://github.com/slalombuild/homebrew-secureli.git
         python ./scripts/get-secureli-dependencies.py
-        git add homebrew-secureli
-        git config --global user.email "secureli-automation@slalom.com"
-        git config --global user.name "Secureli Automation"
+        cd homebrew-secureli
+        git checkout -b "secureli-${secureliVersion}-formula-generation"
+        git add ./Formula/secureli.rb
         git commit -m "Creating pull request with latest Secureli formula for version ${secureliVersion}"
-        gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation" --repo slalombuild/homebrew-secureli --base main --head ${{ github.run_id }}-${{ github.run_attempt }}
+        gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation" --repo slalombuild/homebrew-secureli --base main --head secureli-${secureliVersion}-formula-generation
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
