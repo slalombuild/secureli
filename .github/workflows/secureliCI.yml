@@ -41,17 +41,14 @@ jobs:
         git config user.email github-actions@github.com
         semantic-release publish
     - name: Secureli Homebrew Formula
-      env:
-        GH_TOKEN: ${{ github.token }}
       run: |
         export secureliVersion=$(poetry version | awk '{print $2}')
         poetry build
         export secureliShaSum=$(sha256sum dist/secureli-${secureliVersion}.tar.gz | awk '{print $1}')
         echo ${TOKEN} > GH_TOKEN.txt
-        gh auth login --with-token --git-protocol https -h github.com < GH_TOKEN.txt
-        gh auth setup-git
+        gh repo list slalombuild
         # gh repo clone https://github.com/slalombuild/homebrew-secureli.git
-        python ./scripts/get-secureli-dependencies.py
+        # python ./scripts/get-secureli-dependencies.py
         # git add homebrew-secureli
         # git commit -m "Creating pull request with latest Secureli formula off ${secureliVersion}"
     - name: Upload binaries to release
