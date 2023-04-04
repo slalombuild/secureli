@@ -54,7 +54,7 @@ jobs:
         git config --global user.email "secureli-automation@slalom.com"
         git config --global user.name "Secureli Automation"
         git commit -m "Creating pull request with latest Secureli formula for version ${secureliVersion}"
-        gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation" --repo slalombuild/homebrew-secureli --base main --head {{ github.run_id }}-${{ github.run_attempt }}
+        gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation" --repo slalombuild/homebrew-secureli --base main --head ${{ github.run_id }}-${{ github.run_attempt }}
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
