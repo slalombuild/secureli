@@ -16,6 +16,12 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+    - name: Checkout Secureli Homebrew Repo
+      uses: actions/checkout@v3
+      with:
+        repository: slalombuild/homebrew-secureli
+        token: ${{ secrets.ADMIN_TOKEN_RAUL }} # `GH_PAT` is a secret that contains your PAT
+        path: homebrew-secureli
     - name: Validate Branch name
       run: ./scripts/get-current-branch.sh
     - name: Set up Python 3.9
@@ -40,9 +46,13 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         semantic-release publish
-    - name: Secureli Homebrew Formula
+
+    - name: Homebrew Formula Generation
       env:
         GH_TOKEN: ${{ secrets.ADMIN_TOKEN_RAUL }}
+      with:
+        repository: slalombuild/homebrew-secureli
+        path: my-tools
       run: |
         poetry build
         export secureliShaSum=$(sha256sum dist/secureli-${secureliVersion}.tar.gz | awk '{print $1}')
@@ -57,7 +67,8 @@ jobs:
         git add ./Formula/secureli.rb
         git commit -m "Creating pull request with latest Secureli formula for version ${secureliVersion}"
         git push origin secureli-${secureliVersion}-formula-generation --repo https://github.com/slalombuild/homebrew-secureli.git
-        gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation" --repo slalombuild/homebrew-secureli --base main --head secureli-${secureliVersion}-formula-generation
+        gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation"
+
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
