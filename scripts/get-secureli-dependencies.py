@@ -7,8 +7,8 @@ from jinja2 import Environment, FileSystemLoader
 environment = Environment(loader=FileSystemLoader("templates/"), autoescape=True)
 template = environment.get_template("formula.txt")
 filename = "secureli.rb"
-secureliVersion = os.getenv(secureliVersion)
-secureliSha256 = os.getenv(secureliShaSum)
+secureliVersion = os.getenv("secureliVersion")
+secureliSha256 = os.getenv("secureliShaSum")
 secureliPackageUrl = f"https://github.com/slalombuild/homebrew-secureli/releases/download/{secureliVersion}/secureli-{secureliVersion}.tar.gz"
 secureliPackageDependencies = []
 
@@ -53,7 +53,7 @@ for packageName, packageVersion in zip(
 # Context will then be passed into the Jinja template renderer to create the homebrew file
 context = {
     "secureliPackageDependencies": secureliPackageDependencies,
-    "secureliVersion": secureliVersion.decode(),
+    "secureliVersion": secureliVersion,
     "secureliSha256": secureliSha256,
     "secureliPackageUrl": secureliPackageUrl,
 }
