@@ -11,6 +11,7 @@ secureliVersion = os.getenv("secureliVersion")
 secureliSha256 = os.getenv("secureliShaSum")
 secureliPackageUrl = f"https://github.com/slalombuild/homebrew-secureli/releases/download/{secureliVersion}/secureli-{secureliVersion}.tar.gz"
 secureliPackageDependencies = []
+secureliFormulaPath = "./homebrew-secureli/Formula/"
 
 secureliPackageNamesCmd = "poetry show --only main | awk '{print $1}'"
 secureliPackageVersionsCmd = "poetry show --only main | awk '{print $2}'"
@@ -58,6 +59,6 @@ context = {
     "secureliPackageUrl": secureliPackageUrl,
 }
 
-with open(filename, mode="w", encoding="utf-8") as message:
+with open(f"{secureliFormulaPath}/{filename}", mode="w", encoding="utf-8") as message:
     message.write(template.render(context))
     print(f"Homebrew formula file called {filename} has been created")
