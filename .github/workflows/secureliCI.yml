@@ -44,7 +44,8 @@ jobs:
       run: |
         export secureliVersion=$(poetry version | awk '{print $2}')
         poetry build
-        export secureliShaSum=$(sha256sum dist/secureli- | awk '{print $1}')
+        export secureliShaSum=$(sha256sum dist/secureli-${secureliVersion}.tar.gz | awk '{print $1}')
+        python ./scripts/get-secureli-dependencies.py
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
