@@ -50,9 +50,6 @@ jobs:
     - name: Homebrew Formula Generation
       env:
         GH_TOKEN: ${{ secrets.ADMIN_TOKEN_RAUL }}
-      with:
-        repository: slalombuild/homebrew-secureli
-        path: my-tools
       run: |
         poetry build
         export secureliShaSum=$(sha256sum dist/secureli-${secureliVersion}.tar.gz | awk '{print $1}')
