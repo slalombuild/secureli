@@ -42,7 +42,7 @@ jobs:
         semantic-release publish
     - name: Secureli Homebrew Formula
       env:
-        GH_TOKEN: ${{ github.token }}
+        GH_TOKEN: ${{ secrets.ADMIN_TOKEN_RAUL }}
       run: |
         export secureliVersion=$(poetry version | awk '{print $2}')
         poetry build
