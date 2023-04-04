@@ -4,6 +4,7 @@
 FROM python:3.9
 WORKDIR /app
 COPY . /app
+RUN apt-get update && apt-get install -y gh
 RUN pip install poetry
 RUN poetry install
 RUN poetry run poe precommit

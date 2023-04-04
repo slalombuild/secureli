@@ -20,8 +20,8 @@ RUN brew install gh
 RUN brew tap slalombuild/secureli https://$mytoken@github.com/slalombuild/homebrew-secureli
 RUN HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install secureli
 RUN git clone https://github.com/pypa/pip pip
-RUN cd pip
+WORKDIR pip
 RUN secureli init --yes
-RUN pwd && secureli scan
+RUN secureli scan  --mode all-files
 
 # git add .pre-commit-config.yaml
