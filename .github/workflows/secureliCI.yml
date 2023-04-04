@@ -47,7 +47,7 @@ jobs:
         export secureliVersion=$(poetry version | awk '{print $2}')
         poetry build
         export secureliShaSum=$(sha256sum dist/secureli-${secureliVersion}.tar.gz | awk '{print $1}')
-        gh repo clone https://github.com/slalombuild/homebrew-secureli
+        gh repo clone https://github.com/slalombuild/homebrew-secureli.git
         python ./scripts/get-secureli-dependencies.py
         git add homebrew-secureli
         git commit -m "Creating pull request with latest Secureli formula off ${secureliVersion}"
