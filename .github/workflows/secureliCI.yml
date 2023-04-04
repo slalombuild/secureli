@@ -71,6 +71,5 @@ jobs:
       with:
         repository: pypa/pip
         path: pip
-  #This can be uncommented when we start testing an actual repo. Secureli no worky without git
     - name: Init Secureli
       run: cd pip && secureli init --yes && secureli scan
