@@ -42,13 +42,14 @@ jobs:
         cp .pre-commit-config.yaml pyproject.toml python-secrets/
         cd python-secrets
         poetry install
-        if $(poetry run poe precommit); then
-          echo "Test failed!"
-          exit 1
-        else
-          echo "Test succeeded!"
-          continue
-        fi
+        poetry run poe precommit
+# If statement did not work
+        # if $(poetry run poe precommit); then
+        #   echo "Test failed!"
+        #   exit 1
+        # else
+        #   echo "Test succeeded!"
+        # fi
     - name: Semantic Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
