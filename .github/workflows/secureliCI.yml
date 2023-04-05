@@ -48,6 +48,7 @@ jobs:
         semantic-release publish
 
   deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -61,12 +62,12 @@ jobs:
         token: ${{ secrets.ADMIN_TOKEN_SASCHA }} # `GH_PAT` is a secret that contains your PAT
         path: homebrew-secureli
     - name: Homebrew Formula Generation
-      # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       env:
         GH_TOKEN: ${{ secrets.ADMIN_TOKEN_SASCHA }}
       run: |
         pip install requests jinja2 poetry
         poetry build
+        poetry install
         export secureliVersion=$(poetry version | awk '{print $2}')
         export secureliSha256=$(sha256sum dist/secureli-${secureliVersion}.tar.gz | awk '{print $1}')
         git config --global user.email "secureli-automation@slalom.com"
@@ -80,7 +81,6 @@ jobs:
         gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation"
 
     - name: Upload binaries to release
-      # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
