@@ -34,7 +34,7 @@ jobs:
         poetry run secureli yeti
     - name: Checkout Python secrets repo
       uses: actions/checkout@v3
-      with: 
+      with:
         repository: asidiehl/python-secrets
         path: python-secrets
     - name: Test secret detection for Python
@@ -89,4 +89,3 @@ jobs:
   #   - name: Run Tests
   #     run: |
   #       pre-commit run detect-secrets
-        
