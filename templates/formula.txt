@@ -24,6 +24,6 @@ class Secureli < Formula
     end
 
     test do
-      system bin/"secureli", "--help"
+      system "secureli", "--help"
     end
   end
