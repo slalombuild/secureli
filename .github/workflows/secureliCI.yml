@@ -39,7 +39,7 @@ jobs:
         poetry run poe coverage
         poetry run secureli yeti
     - name: Semantic Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
         pip install python-semantic-release
