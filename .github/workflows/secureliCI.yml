@@ -52,8 +52,8 @@ jobs:
         GH_TOKEN: ${{ secrets.ADMIN_TOKEN_RAUL }}
       run: |
         poetry build
-        export secureliShaSum=$(sha256sum dist/secureli-${secureliVersion}.tar.gz | awk '{print $1}')
         export secureliVersion=$(poetry version | awk '{print $2}')
+        export secureliSha256=$(sha256sum dist/secureli-${secureliVersion}.tar.gz | awk '{print $1}')
         git config --global user.email "secureli-automation@slalom.com"
         git config --global user.name "Secureli Automation"
         pip install requests jinja2

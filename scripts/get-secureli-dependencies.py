@@ -8,24 +8,37 @@ environment = Environment(loader=FileSystemLoader("templates/"), autoescape=True
 template = environment.get_template("formula.txt")
 filename = "secureli.rb"
 secureliVersion = os.getenv("secureliVersion")
-secureliSha256 = os.getenv("secureliShaSum")
+secureliSha256 = os.getenv("secureliSha256")
 secureliPackageUrl = f"https://github.com/slalombuild/homebrew-secureli/releases/download/{secureliVersion}/secureli-{secureliVersion}.tar.gz"
 secureliPackageDependencies = []
-secureliFormulaPath = "./homebrew-secureli/Formula/"
+secureliFormulaPath = "./homebrew-secureli/Formula"
 
 secureliPackageNamesCmd = "poetry show --only main | awk '{print $1}'"
 secureliPackageVersionsCmd = "poetry show --only main | awk '{print $2}'"
 
-getSecureliPackageNames = subprocess.check_output(
-    secureliPackageNamesCmd, shell=True  # nosec B602, B607
+getPackageNames = subprocess.Popen(
+    ["poetry", "show", "--only", "main"], stdout=subprocess.PIPE
 )
-
-getSecureliPackageVersions = subprocess.check_output(  # nosec B602, B607
-    secureliPackageVersionsCmd, shell=True
+filterPackageNames = subprocess.Popen(
+    ["awk", "{print $1}"], stdin=getPackageNames.stdout, stdout=subprocess.PIPE
 )
+getPackageNames.stdout.close()
 
-decodedSecureliPackageNames = getSecureliPackageNames.decode("utf-8").split()
-decodedSecureliPackageVersions = getSecureliPackageVersions.decode("utf-8").split()
+secureliPackageNames, error = filterPackageNames.communicate()
+
+decodedSecureliPackageNames = secureliPackageNames.decode("utf-8").split()
+
+getPackageVersions = subprocess.Popen(
+    ["poetry", "show", "--only", "main"], stdout=subprocess.PIPE
+)
+filterPackageVersions = subprocess.Popen(
+    ["awk", "{print $2}"], stdin=getPackageVersions.stdout, stdout=subprocess.PIPE
+)
+getPackageVersions.stdout.close()
+
+secureliPackageVersions, error = filterPackageVersions.communicate()
+
+decodedSecureliPackageVersions = secureliPackageVersions.decode("utf-8").split()
 
 # This loops through all packages that secureli requires to be properly built
 # It then outputs the package information to a dictionary that will be templated into a Homebrew formula for end-user consumption
@@ -40,14 +53,14 @@ for packageName, packageVersion in zip(
     )
     packagePayloadJsonDict = packagePayload.json()
 
-    filteredPayload = {k: v for (k, v) in packagePayloadJsonDict.items() if "urls" in k}
+    for package in packagePayloadJsonDict["urls"]:
+        if package["packagetype"] == "sdist":
+            url = package["url"]
+            sha256 = package["digests"]["sha256"]
+            break
 
     # Load all the retrieved package info from pypi into a dictionary
-    data = {
-        "packageName": packageName,
-        "packageUrl": filteredPayload["urls"][1]["url"],
-        "sha256": filteredPayload["urls"][1]["digests"]["sha256"],
-    }
+    data = {"packageName": packageName, "packageUrl": url, "sha256": sha256}
     secureliPackageDependencies.append(data)
 
 # Create a dict that contains all the package dependency information
