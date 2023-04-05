@@ -43,10 +43,6 @@ jobs:
         cd python-secrets
         poetry install
         poetry run poe precommit
-    # Does not work - pre-commit: command not found
-    # - name: Test secret detection for Python
-    #   run: |
-    #     pre-commit run detect-secrets --files python-secrets/*
     - name: Semantic Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
@@ -75,24 +71,3 @@ jobs:
     #   uses: relekang/python-semantic-release@master
     #   with:
     #     github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
-
-
-  # test-python-repo:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Check out SeCureLI
-  #     uses: actions/checkout@v3
-  #     with:
-  #       fetch-depth: 0
-  #   - name: Set up Python 3.9
-  #     id: setup-python
-  #     uses: actions/setup-python@v3
-  #     with:
-  #       python-version: "3.9"
-  #   - name: Set Up Project
-  #     run: |
-  #       pip install poetry
-  #       poetry install
-  #   - name: Run Tests
-  #     run: |
-  #       pre-commit run detect-secrets
