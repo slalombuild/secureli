@@ -27,17 +27,22 @@ jobs:
       run: |
         pip install poetry
         poetry install
-    - name: Checkout Python secrets repo
-      uses: actions/checkout@v3
-      with:
-        repository: asidiehl/python-secrets
-        path: python-secrets
     - name: Run Tests
       run: |
         poetry run poe precommit
         poetry run poe coverage
         poetry run secureli yeti
-    # Does not work- pre-commit: command not found
+    - name: Checkout Python secrets repo
+      uses: actions/checkout@v3
+      with:
+        repository: asidiehl/python-secrets
+        path: python-secrets
+    - name: Test Python repo
+      run: |
+        cp .pre-commit-config.yaml pyproject.toml python-secrets/
+        cd python-secrets
+        poetry run poe precommit
+    # Does not work - pre-commit: command not found
     # - name: Test secret detection for Python
     #   run: |
     #     pre-commit run detect-secrets --files python-secrets/*
