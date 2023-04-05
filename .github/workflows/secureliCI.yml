@@ -32,6 +32,14 @@ jobs:
         poetry run poe precommit
         poetry run poe coverage
         poetry run secureli yeti
+    - name: Checkout Python secrets repo
+      uses: actions/checkout@v3
+      with: 
+        repository: asidiehl/python-secrets
+        path: python-secrets
+    - name: Test secret detection for Python
+      run: |
+        pre-commit run detect-secrets --files python-secrets/*
     - name: Semantic Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
@@ -62,22 +70,23 @@ jobs:
     #     github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
 
 
-  test-python-repo:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-        repository: 'asidiehl/python-secrets'
-    - name: Set up Python 3.9
-      id: setup-python
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.9"
-    - name: Set Up Project
-      run: |
-        pip install poetry
-        poetry install
-    - name: Run Tests
-      run: |
-        pre-commit run detect-secrets
+  # test-python-repo:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Check out SeCureLI
+  #     uses: actions/checkout@v3
+  #     with:
+  #       fetch-depth: 0
+  #   - name: Set up Python 3.9
+  #     id: setup-python
+  #     uses: actions/setup-python@v3
+  #     with:
+  #       python-version: "3.9"
+  #   - name: Set Up Project
+  #     run: |
+  #       pip install poetry
+  #       poetry install
+  #   - name: Run Tests
+  #     run: |
+  #       pre-commit run detect-secrets
+        
