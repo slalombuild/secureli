@@ -57,7 +57,7 @@ jobs:
         semantic-release publish --noop
 
   deploy:
-    # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -78,8 +78,6 @@ jobs:
         poetry build
         poetry install
         export secureliVersion$(semantic-release print-version --next)
-        # export secureliVersion=$(poetry version | awk '{print $2}')sdfsd
-        echo $secureliVersion
         export secureliSha256=$(sha256sum dist/secureli-${secureliVersion}.tar.gz | awk '{print $1}')
         git config --global user.email "secureli-automation@slalom.com"
         git config --global user.name "Secureli Automation"
