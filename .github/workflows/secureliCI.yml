@@ -41,6 +41,7 @@ jobs:
       run: |
         cp .pre-commit-config.yaml pyproject.toml python-secrets/
         cd python-secrets
+        poetry install
         poetry run poe precommit
     # Does not work - pre-commit: command not found
     # - name: Test secret detection for Python
