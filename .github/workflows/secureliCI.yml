@@ -39,7 +39,7 @@ jobs:
         poetry run poe coverage
         poetry run secureli yeti
     - name: Semantic Release
-      # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
         pip install python-semantic-release
@@ -88,12 +88,3 @@ jobs:
         git commit -m "Creating pull request with latest Secureli formula for version ${secureliVersion}"
         git push origin secureli-${secureliVersion}-formula-generation --repo https://github.com/slalombuild/homebrew-secureli.git
         gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation"
-
-    # - name: Upload binaries to release
-    #   uses: svenstaro/upload-release-action@v2
-    #   with:
-    #     repo_token: ${{ secrets.GITHUB_TOKEN }}
-    #     file: dist/*
-    #     tag: ${{ github.ref }}
-    #     overwrite: true
-    #     file_glob: true
