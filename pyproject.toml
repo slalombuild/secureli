@@ -49,10 +49,10 @@ version_toml = [
 major_on_zero = true
 branch = "main"
 upload_to_PyPI = false
-upload_to_release = false
+upload_to_release = true
 upload_to_repository = false
 prerelease = true
 parser_angular_default_level_bump = "patch"
 parser_angular_patch_types = "fix,perf,docs,chore"
-build_command = false
+build_command = "poetry build"
 # 'pip install pre-commit && pip install poetry && poetry build'
