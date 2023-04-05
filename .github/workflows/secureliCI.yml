@@ -74,10 +74,10 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.ADMIN_TOKEN_SASCHA }}
       run: |
-        pip install requests jinja2 poetry
+        pip install requests jinja2 poetry python-semantic-release
         poetry build
         poetry install
-        export secureliVersion=$(poetry version | awk '{print $2}')
+        export secureliVersion$(semantic-release print-version --next)
         export secureliSha256=$(sha256sum dist/secureli-${secureliVersion}.tar.gz | awk '{print $1}')
         git config --global user.email "secureli-automation@slalom.com"
         git config --global user.name "Secureli Automation"
