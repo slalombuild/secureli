@@ -61,7 +61,7 @@ jobs:
         token: ${{ secrets.ADMIN_TOKEN_SASCHA }} # `GH_PAT` is a secret that contains your PAT
         path: homebrew-secureli
     - name: Homebrew Formula Generation
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       env:
         GH_TOKEN: ${{ secrets.ADMIN_TOKEN_SASCHA }}
       run: |
@@ -80,7 +80,7 @@ jobs:
         gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation"
 
     - name: Upload binaries to release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
