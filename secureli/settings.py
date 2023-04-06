@@ -1,126 +1,15 @@
-from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 
 import pydantic
 import yaml
-from pydantic import Field
 
-
-default_ignored_extensions = [
-    # Images
-    ".png",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".bmp",
-    ".tiff",
-    "psd",
-    # Videos
-    ".mp4",
-    ".mkv",
-    ".avi",
-    ".mov",
-    ".mpg",
-    ".vob",
-    # Audio
-    ".mp3",
-    ".aac",
-    ".wav",
-    ".flac",
-    ".ogg",
-    ".mka",
-    ".wma",
-    # Documents
-    ".pdf",
-    ".doc",
-    ".xls",
-    ".ppt",
-    ".docx",
-    ".odt",
-    ".drawio",
-    # Archives
-    ".zip",
-    ".rar",
-    ".7z",
-    ".tar",
-    ".iso",
-    # Databases
-    ".mdb",
-    ".accde",
-    ".frm",
-    ".sqlite",
-    # Executable
-    ".exe",
-    ".dll",
-    ".so",
-    ".class",
-    # Other
-    ".pyc",
-]
-
-
-class RepoFilesSettings(pydantic.BaseSettings):
-    """
-    Settings that adjust how SeCureLI evaluates the consuming repository.
-    """
-
-    max_file_size: int = Field(default=100000)
-    ignored_file_extensions: list[str] = Field(default=default_ignored_extensions)
-    exclude_file_patterns: list[str] = Field(default=[])
-
-
-class EchoLevel(str, Enum):
-    debug = "DEBUG"
-    info = "INFO"
-    warn = "WARN"
-    error = "ERROR"
-
-
-class EchoSettings(pydantic.BaseSettings):
-    """
-    Settings that affect how SeCureLI provides information to the user.
-    """
-
-    level: EchoLevel = Field(default=EchoLevel.error)
-
-
-class LanguageSupportSettings(pydantic.BaseSettings):
-    """
-    Settings that affect how SeCureLI performs language analysis and support.
-    """
-
-    command_timeout_seconds: int = Field(default=300)
-
-
-class PreCommitHook(pydantic.BaseSettings):
-    """
-    Hook settings for pre-commit.
-    """
-
-    id: str
-    arguments: Optional[list[str]] = Field(default=None)
-    additional_args: Optional[list[str]] = Field(default=None)
-    exclude_file_patterns: Optional[list[str]] = Field(default=None)
-
-
-class PreCommitRepo(pydantic.BaseSettings):
-    """
-    Repo settings for pre-commit.
-    """
-
-    url: str
-    hooks: list[PreCommitHook] = Field(default=[])
-    suppressed_hook_ids: list[str] = Field(default=[])
-
-
-class PreCommitSettings(pydantic.BaseSettings):
-    """
-    Various adjustments that affect how SeCureLI configures the pre-commit system.
-    """
-
-    repos: list[PreCommitRepo] = Field(default=[])
-    suppressed_repos: list[str] = Field(default=[])
+from secureli.repositories.settings import (
+    RepoFilesSettings,
+    EchoSettings,
+    LanguageSupportSettings,
+    PreCommitSettings,
+)
 
 
 def secureli_yaml_settings(

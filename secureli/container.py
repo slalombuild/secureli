@@ -10,6 +10,7 @@ from secureli.actions.yeti import YetiAction
 from secureli.actions.update import UpdateAction
 from secureli.repositories.repo_files import RepoFilesRepository
 from secureli.repositories.secureli_config import SecureliConfigRepository
+from secureli.repositories.settings import SecureliRepository
 from secureli.resources import read_resource
 from secureli.services.git_ignore import GitIgnoreService
 from secureli.services.language_analyzer import LanguageAnalyzerService
@@ -62,6 +63,8 @@ class Container(containers.DeclarativeContainer):
     running init and other derived data.
     """
     secureli_config_repository = providers.Factory(SecureliConfigRepository)
+
+    settings_repository = providers.Factory(SecureliRepository)
 
     # Abstractions
 
@@ -161,6 +164,7 @@ class Container(containers.DeclarativeContainer):
         echo=echo,
         logging=logging_service,
         scanner=scanner_service,
+        settings_repository=settings_repository,
     )
 
     """Update Action, representing what happens when the update command is invoked"""
