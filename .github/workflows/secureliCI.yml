@@ -63,6 +63,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
+        ref: main
         fetch-depth: 0
     - name: Checkout Secureli Homebrew Repo
       uses: actions/checkout@v3
@@ -75,9 +76,9 @@ jobs:
         GH_TOKEN: ${{ secrets.ADMIN_TOKEN_SASCHA }}
       run: |
         pip install requests jinja2 poetry python-semantic-release
-        poetry build
         poetry install
-        export secureliVersion=$(semantic-release print-version --next)
+        poetry build
+        export secureliVersion=$(semantic-release print-version --current)
         export secureliSha256=$(sha256sum dist/secureli-${secureliVersion}.tar.gz | awk '{print $1}')
         git config --global user.email "secureli-automation@slalom.com"
         git config --global user.name "Secureli Automation"
