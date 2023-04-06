@@ -78,7 +78,7 @@ jobs:
         pip install requests jinja2 poetry python-semantic-release
         poetry install
         poetry build
-        export secureliVersion=$(semantic-release print-version --next)
+        export secureliVersion=$(semantic-release print-version --current)
         export secureliSha256=$(sha256sum dist/secureli-${secureliVersion}.tar.gz | awk '{print $1}')
         git config --global user.email "secureli-automation@slalom.com"
         git config --global user.name "Secureli Automation"
