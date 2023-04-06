@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.0 (2023-04-06)
+### Feature
+* STFT-076: Secureli ignore - ability to suppress issues - auto prompt user ([#18](https://github.com/slalombuild/secureli/issues/18)) ([`c0178d3`](https://github.com/slalombuild/secureli/commit/c0178d3daaaa7f1f00f5ef595b25a1233d76bf2a))
+
 ## v0.1.6 (2023-04-05)
 
 
