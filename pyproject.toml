@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "secureli"
-version = "0.1.1"
+version = "0.1.6"
 description = "Secure Project Manager"
 authors = ["Tristan Leonard <tristanl@slalom.com>"]
 readme = "README.md"
@@ -10,7 +10,7 @@ secureli = "secureli.main:app"
 
 [tool.poe.tasks]
 coverage = ["test", { cmd = "coverage report" }]
-docker-build-app = "docker build -t secureli . --no-cache"
+docker-build-app = "docker build -t secureli . --progress=plain --no-cache"
 docker-build-homebrew = "docker build --build-arg mytoken=$HOMEBREW_GITHUB_API_TOKEN -t homebrew . -f homebrew_Dockerfile --no-cache --progress=plain"
 init = ["install", { cmd = "secureli init -y" }]
 install = "poetry install"
@@ -24,7 +24,6 @@ typer = {version = "^0.6.1", extras = ["all"]}
 pygments = "^2.13.0"
 dependency-injector = {version = "^4.40.0", extras = ["yaml"]}
 pydantic = "^1.10.2"
-pre-commit = "^2.20.0"
 jinja2 = "^3.1.2"
 
 [tool.pytest.ini_options]
@@ -38,6 +37,7 @@ black = "^22.10.0"
 identify = "^2.5.7"
 poethepoet = "^0.16.4"
 python-semantic-release = "^7.33.1"
+pre-commit = "^2.20.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -50,10 +50,10 @@ version_toml = [
 major_on_zero = true
 branch = "main"
 upload_to_PyPI = false
-upload_to_release = false
+upload_to_release = true
 upload_to_repository = false
 prerelease = true
 parser_angular_default_level_bump = "patch"
 parser_angular_patch_types = "fix,perf,docs,chore"
-build_command = false
+build_command = "poetry build"
 # 'pip install pre-commit && pip install poetry && poetry build'
