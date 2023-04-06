@@ -25,6 +25,12 @@ def mock_secureli_config() -> MagicMock:
 
 
 @pytest.fixture()
+def mock_settings_repository() -> MagicMock:
+    mock_settings_repository = MagicMock()
+    return mock_settings_repository
+
+
+@pytest.fixture()
 def mock_open(mocker: MockerFixture) -> MagicMock:
     mock_open = mocker.mock_open()
     mocker.patch("builtins.open", mock_open)

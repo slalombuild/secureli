@@ -9,7 +9,7 @@ template = environment.get_template("formula.txt")
 filename = "secureli.rb"
 secureliVersion = os.getenv("secureliVersion")
 secureliSha256 = os.getenv("secureliSha256")
-secureliPackageUrl = f"https://github.com/slalombuild/homebrew-secureli/releases/download/v{secureliVersion}/secureli-{secureliVersion}.tar.gz"
+secureliPackageUrl = f"https://github.com/slalombuild/secureli/releases/download/v{secureliVersion}/secureli-{secureliVersion}.tar.gz"
 secureliPackageDependencies = []
 secureliFormulaPath = "./homebrew-secureli/Formula"
 

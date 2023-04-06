@@ -8,7 +8,7 @@ import pathspec
 import pydantic
 import yaml
 
-from secureli.settings import PreCommitSettings, PreCommitRepo
+from secureli.repositories.settings import PreCommitSettings, PreCommitRepo
 from secureli.utilities.patterns import combine_patterns
 from secureli.resources.slugify import slugify
 
