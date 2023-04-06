@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "secureli"
-version = "0.2.0"
+version = "0.2.1"
 description = "Secure Project Manager"
 authors = ["Tristan Leonard <tristanl@slalom.com>"]
 readme = "README.md"
