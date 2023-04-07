@@ -51,9 +51,6 @@ secureliPackageVersions, error = filterPackageVersions.communicate()
 
 decodedSecureliPackageVersions = secureliPackageVersions.decode("utf-8").split()
 
-print(decodedSecureliPackageNames)
-print(decodedSecureliPackageVersions)
-
 # This loops through all packages that secureli requires to be properly built
 # It then outputs the package information to a dictionary that will be templated into a Homebrew formula for end-user consumption
 for packageName, packageVersion in zip(
