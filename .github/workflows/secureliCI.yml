@@ -97,7 +97,7 @@ jobs:
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     - name: Install GH
       run: brew install gh
-    - name: Set up Securli
+    - name: Set up Secureli
       run: |
         echo $HOMEBREW_GITHUB_API_TOKEN > securelitoken.txt
         gh auth login --with-token --git-protocol https -h github.com < securelitoken.txt
