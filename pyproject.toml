@@ -24,6 +24,8 @@ pygments = "^2.13.0"
 dependency-injector = {version = "^4.40.0", extras = ["yaml"]}
 pydantic = "^1.10.2"
 jinja2 = "^3.1.2"
+pathspec = "^0.10.1"
+cfgv = "^3.3.1"
 
 [tool.pytest.ini_options]
 addopts = "-p no:cacheprovider"
@@ -54,5 +56,4 @@ upload_to_repository = false
 prerelease = true
 parser_angular_default_level_bump = "patch"
 parser_angular_patch_types = "fix,perf,docs,chore"
-build_command = "poetry build"
-# 'pip install pre-commit && pip install poetry && poetry build'
+build_command = "poetry install && poetry build"

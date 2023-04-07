@@ -22,6 +22,7 @@ getPackageNames = subprocess.Popen(
 filterPackageNames = subprocess.Popen(
     ["awk", "{print $1}"], stdin=getPackageNames.stdout, stdout=subprocess.PIPE
 )
+
 getPackageNames.stdout.close()
 
 secureliPackageNames, error = filterPackageNames.communicate()
@@ -31,14 +32,27 @@ decodedSecureliPackageNames = secureliPackageNames.decode("utf-8").split()
 getPackageVersions = subprocess.Popen(
     ["poetry", "show", "--only", "main"], stdout=subprocess.PIPE
 )
-filterPackageVersions = subprocess.Popen(
-    ["awk", "{print $2}"], stdin=getPackageVersions.stdout, stdout=subprocess.PIPE
+
+# When a package is outdated, Poetry adds an exclamation point to the version output. 
+# For automation purposes we need to remove this
+removeExtraCharacters = subprocess.Popen(
+    ["sed", 's|[(!)]||g'], stdin=getPackageVersions.stdout, stdout=subprocess.PIPE
 )
+
 getPackageVersions.stdout.close()
+
+filterPackageVersions = subprocess.Popen(
+    ["awk", "{print $2}"], stdin=removeExtraCharacters.stdout, stdout=subprocess.PIPE
+)
+
+removeExtraCharacters.stdout.close()
 
 secureliPackageVersions, error = filterPackageVersions.communicate()
 
 decodedSecureliPackageVersions = secureliPackageVersions.decode("utf-8").split()
+
+print(decodedSecureliPackageNames)
+print(decodedSecureliPackageVersions)
 
 # This loops through all packages that secureli requires to be properly built
 # It then outputs the package information to a dictionary that will be templated into a Homebrew formula for end-user consumption
