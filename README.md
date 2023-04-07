@@ -284,6 +284,22 @@ Any library provided via PyPI should be considered a 3rd party library. Examples
 
 Third party dependencies **shall not be unit tested**, but efforts will be taken to unit test their consumers by mocking these dependencies. Traditionally, this will take the place of creating and leveraging Abstractions (see above).
 
+### Dockerfiles
+Docker is used in this project solely to provide an isolated environment for testing Secureli and testing other projects with Secureli. The process is:
+
+- run the docker command to build it
+- if it builds successfully, congrats you're done
+
+The project assumes you have a functioning docker install. These have been tested with the Colima engine. There are commands built into the pyproject.toml file to run these dockerfile builds. To build one, run `poetry run poe docker-build-dockerfilename`.
+
+Current Dockerfiles
+- secureli_Dockerfile - builds secureli and runs the same tests and verifications as the cicd pipeline
+- homebrew_Dockerfile: Designed to verify secureli functionality
+  - installs Homebrew(linuxbrew) on a Debian images
+  - taps our private secureli homebrew tap
+  - installs Secureli
+  - Checks out the public pip repo, inits secureli into the repo and runs a scan
+
 ## License
 
 Copyright 2023 Slalom, Inc.
@@ -292,7 +308,7 @@ Copyright 2023 Slalom, Inc.
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-     http://www.apache.org/licenses/LICENSE-2.0
+  [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0)
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
