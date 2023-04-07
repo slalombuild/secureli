@@ -33,10 +33,10 @@ getPackageVersions = subprocess.Popen(
     ["poetry", "show", "--only", "main"], stdout=subprocess.PIPE
 )
 
-# When a package is outdated, Poetry adds an exclamation point to the version output. 
+# When a package is outdated, Poetry adds an exclamation point to the version output.
 # For automation purposes we need to remove this
 removeExtraCharacters = subprocess.Popen(
-    ["sed", 's|[(!)]||g'], stdin=getPackageVersions.stdout, stdout=subprocess.PIPE
+    ["sed", "s|[(!)]||g"], stdin=getPackageVersions.stdout, stdout=subprocess.PIPE
 )
 
 getPackageVersions.stdout.close()
