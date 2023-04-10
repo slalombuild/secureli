@@ -83,11 +83,11 @@ def scan(
 
 
 @app.command(hidden=True)
-def yeti(color: Color = Color.BLUE):
+def build(color: Color = Color.BLUE):
     """
-    Arrange a visit with our fearless security leader!
+    (Easter Egg) Arrange a visit with our fearless security leader!
     """
-    container.yeti_action().print_yeti(color)
+    container.build_action().print_build(color)
 
 
 @app.command()

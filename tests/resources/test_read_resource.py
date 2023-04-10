@@ -20,7 +20,7 @@ def read_resource(mock_open_resource: MagicMock) -> Callable[[str], str]:
 def test_that_read_resource_opens_specified_file_in_files_folder(
     read_resource: Callable[[str], str], mock_open_resource: MagicMock
 ):
-    result = read_resource("yeti.txt")
+    result = read_resource("build.txt")
 
     assert result == "sample_data"
 

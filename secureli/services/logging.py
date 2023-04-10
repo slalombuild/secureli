@@ -34,7 +34,7 @@ class LogAction(str, Enum):
 
     scan = "SCAN"
     init = "INIT"
-    yeti = "YETI"
+    build = "YETI"
     update = "UPDATE"
 
 
