@@ -8,7 +8,7 @@ from secureli.abstractions.echo import Color
 
 @pytest.fixture()
 def mock_build_data() -> str:
-    return "MOCK YETI"
+    return "MOCK BUILD"
 
 
 @pytest.fixture()
