@@ -1,7 +1,7 @@
 [![SeCureLI Logo](https://repository-images.githubusercontent.com/606206029/aa43fa10-689b-4f8a-a6dc-2e9ed06d9e2d)]
 
 <h1 align="center">SeCureLI</h1>
-<p style="text-align: center;"><strong>The Builder's Security CLI</strong></p>
+<strong>The Builder's Security CLI</strong>
 
 SeCureLI is a tool that enables you to experience the delight of building products by helping you get ideas from your head into working software as frictionlessly as possible, in a reliable, secure, scalable, and observable way.
 SeCureLI:
