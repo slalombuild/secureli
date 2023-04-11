@@ -89,7 +89,7 @@ jobs:
         git push origin secureli-${secureliVersion}-formula-generation --repo https://github.com/slalombuild/homebrew-secureli.git
         gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation"
   test-osx:
-    runs-on: macos-latest
+    runs-on: macos-11
     steps:
     - name: Set up Homebrew
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
