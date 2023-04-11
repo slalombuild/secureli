@@ -47,8 +47,8 @@ Do no setup for this requirement unless prompted to do so, and then follow the i
   - Run these three commands (or something like them) in your terminal to add Homebrew to your PATH:
 
 ```commandline
-    echo '# Set PATH, MANPATH, etc., for Homebrew.' >> /Users/tristanl/.zprofile
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/tristanl/.zprofile
+    echo '# Set PATH, MANPATH, etc., for Homebrew.' >> /Users/[username]/.zprofile
+    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/[username]/.zprofile
     eval "$(/opt/homebrew/bin/brew shellenv)"
 ```
 
@@ -60,7 +60,7 @@ Do no setup for this requirement unless prompted to do so, and then follow the i
 
 ```commandline
 echo '# Add Poetry bin directory to the PATH' >> /Users/tristanl/.zprofile
-echo 'export PATH="/Users/tristanl/.local/bin:$PATH"' >> /Users/tristanl/.zprofile
+echo 'export PATH="/Users/[username]/.local/bin:$PATH"' >> /Users/[username]/.zprofile
 source ~/.zprofile
 ```
 
@@ -100,8 +100,8 @@ source ~/.zprofile
   - For Script path, type `secureli/main.py`
   - For Parameters, type `init`
   - For Working directory, use the file browser to select the outer “secureli” folder, NOT the inner folder.
-    - **Bad** Example: /Users/tristan/Development/secureli**/secureli/**
-    - **Good** Example: /Users/tristan/Development/secureli/
+    - **Bad** Example: /Users/[username]/Development/secureli**/secureli/**
+    - **Good** Example: /Users/[username]/Development/secureli/
     - It will appear as an absolute path, but hopefully should be relative for others
   - Hit “OK” to save and select your first Run/Debug configuration
 
@@ -146,8 +146,8 @@ Already installed for Python language and up to date
     - Parameters: `scan`
   - Name: Update
     - Parameters: `update`
-  - Name: Yeti
-    - Parameters: `yeti`
+  - Name: build
+    - Parameters: `build`
 - Test each of these configurations and see that the expected “not yet implemented” message is shown
 
 # Usage
