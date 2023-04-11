@@ -1,4 +1,4 @@
-[SeCureLI Logo](https://repository-images.githubusercontent.com/606206029/aa43fa10-689b-4f8a-a6dc-2e9ed06d9e2d)
+![SeCureLI Logo](https://repository-images.githubusercontent.com/606206029/aa43fa10-689b-4f8a-a6dc-2e9ed06d9e2d)
 
 <h1 align="center">SeCureLI</h1>
 <strong>The Builder's Security CLI</strong>
