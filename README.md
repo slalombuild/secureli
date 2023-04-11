@@ -1,4 +1,4 @@
-[![SeCureLI Logo](https://repository-images.githubusercontent.com/606206029/aa43fa10-689b-4f8a-a6dc-2e9ed06d9e2d)]
+[SeCureLI Logo](https://repository-images.githubusercontent.com/606206029/aa43fa10-689b-4f8a-a6dc-2e9ed06d9e2d)
 
 <h1 align="center">SeCureLI</h1>
 <strong>The Builder's Security CLI</strong>
@@ -9,6 +9,7 @@ SeCureLI:
 - scans your local repo for secrets before you commit code to a remote repository
 - installs linters based on the code of your project to support security and coding best practices
 - configures all the hooks needed so you don’t have to
+
 SeCureLI isn’t a magic tool that makes things secure because you have it. It enables a lot of other tools that you could set up individually and helps you as a builder write better code.
 
 # Environment Requirements
