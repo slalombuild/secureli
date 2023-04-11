@@ -89,12 +89,24 @@ jobs:
         git push origin secureli-${secureliVersion}-formula-generation --repo https://github.com/slalombuild/homebrew-secureli.git
         gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation"
   test-osx:
-    runs-on: macos-11
+    runs-on: macos-latest
     steps:
     - name: Set up Homebrew
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     - name: Install GH
       run: brew install gh
+    - name: Prep for python 3.11.3 install # Removes python 3.11.3 to avoid conflict with homebrew python
+      run: |
+        rm -rf '/usr/local/bin/2to3'
+        rm -rf '/usr/local/bin/2to3-3.11'
+        rm -rf '/usr/local/bin/idle3'
+        rm -rf '/usr/local/bin/idle3.11'
+        rm -rf '/usr/local/bin/pydoc3'
+        rm -rf '/usr/local/bin/pydoc3.11'
+        rm -rf '/usr/local/bin/python3'
+        rm -rf '/usr/local/bin/python3-config'
+        rm -rf '/usr/local/bin/python3.11'
+        rm -rf '/usr/local/bin/python3.11-config'
     - name: Set up Secureli
       run: |
         echo $HOMEBREW_GITHUB_API_TOKEN > securelitoken.txt
