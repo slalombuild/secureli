@@ -4,6 +4,7 @@
 <strong>The Builder's Security CLI</strong>
 
 SeCureLI is a tool that enables you to experience the delight of building products by helping you get ideas from your head into working software as frictionlessly as possible, in a reliable, secure, scalable, and observable way.
+
 SeCureLI:
 - scans your local repo for secrets before you commit code to a remote repository
 - installs linters based on the code of your project to support security and coding best practices
