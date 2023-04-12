@@ -18,7 +18,7 @@ RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/instal
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
 RUN brew install gh
 RUN brew tap slalombuild/secureli https://$mytoken@github.com/slalombuild/homebrew-secureli
-RUN HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install secureli
+RUN HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew install secureli
 RUN git clone https://github.com/pypa/pip pip
 WORKDIR pip
 RUN secureli init --yes
