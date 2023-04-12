@@ -1,4 +1,16 @@
-# SeCureLI
+[![SeCureLI Logo](https://repository-images.githubusercontent.com/606206029/aa43fa10-689b-4f8a-a6dc-2e9ed06d9e2d)](https://github.com/slalombuild/secureli)
+
+<h1 align="center">SeCureLI</h1>
+<strong>The Builder's Security CLI</strong>
+
+SeCureLI is a tool that enables you to experience the delight of building products by helping you get ideas from your head into working software as frictionlessly as possible, in a reliable, secure, scalable, and observable way.
+
+SeCureLI:
+- scans your local repo for secrets before you commit code to a remote repository
+- installs linters based on the code of your project to support security and coding best practices
+- configures all the hooks needed so you don’t have to
+
+SeCureLI isn’t a magic tool that makes things secure because you have it. It enables a lot of other tools that you could set up individually and helps you as a builder write better code.
 
 # Environment Requirements
 
@@ -35,8 +47,8 @@ Do no setup for this requirement unless prompted to do so, and then follow the i
   - Run these three commands (or something like them) in your terminal to add Homebrew to your PATH:
 
 ```commandline
-    echo '# Set PATH, MANPATH, etc., for Homebrew.' >> /Users/tristanl/.zprofile
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/tristanl/.zprofile
+    echo '# Set PATH, MANPATH, etc., for Homebrew.' >> /Users/[username]/.zprofile
+    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/[username]/.zprofile
     eval "$(/opt/homebrew/bin/brew shellenv)"
 ```
 
@@ -48,7 +60,7 @@ Do no setup for this requirement unless prompted to do so, and then follow the i
 
 ```commandline
 echo '# Add Poetry bin directory to the PATH' >> /Users/tristanl/.zprofile
-echo 'export PATH="/Users/tristanl/.local/bin:$PATH"' >> /Users/tristanl/.zprofile
+echo 'export PATH="/Users/[username]/.local/bin:$PATH"' >> /Users/[username]/.zprofile
 source ~/.zprofile
 ```
 
@@ -88,8 +100,8 @@ source ~/.zprofile
   - For Script path, type `secureli/main.py`
   - For Parameters, type `init`
   - For Working directory, use the file browser to select the outer “secureli” folder, NOT the inner folder.
-    - **Bad** Example: /Users/tristan/Development/secureli**/secureli/**
-    - **Good** Example: /Users/tristan/Development/secureli/
+    - **Bad** Example: /Users/[username]/Development/secureli**/secureli/**
+    - **Good** Example: /Users/[username]/Development/secureli/
     - It will appear as an absolute path, but hopefully should be relative for others
   - Hit “OK” to save and select your first Run/Debug configuration
 
@@ -134,8 +146,8 @@ Already installed for Python language and up to date
     - Parameters: `scan`
   - Name: Update
     - Parameters: `update`
-  - Name: Yeti
-    - Parameters: `yeti`
+    - Name: build
+    - Parameters: `build`
 - Test each of these configurations and see that the expected “not yet implemented” message is shown
 
 # Usage

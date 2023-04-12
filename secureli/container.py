@@ -6,7 +6,7 @@ from secureli.abstractions.pre_commit import PreCommitAbstraction
 from secureli.actions.action import ActionDependencies
 from secureli.actions.initializer import InitializerAction
 from secureli.actions.scan import ScanAction
-from secureli.actions.yeti import YetiAction
+from secureli.actions.build import BuildAction
 from secureli.actions.update import UpdateAction
 from secureli.repositories.repo_files import RepoFilesRepository
 from secureli.repositories.secureli_config import SecureliConfigRepository
@@ -30,8 +30,8 @@ class Container(containers.DeclarativeContainer):
     """The secureli input configuration, which drives how secureli performs its tasks"""
     config = providers.Configuration()
 
-    """Data for the 'yeti' command, as drawn from the resources"""
-    yeti_data = providers.Callable(read_resource, resource_name="yeti.txt")
+    """Data for the 'build' command, as drawn from the resources"""
+    build_data = providers.Callable(read_resource, resource_name="build.txt")
 
     settings = providers.Factory(Settings)
 
@@ -142,10 +142,10 @@ class Container(containers.DeclarativeContainer):
         pre_commit=pre_commit_abstraction,
     )
 
-    """The Yeti Action, used to render the yeti_data using the echo"""
-    yeti_action = providers.Factory(
-        YetiAction,
-        yeti_data=yeti_data,
+    """The Build Action, used to render the build_data using the echo"""
+    build_action = providers.Factory(
+        BuildAction,
+        build_data=build_data,
         echo=echo,
         logging=logging_service,
     )

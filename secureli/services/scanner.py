@@ -119,8 +119,6 @@ class ScannerService:
             for file in files:
                 failures.append(Failure(id=id, file=file, repo=repo))
 
-        print("Failures: {}".format(failures))
-
         return ScanOuput(failures=failures)
 
     def _get_single_failure_output(
