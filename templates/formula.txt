@@ -7,6 +7,7 @@ class Secureli < Formula
     url "{{ secureliPackageUrl }}", :using => GitHubPrivateRepositoryReleaseDownloadStrategy
     version "{{ secureliVersion }}"
     sha256 "{{ secureliSha256 }}"
+    license "Apache-2.0"
 
     depends_on "pre-commit"
 
