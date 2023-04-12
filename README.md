@@ -146,7 +146,7 @@ Already installed for Python language and up to date
     - Parameters: `scan`
   - Name: Update
     - Parameters: `update`
-  - Name: build
+    - Name: build
     - Parameters: `build`
 - Test each of these configurations and see that the expected “not yet implemented” message is shown
 
