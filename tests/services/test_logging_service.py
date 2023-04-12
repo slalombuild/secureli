@@ -93,6 +93,6 @@ def test_that_logging_service_success_logs_none_for_hook_config_if_not_initializ
         overall_language=None, version_installed=None
     )
 
-    log_entry = logging_service.success(LogAction.yeti)
+    log_entry = logging_service.success(LogAction.build)
 
     assert log_entry.hook_config is None

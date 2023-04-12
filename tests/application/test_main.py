@@ -26,10 +26,10 @@ def test_that_init_creates_initializer_action_and_executes(mock_container: Magic
     mock_container.initializer_action.assert_called_once()
 
 
-def test_that_yeti_creates_yeti_action_and_executes(mock_container: MagicMock):
-    secureli.main.yeti()
+def test_that_build_creates_build_action_and_executes(mock_container: MagicMock):
+    secureli.main.build()
 
-    mock_container.yeti_action.assert_called_once()
+    mock_container.build_action.assert_called_once()
 
 
 def test_that_scan_is_tbd(mock_container: MagicMock):

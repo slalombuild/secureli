@@ -37,7 +37,7 @@ jobs:
       run: |
         poetry run poe precommit
         poetry run poe coverage
-        poetry run secureli yeti
+        poetry run secureli build
     - name: Semantic Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
