@@ -4,11 +4,7 @@ class Secureli < Formula
     include Language::Python::Virtualenv
     desc "SeCureLI is a tool that enables you to experience the delight of building products by helping you get ideas from your head into working software as frictionlessly as possible, in a reliable, secure, scalable, and observable way"
     homepage "https://github.com/slalombuild/secureli"
-    url "{{ secureliPackageUrl }}",
-    headers: [
-      "Accept: application/octet-stream",
-      "Authorization: bearer #{ENV["HOMEBREW_GITHUB_API_TOKEN"]}"
-    ]
+    url "{{ secureliPackageUrl }}"
     version "{{ secureliVersion }}"
     sha256 "{{ secureliSha256 }}"
     license "Apache-2.0"
