@@ -110,15 +110,9 @@ jobs:
         rm -rf '/usr/local/bin/python3.11-config'
     - name: Set up Secureli
       run: |
-        # echo $HOMEBREW_GITHUB_API_TOKEN > securelitoken.txt
-        # gh auth login --with-token --git-protocol https -h github.com < securelitoken.txt
-        # gh auth setup-git
         brew tap slalombuild/secureli
         HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install secureli
-        # rm -f securelitoken.txt
-      # env:
-      #   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.TAP_TOKEN }}
-    - name: Checkout private tools
+    - name: Checkout test repo
       uses: actions/checkout@v3
       with:
         repository: pypa/pip
