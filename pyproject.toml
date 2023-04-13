@@ -56,6 +56,6 @@ upload_to_release = true
 upload_to_repository = false
 prerelease = true
 parser_angular_default_level_bump = "patch"
-parser_angular_patch_types = "fix,perf,docs,chore"
+parser_angular_patch_types = "fix,perf,docs,chore,chore(release)"
 build_command = "poetry build"
 commit_subject = "chore(release): Release v{version} [skip ci]"
