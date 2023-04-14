@@ -70,13 +70,13 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: slalombuild/homebrew-secureli
-        token: ${{ secrets.GITHUB_TOKEN }} # `GH_PAT` is a secret that contains your PAT
+        token: ${{ secrets.ADMIN_TOKEN_SASCHA }} # `GH_PAT` is a secret that contains your PAT
         path: homebrew-secureli
         ref: main
         fetch-depth: 0
     - name: Homebrew Formula Generation
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.ADMIN_TOKEN_SASCHA }}
       run: ./scripts/secureli-deployment.sh
   test-osx:
     runs-on: macos-latest
