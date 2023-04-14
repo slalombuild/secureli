@@ -15,8 +15,8 @@ else
     export secureliSha256=$(sha256sum ./secureli-${secureliVersion}.tar.gz | awk '{print $1}')
     git config --global user.email "secureli-automation@slalom.com"
     git config --global user.name "Secureli Automation"
-    cd homebrew-secureli
     python ./scripts/get-secureli-dependencies.py
+    cd homebrew-secureli
     git checkout -b "secureli-${secureliVersion}-formula-generation"
     git add ./Formula/secureli.rb
     git commit -m "Creating pull request with latest Secureli formula for version ${secureliVersion}"
