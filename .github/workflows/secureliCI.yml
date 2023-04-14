@@ -72,7 +72,7 @@ jobs:
         repository: slalombuild/homebrew-secureli
         token: ${{ secrets.ADMIN_TOKEN_SASCHA }} # `GH_PAT` is a secret that contains your PAT
         path: homebrew-secureli
-        ref: main
+        # ref: main
         fetch-depth: 0
     - name: Homebrew Formula Generation
       env:
