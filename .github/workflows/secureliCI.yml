@@ -70,26 +70,14 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: slalombuild/homebrew-secureli
-        token: ${{ secrets.ADMIN_TOKEN_SASCHA }} # `GH_PAT` is a secret that contains your PAT
+        token: ${{ secrets.GITHUB_TOKEN }} # `GH_PAT` is a secret that contains your PAT
         path: homebrew-secureli
+        ref: main
+        fetch-depth: 0
     - name: Homebrew Formula Generation
       env:
-        GH_TOKEN: ${{ secrets.ADMIN_TOKEN_SASCHA }}
-      run: |
-        pip install requests jinja2 poetry python-semantic-release
-        export secureliVersion=$(semantic-release print-version --current)
-        gh release download v$secureliVersion
-        export secureliSha256=$(sha256sum ./secureli-${secureliVersion}.tar.gz | awk '{print $1}')
-        git config --global user.email "secureli-automation@slalom.com"
-        git config --global user.name "Secureli Automation"
-        python ./scripts/get-secureli-dependencies.py
-        cd homebrew-secureli
-        git checkout -b "secureli-${secureliVersion}-formula-generation"
-        git add ./Formula/secureli.rb
-        git commit -m "Creating pull request with latest Secureli formula for version ${secureliVersion}"
-        git push origin secureli-${secureliVersion}-formula-generation --repo https://github.com/slalombuild/homebrew-secureli.git
-        gh release create ${secureliVersion}
-        gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation"
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: ./scripts/secureli-deployment.sh
   test-osx:
     runs-on: macos-latest
     steps:
