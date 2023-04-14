@@ -64,6 +64,23 @@ echo 'export PATH="/Users/[username]/.local/bin:$PATH"' >> /Users/[username]/.zp
 source ~/.zprofile
 ```
 
+# Secureli Installation via Homebrew
+
+Current the only packaging tool that is supported for Secureli is Homebrew. To install secureli via homebrew, issue the following commands
+
+```commandline
+brew tap slalombuild/secureli
+brew install secureli
+```
+
+# Upgrading Secureli via Homebrew
+
+To update secureli, you can use the standard homebrew update command to pull down the latest formula
+
+```commandline
+brew update
+```
+
 - Install [PyCharm Community Edition](https://www.jetbrains.com/pycharm/download/#section=mac)
   - Launch PyCharm and create a new sample project
   - Use the Tools menu and select `Create Command-line Launcher...`
