@@ -3,6 +3,7 @@ name = "secureli"
 version = "0.2.14"
 description = "Secure Project Manager"
 authors = ["Tristan Leonard <tristanl@slalom.com>"]
+license = "Apache-2.0"
 readme = "README.md"
 
 [tool.poetry.scripts]
