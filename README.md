@@ -13,7 +13,7 @@ SeCureLI:
 
 SeCureLI isn’t a magic tool that makes things secure because you have it. It enables a lot of other tools that you could set up individually and helps you as a builder write better code.
 
-Looking to contribute? Read our [CONTRIBUTING.md](https://github.xom/slalombuild/secureli/lob/main/CONTRIBUTING.md)
+Looking to contribute? Read our [CONTRIBUTING.md](https://github.com/slalombuild/secureli/blob/main/CONTRIBUTING.md)
 
 # Installation and Usage
 
