@@ -12,7 +12,6 @@ Note that, as of today, this repo is being built on and tested against macOS 12.
 
 SeCureLI has Slalom-maintained templates for security management of the following languages.
 
-- C# .Net
 - Java
 - Python
 - Terraform
