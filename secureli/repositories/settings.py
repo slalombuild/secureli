@@ -152,7 +152,8 @@ class SecureliRepository:
         }
 
         # Converts EchoLevel to string
-        settings_dict["echo"]["level"] = "{}".format(settings_dict["echo"]["level"])
+        if settings_dict.get("echo"):
+            settings_dict["echo"]["level"] = "{}".format(settings_dict["echo"]["level"])
 
         with open(self.secureli_file_path, "w") as f:
             yaml.dump(settings_dict, f)
