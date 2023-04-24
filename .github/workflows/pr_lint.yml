@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: Slashgear/action-check-pr-title@v4.3.0
+    - uses: morrisoncole/pr-lint-action@v1.7.0
       with:
-        regexp: "(chore|style|test|feat|fix|docs): .++" # Regex the title should match.
-        helpMessage: "Example: 'feat: example of title'"
+        title-regex: "(chore|style|test|feat|fix|docs): .++"
+        on-failed-regex-fail-action: true
