@@ -46,7 +46,7 @@ jobs:
         pip install python-semantic-release
         git config user.name github-actions
         git config user.email github-actions@github.com
-        semantic-release publish --skip-ci
+        semantic-release publish
         # A NOOP run on feature branches
     - name: Verify Semantic Release
       if: github.ref != 'refs/heads/main'
@@ -56,6 +56,25 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         semantic-release publish --noop
+
+  secureli-publish:
+    name: Upload release to PyPI
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+    steps:
+    - name: Checkout Secureli Repo
+      uses: actions/checkout@v3
+      with:
+        ref: main
+        fetch-depth: 0
+    - run: |
+        pip install poetry
+        poetry install
+        poetry build
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
