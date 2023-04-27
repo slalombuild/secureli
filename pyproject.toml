@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "secureli"
-version = "0.2.16"
+version = "0.2.17"
 description = "Secure Project Manager"
 authors = ["Caleb Tonn <caleb.tonn@slalom.com>"]
 license = "Apache-2.0"
