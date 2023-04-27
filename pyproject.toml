@@ -13,6 +13,7 @@ secureli = "secureli.main:app"
 coverage = ["test", { cmd = "coverage report" }]
 docker-build-app = "docker build -t secureli . -f Dockerfile_secureli --progress=plain --no-cache"
 docker-build-homebrew = "docker build --build-arg mytoken=$HOMEBREW_GITHUB_API_TOKEN -t homebrew . -f Dockerfile_homebrew --no-cache --progress=plain"
+docker-build-pypi = "docker build -t pypi . -f Dockerfile_pypi --no-cache --progress=plain"
 init = ["install", { cmd = "secureli init -y" }]
 install = "poetry install"
 lint = "black --check ."
