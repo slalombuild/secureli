@@ -59,6 +59,7 @@ jobs:
 
   secureli-publish:
     name: Upload release to PyPI
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
