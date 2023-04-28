@@ -2,6 +2,9 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.18 (2023-04-28)
+
+
 ## v0.2.17 (2023-04-27)
 ### Fix
 * Resolves setting save failure on empty secureli.yaml ([#83](https://github.com/slalombuild/secureli/issues/83)) ([`6b80c20`](https://github.com/slalombuild/secureli/commit/6b80c2047049b1495e9ab824ee4a9c9dc0cf8caf))
