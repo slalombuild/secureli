@@ -12,9 +12,21 @@ secureliSha256 = os.getenv("secureliSha256")
 secureliPackageUrl = f"https://github.com/slalombuild/secureli/releases/download/v{secureliVersion}/secureli-{secureliVersion}.tar.gz"
 secureliPackageDependencies = []
 secureliFormulaPath = "./homebrew-secureli/Formula"
-# Poetry does not do a good job of filtering out package sub-dependencies
-# As a result, we need to filter out the packages ourself that the Secureli Formula does not need
-packagesToRemoveFromFormula = ["colorama", "six", "shellingham"]
+# Filter out additional packages that are needed for the pip package, but not the homebrew formula
+packagesToRemoveFromFormula = [
+    "colorama",
+    "six",
+    "shellingham",
+    "distlib",
+    "filelock",
+    "identify",
+    "nodeenv",
+    "platformdirs",
+    "setuptools",
+    "virtualenv",
+    "cfgv",
+    "pre-commit",
+]
 
 secureliPackageNamesCmd = "poetry show --only main | awk '{print $1}'"
 secureliPackageVersionsCmd = "poetry show --only main | awk '{print $2}'"
