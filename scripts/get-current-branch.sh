@@ -2,7 +2,7 @@
 set -exo pipefail
 # This script detects the git branch name from the environment and
 # transforms it into a shortened label for use by the build and deployment process.
-# It also validates the social contract of having a jira story for each
+# It also validates the social contract of having a github issue for each
 
 # The value returned by this script is:
 #   branch: the abbreviated, formatted branch name based on the story number, e.g. "abc1234" or "main"
@@ -23,10 +23,10 @@ else
 fi
 
 # Check if short name work
-if [[ $branch == "main" || $branch =~ ^stft[0-9][0-9][0-9]$ ]]; then
+if [[ $branch == "main" || $branch =~ ^secureli[0-9][0-9]$ ]]; then
   echo "The branch name is a valid pattern."
 else
-  echo "error The branch name ${branch} does not meet naming requirements. It should look something like feature/stft-123-mybranchname."
+  echo "error The branch name ${branch} does not meet naming requirements. It should look something like feature/secureli-123-mybranchname."
   exit 1
 fi
 
