@@ -1,7 +1,5 @@
 FROM debian
 WORKDIR app
-ARG mytoken
-#ENV HOMEBREW_GITHUB_API_TOKEN=$mytoken
 
 # Install deps
 RUN apt-get update && apt-get autoclean && \
@@ -18,4 +16,4 @@ RUN pip3 --version && pip3 install secureli
 RUN git clone https://github.com/pypa/pip pip
 WORKDIR pip
 RUN secureli init --yes
-RUN secureli scan  --mode all-files
+RUN secureli scan  --mode all-files --yes
