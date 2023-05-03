@@ -46,4 +46,10 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Test with Pypi
-        run: pip3 --version #what do we have on the macos image
+        run: |
+          pip3 --version #what do we have on the macos image
+          pip3 install secureli
+          git clone https://github.com/pypa/pip pip
+          cd pip
+          secureli init --yes
+          secureli scan  --mode all-files --yes
