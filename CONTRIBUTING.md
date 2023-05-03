@@ -218,9 +218,13 @@ The project assumes you have a functioning docker install. These have been teste
 
 Current Dockerfiles
 
-- secureli_Dockerfile - builds secureli and runs the same tests and verifications as the cicd pipeline
-- homebrew_Dockerfile: Designed to verify secureli functionality
+- Dockerfile_secureli - builds secureli and runs the same tests and verifications as the cicd pipeline
+- Dockerfile_homebrew: Designed to verify secureli functionality
   - installs Homebrew(linuxbrew) on a Debian images
   - taps our private secureli homebrew tap
+  - installs Secureli
+  - Checks out the public pip repo, inits secureli into the repo and runs a scan
+- Dockerfile_pypi
+  - installs pip
   - installs Secureli
   - Checks out the public pip repo, inits secureli into the repo and runs a scan
