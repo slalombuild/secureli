@@ -1,0 +1,55 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Integration Testing
+
+on:
+  push:
+    branches:
+      - main
+      - feature/**
+
+jobs:
+  test-homebrew-osx:
+    runs-on: macos-latest
+    steps:
+    - name: Test with Homebrew
+      run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    - name: Install GH
+      run: brew install gh
+    - name: Prep for python 3.11.3 install # Removes python 3.11.3 to avoid conflict with homebrew python
+      run: |
+        rm -rf '/usr/local/bin/2to3'
+        rm -rf '/usr/local/bin/2to3-3.11'
+        rm -rf '/usr/local/bin/idle3'
+        rm -rf '/usr/local/bin/idle3.11'
+        rm -rf '/usr/local/bin/pydoc3'
+        rm -rf '/usr/local/bin/pydoc3.11'
+        rm -rf '/usr/local/bin/python3'
+        rm -rf '/usr/local/bin/python3-config'
+        rm -rf '/usr/local/bin/python3.11'
+        rm -rf '/usr/local/bin/python3.11-config'
+    - name: Set up Secureli
+      run: |
+        brew tap slalombuild/secureli
+        HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install secureli
+      # env:
+      #   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.TAP_TOKEN }}
+    - name: Checkout test repo
+      uses: actions/checkout@v3
+      with:
+        repository: pypa/pip
+        path: pip
+    - name: Init Secureli
+      run: cd pip && secureli init --yes && secureli scan
+  test-pypi-osx:
+    runs-on: macos-latest
+    steps:
+      - name: Test with Pypi
+        run: |
+          pip3 --version #what do we have on the macos image
+          pip3 install secureli
+          git clone https://github.com/pypa/pip pip
+          cd pip
+          secureli init --yes
+          secureli scan  --mode all-files --yes
