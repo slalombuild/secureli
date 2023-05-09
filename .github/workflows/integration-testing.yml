@@ -18,7 +18,9 @@ jobs:
       with:
         python-version: '3.10'
     - name: pip?
-      run: pip3 --version #any pip havers?
+      run: |
+        pip3 --version #any pip havers?
+        pip3 install secureli
 
   test-homebrew-osx:
     runs-on: macos-latest
