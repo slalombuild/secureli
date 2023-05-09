@@ -22,6 +22,10 @@ jobs:
         pip3 --version #any pip havers?
         pip3 install secureli
         git clone https://github.com/pypa/pip pip
+        cd pip
+        secureli init --yes
+        secureli scan  --mode all-files --yes
+
 
   test-homebrew-osx:
     runs-on: macos-latest
