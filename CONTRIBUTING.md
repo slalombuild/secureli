@@ -228,3 +228,25 @@ Current Dockerfiles
   - installs pip
   - installs Secureli
   - Checks out the public pip repo, inits secureli into the repo and runs a scan
+
+# Contributors
+A special thanks to everyone that has contributed to seCureLI so far:
+- Jon Allegre
+- Dan Arnold
+- Nava Atluri
+- Max Aussendorf
+- Sascha Bates
+- Elliot Benjamin
+- Joel Carpenter
+- Raul Centeno
+- Alex Diehl
+- Martin Gallegos
+- Jordan Hill
+- Kira Hollerman
+- Myung Kim
+- Tristan Leonard
+- Gabe Negron
+- Hartono Ramli
+- Jeff Schumacher
+- Caleb Tonn
+- Josh Werner
