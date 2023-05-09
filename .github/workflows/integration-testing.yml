@@ -19,6 +19,7 @@ jobs:
         python-version: '3.10'
     - name: Install Secureli
       run: |
+        set -x
         pip3 --version #any pip havers?
         pip3 install secureli
         git clone https://github.com/pypa/pip pip
