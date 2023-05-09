@@ -10,6 +10,14 @@ on:
       - feature/**
 
 jobs:
+  test-windows:
+    runs-on: windows-latest
+    steps:
+    - name: setup python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
   test-homebrew-osx:
     runs-on: macos-latest
     steps:
