@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.0 (2023-05-09)
+### Feature
+* Added list of project contributors ([#95](https://github.com/slalombuild/secureli/issues/95)) ([`f8ec871`](https://github.com/slalombuild/secureli/commit/f8ec871581efa591f4412024e88be2b59b2377a3))
+
 ## v0.2.21 (2023-05-04)
 
 
