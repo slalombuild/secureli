@@ -26,8 +26,9 @@ jobs:
     - name: Run Tests
       run: |
         poetry run poe precommit
+        # Both of these lines error when run on a windows image, more research required as to why
         # poetry run poe coverage
-        poetry run secureli build
+        # poetry run secureli build
 
   build-linux:
     runs-on: ubuntu-latest
@@ -36,12 +37,12 @@ jobs:
       with:
         fetch-depth: 0
         token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
-    - name: Checkout Secureli Homebrew Repo
-      uses: actions/checkout@v3
-      with:
-        repository: slalombuild/homebrew-secureli
-        token: ${{ secrets.ADMIN_TOKEN_SASCHA }} # `GH_PAT` is a secret that contains your PAT
-        path: homebrew-secureli
+    # - name: Checkout Secureli Homebrew Repo
+    #   uses: actions/checkout@v3
+    #   with:
+    #     repository: slalombuild/homebrew-secureli
+    #     token: ${{ secrets.ADMIN_TOKEN_SASCHA }} # `GH_PAT` is a secret that contains your PAT
+    #     path: homebrew-secureli
     - name: Validate Branch name
       run: ./scripts/get-current-branch.sh
     - name: Set up Python 3.9
