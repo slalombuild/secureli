@@ -10,7 +10,26 @@ on:
       - feature/**
 
 jobs:
-  build:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.9
+      id: setup-python
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.9"
+    - name: Set Up Project
+      run: |
+        pip install poetry
+        poetry install
+    - name: Run Tests
+      run: |
+        poetry run poe precommit
+        poetry run poe coverage
+        poetry run secureli build
+
+  build-linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
