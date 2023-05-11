@@ -26,7 +26,7 @@ jobs:
     - name: Run Tests
       run: |
         poetry run poe precommit
-        # poetry run poe coverage
+        poetry run poe coverage
         # poetry run secureli build
 
   build-linux:
