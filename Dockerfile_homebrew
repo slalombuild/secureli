@@ -1,12 +1,10 @@
 FROM debian
 WORKDIR app
-ARG mytoken
-ENV HOMEBREW_GITHUB_API_TOKEN=$mytoken
 
 # Install deps
 RUN apt-get update && apt-get autoclean && \
     apt-get install -y -q --allow-unauthenticated \
-    git curl sudo build-essential gcc
+    git curl sudo build-essential
 
 # set up dirs
 RUN useradd -m -s /bin/bash linuxbrew && \
@@ -16,10 +14,9 @@ RUN useradd -m -s /bin/bash linuxbrew && \
 
 RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
-RUN brew install gh
 RUN brew tap slalombuild/secureli
 RUN brew install secureli
 RUN git clone https://github.com/pypa/pip pip
 WORKDIR pip
 RUN secureli init --yes
-RUN secureli scan  --mode all-files
+RUN secureli scan --yes --mode all-files
