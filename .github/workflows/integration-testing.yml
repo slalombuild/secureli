@@ -10,13 +10,28 @@ on:
       - feature/**
 
 jobs:
+  test-windows:
+    runs-on: windows-latest
+    steps:
+    - name: setup python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - name: Install Secureli
+      run: |
+        pip3 --version #any pip havers?
+        pip3 install secureli
+        git clone https://github.com/pypa/pip pip
+        cd pip
+        secureli init --yes
+        secureli scan  --mode all-files --yes
+
+
   test-homebrew-osx:
     runs-on: macos-latest
     steps:
     - name: Test with Homebrew
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    - name: Install GH
-      run: brew install gh
     - name: Prep for python 3.11.3 install # Removes python 3.11.3 to avoid conflict with homebrew python
       run: |
         rm -rf '/usr/local/bin/2to3'
@@ -33,8 +48,6 @@ jobs:
       run: |
         brew tap slalombuild/secureli
         HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install secureli
-      # env:
-      #   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.TAP_TOKEN }}
     - name: Checkout test repo
       uses: actions/checkout@v3
       with:
