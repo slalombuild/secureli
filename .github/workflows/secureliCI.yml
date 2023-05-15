@@ -1,5 +1,11 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+# These jobs are specifically designed to test the codebase
+# and ensure that basic contributing from both mac and windows will work
+# Once both windows and mac builds are successful, the next steps will
+# - version the code, pushing the version back to the repo
+# - push a package to pypi
+# - push a formula to the homebrew repo
 
 name: secureliCI
 
@@ -26,7 +32,7 @@ jobs:
     - name: Run Tests
       run: |
         poetry run poe precommit
-        # Both of these lines error when run on a windows image, more research required as to why
+# Both of these lines error when run on a windows image, more research required as to why
         # poetry run poe coverage
         # poetry run secureli build
 
@@ -61,7 +67,7 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         semantic-release publish
-        # A NOOP run on feature branches
+    # A NOOP run on feature branches
     - name: Verify Semantic Release
       if: github.ref != 'refs/heads/main'
       run: |
@@ -106,7 +112,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: slalombuild/homebrew-secureli
-        token: ${{ secrets.ADMIN_TOKEN_SASCHA }} # `GH_PAT` is a secret that contains your PAT
+        token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
         path: homebrew-secureli
         ref: main
         fetch-depth: 0
