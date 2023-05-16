@@ -11,6 +11,6 @@ SeCureLI currently supports the following languages:
 {% endfor %}
 
 
-For more information, check us out on Confluence at {{ confluence_url }}
+For more information, check us out on the GitHub wiki at {{ confluence_url }}
 
-Interested in contributing? Check out SeCureLI on Bitbucket {{ repo_url }}
+Interested in contributing? Check out {{ repo_url }}
