@@ -6,8 +6,8 @@ from secureli.services.language_support import supported_languages
 class SetupAction:
     """Arranges various properties needed to set up the application itself."""
 
-    repo_url = "https://bitbucket.org/slalom-consulting/secureli"
-    confluence_url = "https://slalom.atlassian.net/wiki/spaces/STFT"
+    repo_url = "https://github.com/slalombuild/secureli/blob/main/CONTRIBUTING.md"
+    confluence_url = "https://github.com/slalombuild/secureli/wiki"
 
     def __init__(self, epilog_template_data: str):
         self.epilog_template_data = epilog_template_data
