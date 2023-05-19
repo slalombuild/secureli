@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.4 (2023-05-19)
+### Fix
+* Detect-secrets-init-text ([#101](https://github.com/slalombuild/secureli/issues/101)) ([`dc1755c`](https://github.com/slalombuild/secureli/commit/dc1755c53177de087147e2f392abecfb6b798c4c))
+
 ## v0.3.3 (2023-05-19)
 
 

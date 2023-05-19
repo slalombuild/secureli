@@ -223,7 +223,7 @@ class Action(ABC):
 
         if secret_test_id := metadata.security_hook_id:
             self.action_deps.echo.print(
-                f"{config.overall_language} supports secrets detection; running {secret_test_id} on the whole repo"
+                f"{config.overall_language} supports secrets detection; running {secret_test_id}."
             )
             self.action_deps.scanner.scan_repo(
                 ScanMode.ALL_FILES, specific_test=secret_test_id
