@@ -11,7 +11,7 @@ updates:
       interval: daily
     commit-message:
       prefix: "chore: pip"
-  - package-ecosystem: "github-actions"
+  - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: daily
