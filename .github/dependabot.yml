@@ -5,11 +5,18 @@
 
 version: 2
 updates:
-  - package-ecosystem: "pip" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: pip
+    directory: /
     schedule:
-      interval: "daily"
-  - package-ecosystem: "github-actions" # See documentation for possible values
-    directory: "/" # Location of package manifests
+      interval: daily
+    commit-message:
+      prefix: "chore: pip"
+  - package-ecosystem: "github-actions"
+    directory: /
     schedule:
-      interval: "daily"
+      interval: daily
+    commit-message:
+      prefix: "chore: github-actions"
+    reviewers:
+      - sbates
+      - calebtonn
