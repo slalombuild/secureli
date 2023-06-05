@@ -57,6 +57,8 @@ class LogEntry(pydantic.BaseModel):
     action: LogAction
     hook_config: Optional[HookConfiguration]
     failure: Optional[LogFailure] = None
+    total_failure_count: Optional[int]
+    failure_count_details: Optional[object]
 
 
 class LoggingService:
@@ -91,7 +93,13 @@ class LoggingService:
 
         return log_entry
 
-    def failure(self, action: LogAction, details: str) -> LogEntry:
+    def failure(
+        self,
+        action: LogAction,
+        details: str,
+        total_failure_count: Optional[int],
+        individual_failure_count: Optional[object],
+    ) -> LogEntry:
         """
         Capture a failure against an action, with details
         :param action: The action that failed
@@ -109,6 +117,8 @@ class LoggingService:
             failure=LogFailure(
                 details=details,
             ),
+            total_failure_count=total_failure_count,
+            failure_count_details=individual_failure_count,
             hook_config=hook_config,
             primary_language=secureli_config.overall_language,
         )
