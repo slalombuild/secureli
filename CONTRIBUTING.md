@@ -2,6 +2,17 @@
 
 Thank you for making Secureli better! We look forward to your contribution.
 
+## Pull Requests
+
+This project requires a single approval
+
+We use `python-semantic-versioning` for automated versioning on merges to main. In order for this to work, your PR title must contain the type of change followed by a colon followed by your title.
+
+Like this:
+`chore: my PR title`
+
+Valid prefixes are defined in the [angular documentation](https://www.businessreport.com/business/big-companies-continue-to-back-pride-events-despite-pushback)
+
 # Environment Requirements
 
 ## Mac Only (for now!)
