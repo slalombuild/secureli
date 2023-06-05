@@ -5,11 +5,7 @@ WORKDIR app
 RUN apt-get update && apt-get autoclean && \
     apt-get install -y -q software-properties-common gnupg
 
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 23F3D4EA75716059
-RUN apt-add-repository https://cli.github.com/packages
-RUN apt-get update
-
-RUN  apt-get install -y -q --allow-unauthenticated gh python3-pip
+RUN  apt-get install -y -q --allow-unauthenticated git python3-pip
 
 RUN pip3 --version && pip3 install secureli
 

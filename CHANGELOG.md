@@ -2,6 +2,22 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.5 (2023-05-19)
+
+
+## v0.3.4 (2023-05-19)
+### Fix
+* Detect-secrets-init-text ([#101](https://github.com/slalombuild/secureli/issues/101)) ([`dc1755c`](https://github.com/slalombuild/secureli/commit/dc1755c53177de087147e2f392abecfb6b798c4c))
+
+## v0.3.3 (2023-05-19)
+
+
+## v0.3.2 (2023-05-16)
+
+
+## v0.3.1 (2023-05-15)
+
+
 ## v0.3.0 (2023-05-09)
 ### Feature
 * Added list of project contributors ([#95](https://github.com/slalombuild/secureli/issues/95)) ([`f8ec871`](https://github.com/slalombuild/secureli/commit/f8ec871581efa591f4412024e88be2b59b2377a3))

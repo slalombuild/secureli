@@ -240,6 +240,7 @@ A special thanks to everyone that has contributed to seCureLI so far:
 - Joel Carpenter
 - Raul Centeno
 - Alex Diehl
+- Korey Earl
 - Martin Gallegos
 - Jordan Hill
 - Kira Hollerman

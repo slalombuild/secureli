@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "secureli"
-version = "0.3.0"
+version = "0.3.5"
 description = "Secure Project Manager"
 authors = ["Caleb Tonn <caleb.tonn@slalom.com>"]
 license = "Apache-2.0"
@@ -12,7 +12,7 @@ secureli = "secureli.main:app"
 [tool.poe.tasks]
 coverage = ["test", { cmd = "coverage report" }]
 docker-build-app = "docker build -t secureli . -f Dockerfile_secureli --progress=plain --no-cache"
-docker-build-homebrew = "docker build --build-arg mytoken=$HOMEBREW_GITHUB_API_TOKEN -t homebrew . -f Dockerfile_homebrew --no-cache --progress=plain"
+docker-build-homebrew = "docker build -t homebrew . -f Dockerfile_homebrew --no-cache --progress=plain"
 docker-build-pypi = "docker build -t pypi . -f Dockerfile_pypi --no-cache --progress=plain"
 init = ["install", { cmd = "secureli init -y" }]
 install = "poetry install"
