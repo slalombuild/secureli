@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
+from secureli.utilities.usage_stats import convert_failures_to_failure_count
 from secureli.abstractions.echo import EchoAbstraction
 from secureli.services.logging import LoggingService, LogAction
 from secureli.services.scanner import (
@@ -17,6 +18,7 @@ from secureli.repositories.settings import (
     PreCommitRepo,
     PreCommitHook,
 )
+import json
 
 
 class ScanAction(Action):
@@ -70,11 +72,24 @@ class ScanAction(Action):
         self.echo.print(details)
 
         failure_count = len(scan_result.failures)
+        scan_result_failures_json_string = json.dumps(
+            [ob.__dict__ for ob in scan_result.failures]
+        )
+
+        individual_failure_count = convert_failures_to_failure_count(
+            scan_result.failures
+        )
+
         if failure_count > 0:
             self._process_failures(scan_result.failures, always_yes=always_yes)
 
         if not scan_result.successful:
-            self.logging.failure(LogAction.scan, details)
+            self.logging.failure(
+                LogAction.scan,
+                scan_result_failures_json_string,
+                failure_count,
+                individual_failure_count,
+            )
         else:
             self.echo.print("Scan executed successfully and detected no issues!")
             self.logging.success(LogAction.scan)

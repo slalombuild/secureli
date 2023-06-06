@@ -77,7 +77,7 @@ def test_that_logging_service_failure_creates_logs_folder_if_not_exists(
         overall_language=None, version_installed=None
     )
 
-    logging_service.failure(LogAction.init, "Horrible Failure")
+    logging_service.failure(LogAction.init, "Horrible Failure", None, None)
 
     mock_path.parent.mkdir.assert_called_once()
 
