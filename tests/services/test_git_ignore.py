@@ -24,7 +24,6 @@ def mock_open_with_ignored_patterns(mocker: MockerFixture) -> MagicMock:
 def mock_open_with_gitignore_existing_secureli_config(
     mocker: MockerFixture,
 ) -> MagicMock:
-
     header = "# Secureli-generated files (do not modify):"
     footer = "# End Secureli-generated files"
     mock_open = mocker.mock_open(read_data=f"# existing contents\n{header}...{footer}")
