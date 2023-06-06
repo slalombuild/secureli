@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "secureli"
-version = "0.3.5"
+version = "0.3.8"
 description = "Secure Project Manager"
 authors = ["Caleb Tonn <caleb.tonn@slalom.com>"]
 license = "Apache-2.0"
@@ -32,7 +32,7 @@ pydantic = "^1.10.2"
 jinja2 = "^3.1.2"
 pathspec = "^0.10.1"
 cfgv = "^3.3.1"
-pre-commit = "^2.20.0"
+pre-commit = ">=2.20,<4.0"
 
 [tool.pytest.ini_options]
 addopts = "-p no:cacheprovider"
@@ -41,7 +41,7 @@ addopts = "-p no:cacheprovider"
 pytest = "^7.1.3"
 pytest-mock = "^3.10.0"
 coverage = "^6.5.0"
-black = "^22.10.0"
+black = ">=22.10,<24.0"
 identify = "^2.5.7"
 poethepoet = "^0.16.4"
 python-semantic-release = "^7.33.1"
