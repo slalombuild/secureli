@@ -25,7 +25,7 @@ test = ["init", "lint", "coverage_run"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-typer = {version = "^0.6.1", extras = ["all"]}
+typer = {version = ">=0.6.1,<0.10.0", extras = ["all"]}
 pygments = "^2.13.0"
 dependency-injector = {version = "^4.40.0", extras = ["yaml"]}
 pydantic = "^1.10.2"
