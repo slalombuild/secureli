@@ -453,7 +453,6 @@ class PreCommitAbstraction:
             pre_commit_repo_hooks = pre_commit_repo["hooks"]
 
             for hook_settings in matching_settings_repo.hooks or []:
-
                 # Find the hook from the configuration (it may have just been removed)
                 matching_hook = self._find_matching_hook(
                     hook_settings.id,
