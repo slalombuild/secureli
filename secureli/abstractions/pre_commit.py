@@ -31,7 +31,7 @@ class LanguageNotSupportedError(Exception):
     pass
 
 
-class LanguagePreCommitConfig(pydantic.BaseModel):
+class LanguagePreCommitInstallResult(pydantic.BaseModel):
     """
     A configuration model for a supported pre-commit-configurable language.
     """
@@ -39,6 +39,14 @@ class LanguagePreCommitConfig(pydantic.BaseModel):
     language: str
     config_data: str
     version: str
+
+
+class LanguagePreCommitConfigInstallResult(pydantic.BaseModel):
+    """Results from installing langauge specific configs for pre-commit hooks"""
+
+    num_successful: int
+    num_non_success: int
+    non_success_messages: list[str]
 
 
 class UnexpectedReposResult(pydantic.BaseModel):
@@ -66,6 +74,7 @@ class InstallResult(pydantic.BaseModel):
 
     successful: bool
     version_installed: str
+    configs_result: LanguagePreCommitConfigInstallResult
 
 
 class ValidateConfigResult(pydantic.BaseModel):
@@ -189,7 +198,13 @@ class PreCommitAbstraction:
                 f"Installing the pre-commit script for {language} failed"
             )
 
-        return InstallResult(successful=True, version_installed=language_config.version)
+        install_configs_result = self._install_pre_commit_configs(language)
+
+        return InstallResult(
+            successful=True,
+            version_installed=language_config.version,
+            configs_result=install_configs_result,
+        )
 
     def get_configuration(self, language: str) -> HookConfiguration:
         """
@@ -382,7 +397,7 @@ class PreCommitAbstraction:
         else:
             return ExecuteResult(successful=True, output=output)
 
-    def _get_language_config(self, language: str) -> LanguagePreCommitConfig:
+    def _get_language_config(self, language: str) -> LanguagePreCommitInstallResult:
         """
         Calculates a hash of the pre-commit file for the given language to be used as part
         of the overall installed configuration.
@@ -395,7 +410,7 @@ class PreCommitAbstraction:
             config_data = self._calculate_combined_configuration_data(language)
 
             version = self._hash_config(config_data)
-            return LanguagePreCommitConfig(
+            return LanguagePreCommitInstallResult(
                 language=language, config_data=config_data, version=version
             )
         except ValueError:
@@ -763,3 +778,45 @@ class PreCommitAbstraction:
         )
 
         return output
+
+    def _install_pre_commit_configs(
+        self, language: str
+    ) -> LanguagePreCommitConfigInstallResult:
+        """
+        Install any config files for given language to support any pre-commit commands.
+        i.e. Javascript ESLint requires a .eslintrc file to sufficiently use plugins and allow
+        for further customization for repo's flavor of Javascript
+        :param language: repo language
+        :return: LanguagePreCommitConfigInstallResult
+        """
+        language_configs_data = self.data_loader(
+            f"configs/{slugify(language)}.config.yaml"
+        )
+        language_configs = yaml.safe_load_all(language_configs_data)
+
+        num_configs_wrote = 0
+        num_configs_non_success = 0
+        non_success_warnings = list[str]()
+
+        for config in language_configs:
+            if config:
+                try:
+
+                    for key in config:
+                        config_name = f"{slugify(language)}.{key}.yaml"
+                        path_to_config_file = Path(f".secureli/{config_name}")
+
+                        with open(path_to_config_file, "w") as f:
+                            f.write(yaml.dump(config[key]))
+                        num_configs_wrote += 1
+                except Exception as e:
+                    num_configs_non_success += 1
+                    non_success_warnings.append(
+                        f"Unable to install config: {config_name}. {e}"
+                    )
+
+        return LanguagePreCommitConfigInstallResult(
+            num_successful=num_configs_wrote,
+            num_non_success=num_configs_non_success,
+            non_success_messages=non_success_warnings,
+        )
