@@ -49,6 +49,13 @@ class LanguagePreCommitConfigInstallResult(pydantic.BaseModel):
     non_success_messages: list[str]
 
 
+class LoadLanguageConfigsResult(pydantic.BaseModel):
+    """Results from finding and loading any pre-commit configs for the language"""
+
+    success: bool
+    config_data: list[Any]
+
+
 class UnexpectedReposResult(pydantic.BaseModel):
     """
     The result of checking for unexpected repos in config
@@ -779,6 +786,22 @@ class PreCommitAbstraction:
 
         return output
 
+    def _load_language_config_file(self, language: str) -> LoadLanguageConfigsResult:
+        """
+        Load any config files for given language if they exist.
+        :param language: repo language
+        :return:
+        """
+        try:
+            language_configs_data = self.data_loader(
+                f"configs/{slugify(language)}.config.yaml"
+            )
+            language_configs = yaml.safe_load_all(language_configs_data)
+
+            return LoadLanguageConfigsResult(success=True, config_data=language_configs)
+        except:
+            return LoadLanguageConfigsResult(success=False, config_data=list())
+
     def _install_pre_commit_configs(
         self, language: str
     ) -> LanguagePreCommitConfigInstallResult:
@@ -789,31 +812,31 @@ class PreCommitAbstraction:
         :param language: repo language
         :return: LanguagePreCommitConfigInstallResult
         """
-        language_configs_data = self.data_loader(
-            f"configs/{slugify(language)}.config.yaml"
-        )
-        language_configs = yaml.safe_load_all(language_configs_data)
+
+        language_configs_result = self._load_language_config_file(language)
 
         num_configs_wrote = 0
         num_configs_non_success = 0
         non_success_warnings = list[str]()
 
-        for config in language_configs:
-            if config:
-                try:
+        # if successfully loaded any language specific configs
+        if language_configs_result.success:
+            for config in language_configs_result.config_data:
+                if config:
+                    try:
 
-                    for key in config:
-                        config_name = f"{slugify(language)}.{key}.yaml"
-                        path_to_config_file = Path(f".secureli/{config_name}")
+                        for key in config:
+                            config_name = f"{slugify(language)}.{key}.yaml"
+                            path_to_config_file = Path(f".secureli/{config_name}")
 
-                        with open(path_to_config_file, "w") as f:
-                            f.write(yaml.dump(config[key]))
-                        num_configs_wrote += 1
-                except Exception as e:
-                    num_configs_non_success += 1
-                    non_success_warnings.append(
-                        f"Unable to install config: {config_name}. {e}"
-                    )
+                            with open(path_to_config_file, "w") as f:
+                                f.write(yaml.dump(config[key]))
+                            num_configs_wrote += 1
+                    except Exception as e:
+                        num_configs_non_success += 1
+                        non_success_warnings.append(
+                            f"Unable to install config: {config_name}. {e}"
+                        )
 
         return LanguagePreCommitConfigInstallResult(
             num_successful=num_configs_wrote,
