@@ -65,6 +65,23 @@ When invoking these commands, you can combine the short versions into a single f
 % secureli init -ry
 ```
 
+# Usage Statistic Observability
+
+Supported observability platform.
+
+## New Relic
+
+How to use:
+
+- Sign up to New Relic Log Platform https://docs.newrelic.com/docs/logs/log-api/introduction-log-api/
+- Setup environment variable for API_KEY and API_ENDPOINT
+- Log will be recorded whenever seCureLI triggered
+- You can create a dashboard of metric using query such as
+
+```commandline
+FROM Log Select sum(failure_count_details.detect_secrets) as 'Caught Secret Count'
+```
+
 # Configuration
 
 SeCureLI is configurable via a .secureli.yaml file present in the consuming repository.
