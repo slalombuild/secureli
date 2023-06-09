@@ -65,18 +65,18 @@ When invoking these commands, you can combine the short versions into a single f
 % secureli init -ry
 ```
 
-# Usage Statistic Observability
+# Tutorial to Use Observability Platform to Show Usage Statistics
 
-Supported observability platform.
+The tutorial will use New Relic as sample observability platform, and the only one that is currently supported.
+Should you need seCureLI to work with other platform, please create an support issue ticket, or contribute to the open source project.
 
-## New Relic
+## Steps
 
-How to use:
-
-- Sign up to New Relic Log Platform https://docs.newrelic.com/docs/logs/log-api/introduction-log-api/
-- Setup environment variable for API_KEY and API_ENDPOINT
-- Log will be recorded whenever seCureLI triggered
-- You can create a dashboard of metric using query such as
+- Assuming, seCureLI has been setup and installed, sign up to New Relic Log Platform https://docs.newrelic.com/docs/logs/log-api/introduction-log-api/
+- Retrieve API_KEY and API_ENDPOINT from New Relic. API_ENDPOINT for New Relic should be https://log-api.newrelic.com/log/v1
+- On your development machine, setup environment variable with variable name API_KEY and API_ENDPOINT
+- Once the above setup is complete, everytime seCureLI triggered, it should send a usage log to New Relic
+- In New Relic, you can create a dashboard of metric to see the number of times secret was caught using query such as
 
 ```commandline
 FROM Log Select sum(failure_count_details.detect_secrets) as 'Caught Secret Count'

@@ -34,3 +34,26 @@ def test_that_post_log_return_none_when_no_api_key():
     result = post_log("testing")
 
     assert result == None
+
+
+# pragma: allowlist nextline secret
+@mock.patch.dict(os.environ, {"API_KEY": "testkey", "API_ENDPOINT": ""}, clear=True)
+def test_that_post_log_return_none_when_no_api_endpoint():
+    result = post_log("testing")
+
+    assert result == None
+
+
+@mock.patch.dict(
+    os.environ,
+    {"API_KEY": "testkey", "API_ENDPOINT": "testendpoint"},  # pragma: allowlist secret
+    clear=True,
+)
+@patch("requests.post")
+def test_that_post_log_return_correctly_when_argument_is_correct(mock_requests):
+    mock_requests.return_value = Mock(status_code=202, text={"requestId": "test-0001"})
+
+    result = post_log("test_log_data")
+
+    mock_requests.assert_called_once()
+    assert result == {"requestId": "test-0001"}
