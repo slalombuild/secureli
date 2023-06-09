@@ -67,8 +67,8 @@ When invoking these commands, you can combine the short versions into a single f
 
 # Tutorial to Use Observability Platform to Show Usage Statistics
 
-The tutorial will use New Relic as sample observability platform, and the only one that is currently supported.
-Should you need seCureLI to work with other platform, please create an support issue ticket, or contribute to the open source project.
+This tutorial uses New Relic as the sample observability platform. Other platforms may also work, but have not been tested.
+Should you need seCureLI to work with other platforms, please create a new issue in github, or contribute to the open source project.
 
 ## Steps
 
