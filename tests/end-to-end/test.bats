@@ -1,6 +1,6 @@
 setup() {
-  load '../.submodules/test_helper/bats-support/load'
-  load '../.submodules/test_helper/bats-assert/load'
+  load "${BATS_LIBS_ROOT}/bats-support/load"
+  load "${BATS_LIBS_ROOT}/bats-assert/load"
 }
 
 @test "can run secureli" {
