@@ -11,7 +11,7 @@ We use `python-semantic-versioning` for automated versioning on merges to main. 
 Like this:
 `chore: my PR title`
 
-Valid prefixes are defined in the [angular documentation](https://www.businessreport.com/business/big-companies-continue-to-back-pride-events-despite-pushback)
+Valid prefixes are defined in the [angular documentation](https://github.com/angular/angular/blob/main/CONTRIBUTING.md#commit)
 
 # Environment Requirements
 
