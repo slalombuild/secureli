@@ -4,6 +4,6 @@ setup() {
 }
 
 @test "can run secureli" {
-    run python secureli/main.py scan
+    run python secureli/main.py scan -y
     assert_output --partial 'Scan executed successfully and detected no issues!'
 }

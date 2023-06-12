@@ -101,6 +101,7 @@ As of June 9, 2023, this repo is being built on and tested against Ubuntu Jammy 
 
 - Try it out!
   - With the virtual environment still activated, and having installed all dependencies (i.e. `poetry shell && poetry install`), run `secureli` and check out the Usage instructions
+  - After the first run, you can run end-to-end BATS tests with `poe e2e`
 
 
 # PyCharm
