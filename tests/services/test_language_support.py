@@ -12,7 +12,7 @@ from secureli.services.language_support import LanguageSupportService
 @pytest.fixture()
 def mock_pre_commit_config_install() -> MagicMock:
     mock_pre_commit_config_install_result = LanguagePreCommitConfigInstallResult(
-        num_non_success=0, non_success_messages=0, non_success_messages=list()
+        num_non_success=0, num_non_success=0, non_success_messages=list()
     )
 
     return mock_pre_commit_config_install_result
