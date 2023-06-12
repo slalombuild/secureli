@@ -1,4 +1,4 @@
-# Contributing to Secureli
+# Contributing to Secureli - text change
 
 Thank you for making Secureli better! We look forward to your contribution.
 
