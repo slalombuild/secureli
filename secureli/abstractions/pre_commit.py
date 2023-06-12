@@ -792,15 +792,15 @@ class PreCommitAbstraction:
         :param language: repo language
         :return:
         """
-        try:
-            language_configs_data = self.data_loader(
-                f"configs/{slugify(language)}.config.yaml"
-            )
+        language_config_path = Path(f"configs/{slugify(language)}.config.yaml")
+
+        if Path.exists(language_config_path):
+            language_configs_data = self.data_loader(language_config_path)
             language_configs = yaml.safe_load_all(language_configs_data)
 
             return LoadLanguageConfigsResult(success=True, config_data=language_configs)
-        except:
-            return LoadLanguageConfigsResult(success=False, config_data=list())
+
+        return LoadLanguageConfigsResult(success=False, config_data=list())
 
     def _install_pre_commit_configs(
         self, language: str
