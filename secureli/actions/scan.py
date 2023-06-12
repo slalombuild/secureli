@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from secureli.utilities.usage_stats import convert_failures_to_failure_count
+from secureli.utilities.usage_stats import post_log, convert_failures_to_failure_count
 from secureli.abstractions.echo import EchoAbstraction
 from secureli.services.logging import LoggingService, LogAction
 from secureli.services.scanner import (
@@ -84,15 +84,19 @@ class ScanAction(Action):
             self._process_failures(scan_result.failures, always_yes=always_yes)
 
         if not scan_result.successful:
-            self.logging.failure(
+            log_data = self.logging.failure(
                 LogAction.scan,
                 scan_result_failures_json_string,
                 failure_count,
                 individual_failure_count,
             )
+
+            post_log(log_data.json(exclude_none=True))
         else:
             self.echo.print("Scan executed successfully and detected no issues!")
-            self.logging.success(LogAction.scan)
+            log_data = self.logging.success(LogAction.scan)
+
+            post_log(log_data.json(exclude_none=True))
 
     def _process_failures(
         self,
