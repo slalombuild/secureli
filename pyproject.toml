@@ -22,8 +22,8 @@ secureli_init = "secureli init -y"
 install = "poetry install"
 lint = "black --check ."
 precommit = "pre-commit run -a"
-test = ["init", "lint", "coverage_run", "coverage_html", "bats"]
-bats = "bats tests/end-to-end/test.bats"
+test = ["init", "lint", "coverage_run", "coverage_html"]
+e2e = "bats tests/end-to-end/test.bats"
 
 [tool.poetry.dependencies]
 python = "^3.9"
