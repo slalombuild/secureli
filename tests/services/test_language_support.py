@@ -10,22 +10,17 @@ from secureli.services.language_support import LanguageSupportService
 
 
 @pytest.fixture()
-def mock_pre_commit_config_install() -> MagicMock:
+def mock_pre_commit_hook() -> MagicMock:
     mock_pre_commit_config_install_result = LanguagePreCommitConfigInstallResult(
-        num_non_success=0, num_non_success=0, non_success_messages=list()
+        num_successful=0, num_non_success=0, non_success_messages=list()
     )
 
-    return mock_pre_commit_config_install_result
-
-
-@pytest.fixture()
-def mock_pre_commit_hook() -> MagicMock:
     mock_pre_commit_hook = MagicMock()
     mock_pre_commit_hook.version_for_language.return_value = "abc123"
     mock_pre_commit_hook.install.return_value = InstallResult(
         successful=True,
         version_installed="abc123",
-        configs_result=mock_pre_commit_config_install(),
+        configs_result=mock_pre_commit_config_install_result,
     )
     mock_pre_commit_hook.secret_detection_hook_id.return_value = "baddie-finder"
     return mock_pre_commit_hook
