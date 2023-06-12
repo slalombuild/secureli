@@ -475,7 +475,6 @@ class PreCommitAbstraction:
             pre_commit_repo_hooks = pre_commit_repo["hooks"]
 
             for hook_settings in matching_settings_repo.hooks or []:
-
                 # Find the hook from the configuration (it may have just been removed)
                 matching_hook = self._find_matching_hook(
                     hook_settings.id,
@@ -824,7 +823,6 @@ class PreCommitAbstraction:
             for config in language_configs_result.config_data:
                 if config:
                     try:
-
                         for key in config:
                             config_name = f"{slugify(language)}.{key}.yaml"
                             path_to_config_file = Path(f".secureli/{config_name}")
