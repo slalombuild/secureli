@@ -206,6 +206,7 @@ class PreCommitAbstraction:
             )
 
         install_configs_result = self._install_pre_commit_configs(language)
+        print(install_configs_result)
 
         return InstallResult(
             successful=True,
@@ -791,10 +792,21 @@ class PreCommitAbstraction:
         :param language: repo language
         :return:
         """
-        language_config_path = Path(f"configs/{slugify(language)}.config.yaml")
 
-        if Path.exists(language_config_path):
-            language_configs_data = self.data_loader(language_config_path)
+        # respective name for config file
+        language_config_name = Path(f"configs/{slugify(language)}.config.yaml")
+
+        # build absolute path to config file if one exists
+        absolute_secureli_path = f'{Path(f"{__file__}").parent.resolve()}'.rsplit(
+            "/", 1
+        )[0]
+        absolut_configs_path = Path(
+            f"{absolute_secureli_path}/resources/files/{language_config_name}"
+        )
+
+        #  check if config file exists for current language
+        if Path.exists(absolut_configs_path):
+            language_configs_data = self.data_loader(language_config_name)
             language_configs = yaml.safe_load_all(language_configs_data)
 
             return LoadLanguageConfigsResult(success=True, config_data=language_configs)
