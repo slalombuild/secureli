@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.16 (2023-06-13)
+
+### Fix
+
+* Fixes semantic versioning ([#127](https://github.com/slalombuild/secureli/issues/127)) ([`286ddc3`](https://github.com/slalombuild/secureli/commit/286ddc3b5c5c019c23a766a167f4bbdc5daa99d6))
+* Adds 'requests' to pyproject.toml ([#126](https://github.com/slalombuild/secureli/issues/126)) ([`7ba783f`](https://github.com/slalombuild/secureli/commit/7ba783f24749095f836d07793323d3e2eaa0f82e))
+
 ## v0.3.15 (2023-06-09)
 
 
