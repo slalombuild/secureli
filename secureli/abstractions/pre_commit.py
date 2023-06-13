@@ -206,7 +206,6 @@ class PreCommitAbstraction:
             )
 
         install_configs_result = self._install_pre_commit_configs(language)
-        print(install_configs_result)
 
         return InstallResult(
             successful=True,
