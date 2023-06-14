@@ -44,14 +44,19 @@ ___Do no setup for this requirement__ unless prompted to do so, and then follow 
 - Install Homebrew if needed: https://brew.sh
 - Install python `brew install python`
 - Install [Poetry](https://python-poetry.org/docs/)
+- Install Docker
+  - This varies by each individual contributor's environment.
+  - Docker Desktop is the simplest
+  - The core seCureLI development team uses [Colima - container runtimes on macOS (and Linux)](https://github.com/abiosoft/colima)
+- Install Docker buildx cli-plugin
+  - This varies by each individual contributor's environment.
+  - Docker Desktop is the simplest
+  - The core seCureLI development team uses homebrew
+    ```shell
+    homebrew install docker-buildx
+    ln -sfn /usr/local/opt/docker-buildx/bin/docker-buildx ~/.docker/cli-plugins/docker-buildx
+    ```
 - Restart your terminal
-  - Similar to the next steps in the homebrew section, follow the instructions to register Poetry with your PATH, running something like the following:
-
-```commandline
-echo '# Add Poetry bin directory to the PATH' >> /Users/tristanl/.zprofile
-echo 'export PATH="/Users/[username]/.local/bin:$PATH"' >> /Users/[username]/.zprofile
-source ~/.zprofile
-```
 - Jump to [Setup (all Operating Systems)](#Setup-all-Operating-Systems)
 
 ## Setup Windows™
@@ -67,6 +72,7 @@ As of June 9, 2023, this repo is being built on and tested against Ubuntu Jammy 
 - Install [Poetry](https://python-poetry.org/docs/)
   - `curl -sSL https://install.python-poetry.org | python3 -`
   - Follow the instructions to add poetry to your shell's $PATH
+- Install [Docker & Docker buildx](https://docs.docker.com/engine/install/)
 
 # Setup (all Operating Systems)
 - Install BATS (Bash Automated Testing System)
@@ -173,6 +179,13 @@ Already installed for Python language and up to date
   - Name: build
   - Parameters: `build`
 - Test each of these configurations and see that the expected “not yet implemented” message is shown
+
+# Building seCureLI Docker Containers behind a corporate proxy
+If you receive SSL/TLS untrusted certificate errors when building the Docker images,
+chances are your organization's digital security team is using a proxy to monitor your encrypted internet usage. To build
+the seCureLI Docker images you will need to inject your organizations self-signed root CA certificate into the images
+at build time. To do this, simply place the root certificate (*.crt format) into the `ca-certificates` directory of this
+repository.  Everything in the ca-certificates directory will be picked up and trusted by the images built.
 
 # SeCureLI Architecture
 
