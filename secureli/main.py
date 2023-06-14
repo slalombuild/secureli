@@ -25,7 +25,7 @@ container.config.from_pydantic(Settings())
 def setup():
     """
     SeCureLI:
-    Secure Project Manager!!! :sparkles:
+    Secure Project Manager :sparkles:
     ---
     An intelligent CLI that helps developers build securely
     """
