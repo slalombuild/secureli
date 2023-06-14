@@ -5,9 +5,14 @@ WORKDIR app
 RUN apt-get update && apt-get autoclean && \
     apt-get install -y -q software-properties-common gnupg
 
+# Install ca-certificates
+RUN apt-get install -y ca-certificates
+COPY ./ca-certificates* /app/ca-certificates
+RUN cp /app/ca-certificates/*.crt /usr/local/share/ca-certificates | true && update-ca-certificates
+
 RUN  apt-get install -y -q --allow-unauthenticated git python3-pip
 
-RUN pip3 --version && pip3 install secureli
+RUN pip3 --version && pip3 install secureli --break-system-packages
 
 RUN git clone https://github.com/pypa/pip pip
 WORKDIR pip
