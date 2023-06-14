@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "secureli"
-version = "0.3.16"
+version = "0.3.19"
 description = "Secure Project Manager"
 authors = ["Caleb Tonn <caleb.tonn@slalom.com>"]
 license = "Apache-2.0"
@@ -13,6 +13,7 @@ secureli = "secureli.main:app"
 coverage = ["test", "coverage_report"]
 coverage_report = "coverage report"
 coverage_run = "coverage run -m pytest"
+coverage_html = "coverage html"
 docker-build-app = "docker build -t secureli . -f Dockerfile_secureli --progress=plain --no-cache"
 docker-build-homebrew = "docker build -t homebrew . -f Dockerfile_homebrew --no-cache --progress=plain"
 docker-build-pypi = "docker build -t pypi . -f Dockerfile_pypi --no-cache --progress=plain"
@@ -21,7 +22,8 @@ secureli_init = "secureli init -y"
 install = "poetry install"
 lint = "black --check ."
 precommit = "pre-commit run -a"
-test = ["init", "lint", "coverage_run"]
+test = ["init", "lint", "coverage_run", "coverage_html"]
+e2e = "bats tests/end-to-end/test.bats"
 
 [tool.poetry.dependencies]
 python = "^3.9"
