@@ -11,13 +11,9 @@ We use `python-semantic-versioning` for automated versioning on merges to main. 
 Like this:
 `chore: my PR title`
 
-Valid prefixes are defined in the [angular documentation](https://www.businessreport.com/business/big-companies-continue-to-back-pride-events-despite-pushback)
+Valid prefixes are defined in the [angular documentation](https://github.com/angular/angular/blob/main/CONTRIBUTING.md#commit)
 
 # Environment Requirements
-
-## Mac Only (for now!)
-
-Note that, as of today, this repo is being built on and tested against macOS 12.6 Monterey. Windows support will be coming soon™.
 
 ## Supported Languages
 
@@ -38,28 +34,17 @@ SeCureLI is currently in alpha, with support for additional languages planned, i
 
 This repo was started against Python 3.9.9, which released 11/15/2021. Security support will last until 10/05/2025. Newer versions should be fine, older versions will likely not work.
 
-## C Compiler
+## Setup macOS
+As of June 9, 2023, this repo is being built on and tested against macOS 13.4 Ventura.
 
-Certain dependencies are implemented as C extensions. Under certain circumstances, you may need to compile the package from sources on your machine. You’ll need a C compiler and Python header files, such as Xcode and Xcode’s command line tools for the Mac, if this is the case. Generally you’ll be guided through this process as you attempt to resolve dependencies (see `poetry install` below).
+_Note about the C Compiler: Certain dependencies are implemented as C extensions. Under certain circumstances, you may need to compile the package from sources on your machine. You’ll need a C compiler and Python header files, such as Xcode and Xcode’s command line tools for the Mac, if this is the case. Generally you’ll be guided through this process as you attempt to resolve dependencies (see `poetry install` below)._
 
-Do no setup for this requirement unless prompted to do so, and then follow the instructions given.
+___Do no setup for this requirement__ unless prompted to do so, and then follow the instructions given._
 
-# Cloning the Repo and Setup
-
-- Install Homebrew if needed
-  - https://brew.sh
-  - Run these three commands (or something like them) in your terminal to add Homebrew to your PATH:
-
-```commandline
-	echo '# Set PATH, MANPATH, etc., for Homebrew.' >> /Users/[username]/.zprofile
-	echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/[username]/.zprofile
-	eval "$(/opt/homebrew/bin/brew shellenv)"
-```
-
-- Using Homebrew, install python if needed (installs 3.9.6 as of 11/04/2022)
-  - `brew install python`
+- Install Homebrew if needed: https://brew.sh
+- Install python `brew install python`
 - Install [Poetry](https://python-poetry.org/docs/)
-  - Troubleshooting: If you get an error about python and virtual environments, and you have just installed python using Homebrew, you may need to close and relaunch your terminal
+- Restart your terminal
   - Similar to the next steps in the homebrew section, follow the instructions to register Poetry with your PATH, running something like the following:
 
 ```commandline
@@ -67,34 +52,69 @@ echo '# Add Poetry bin directory to the PATH' >> /Users/tristanl/.zprofile
 echo 'export PATH="/Users/[username]/.local/bin:$PATH"' >> /Users/[username]/.zprofile
 source ~/.zprofile
 ```
+- Jump to [Setup (all Operating Systems)](#Setup-all-Operating-Systems)
 
+## Setup Windows™
+Windows™ contributing setup will be coming soon.
+
+## Setup Linux
+
+As of June 9, 2023, this repo is being built on and tested against Ubuntu Jammy 22.04 LTS
+
+- Update apt: `sudo apt update`
+- Install git & curl: `sudo apt install git curl`
+- (Optional) Install Python: _Ubuntu Jammy comes with Python 3.10 pre-installed_
+- Install [Poetry](https://python-poetry.org/docs/)
+  - `curl -sSL https://install.python-poetry.org | python3 -`
+  - Follow the instructions to add poetry to your shell's $PATH
+
+# Setup (all Operating Systems)
+- Install BATS (Bash Automated Testing System)
+  - `cd $HOME`
+  - `git clone https://github.com/bats-core/bats-core.git`
+  - `sudo ./bats-core/install.sh /usr/local`
+  - `sudo git clone https://github.com/bats-core/bats-support.git /usr/local/lib/bats-support`
+  - `sudo git clone https://github.com/bats-core/bats-assert.git /usr/local/lib/bats-assert`
+  - Add `export BATS_LIBS_ROOT="/usr/local/lib"` to your shell's configuration file (e.x. ~/.bashrc)
+  - Restart your terminal
+
+
+- Clone the secureli repo
+  - `git clone https://github.com/slalombuild/secureli.git`
+  - `cd secureli`
+
+
+- Activate a virtual environment using Poetry
+  - `poetry shell`
+  - This will activate a new virtual environment, and PyCharm should automatically pick this up.
+  - To leave this virtual environment, use `exit`, not `deactivate`
+
+
+- Install your dependencies with Poetry
+  - `poetry install`
+
+
+- Run the tests and calculate code coverage
+  - `poe test`
+  - Open the `htmlcov/index.html` file to view your coverage report
+
+
+- Try it out!
+  - With the virtual environment still activated, and having installed all dependencies (i.e. `poetry shell && poetry install`), run `secureli` and check out the Usage instructions
+  - After the first run, you can run end-to-end BATS tests with `poe e2e`
+
+
+# PyCharm
 - Install [PyCharm Community Edition](https://www.jetbrains.com/pycharm/download/#section=mac)
   - Launch PyCharm and create a new sample project
   - Use the Tools menu and select `Create Command-line Launcher...`
   - Troubleshooting: You may need to create a new project in order to see the Tools menu
   - Perform a one-time configuration of Poetry into PyCharm. Follow the instructions on PyCharm’s website
   - [https://www.jetbrains.com/help/pycharm/poetry.html](https://www.jetbrains.com/help/pycharm/poetry.html)
-- Clone the repo
-  - `git clone git@bitbucket.org:slalom-consulting/secureli.git`
-  - `cd secureli`
-- Activate a virtual environment using Poetry
-  - `poetry shell`
-  - This will activate a new virtual environment, and PyCharm should automatically pick this up.
-  - To leave this virtual environment, use `exit`, not `deactivate`
-- Install your dependencies with Poetry
-  - `poetry install`
 - Open the new repo with PyCharm
   - `charm .` (assuming you set up the Command-line Launcher above 👆)
   - Say “OK” when prompted to create a poetry environment using pyproject.toml
 - From the terminal, either in PyCharm or in the OS Terminal, type `secureli` and press Enter. You should see SeCureLI’s documentation appear, with a list of supported commands.
-- Run the tests
-  - `pytest`
-- Calculate code coverage
-  - `coverage run -m pytest && coverage html`
-  - Open the `htmlcov/index.html` file to view your coverage report
-- Try it out!
-  - With the virtual environment still activated, and having installed (i.e. `poetry shell && poetry install`), run `secureli` and check out the Usage instructions
-  - Right now, all it does is try to determine what the language is of the repo
 
 ## Create your first Run/Debug Configuration
 
