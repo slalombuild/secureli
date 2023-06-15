@@ -6,6 +6,11 @@ RUN apt-get update && apt-get autoclean && \
     apt-get install -y -q --allow-unauthenticated \
     git curl sudo build-essential
 
+# Install ca-certificates
+RUN apt-get install -y ca-certificates
+COPY ./ca-certificates* /app/ca-certificates
+RUN cp /app/ca-certificates/*.crt /usr/local/share/ca-certificates | true && update-ca-certificates
+
 # set up dirs
 RUN useradd -m -s /bin/bash linuxbrew && \
     usermod -aG sudo linuxbrew &&  \
