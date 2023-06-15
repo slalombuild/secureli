@@ -930,3 +930,14 @@ def test_that_pre_commit_language_config_does_not_get_installed(
     assert result.num_non_success == 0
     assert result.num_successful == 0
     assert len(result.non_success_messages) == 0
+
+
+def test_that_pre_commit_install_captures_error_if_cannot_install_config(
+    pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
+):
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
+
+    result = pre_commit._install_pre_commit_configs("JavaScript")
+
+    assert result.num_successful == 0
+    assert result.num_non_success > 0

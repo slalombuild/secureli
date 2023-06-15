@@ -838,29 +838,28 @@ class PreCommitAbstraction:
         # if successfully loaded any language specific configs
         if language_configs_result.success:
             for config in language_configs_result.config_data:
-                if config:
-                    try:
-                        for key in config:
-                            config_name = f"{slugify(language)}.{key}.yaml"
-                            path_to_config_file = Path(f".secureli/{config_name}")
+                try:
+                    for key in config:
+                        config_name = f"{slugify(language)}.{key}.yaml"
+                        path_to_config_file = Path(f".secureli/{config_name}")
 
-                            with open(path_to_config_file, "w") as f:
-                                f.write(yaml.dump(config[key]))
+                        with open(path_to_config_file, "w") as f:
+                            f.write(yaml.dump(config[key]))
 
-                            completed_process = subprocess.run(
-                                ["pre-commit", "install-language-config"]
-                            )
-
-                            if completed_process.returncode != 0:
-                                raise InstallLanguageConfigError(
-                                    f"Installing config: {key}, was not successful"
-                                )
-                            num_configs_wrote += 1
-                    except Exception as e:
-                        num_configs_non_success += 1
-                        non_success_warnings.append(
-                            f"Unable to install config: {config_name}. {e}"
+                        completed_process = subprocess.run(
+                            ["pre-commit", "install-language-config"]
                         )
+
+                        if completed_process.returncode != 0:
+                            raise InstallLanguageConfigError(
+                                f"Installing config: {key}, was not successful"
+                            )
+                        num_configs_wrote += 1
+                except Exception as e:
+                    num_configs_non_success += 1
+                    non_success_warnings.append(
+                        f"Unable to install config: {config_name}. {e}"
+                    )
 
         return LanguagePreCommitConfigInstallResult(
             num_successful=num_configs_wrote,
