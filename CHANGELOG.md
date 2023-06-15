@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.0 (2023-06-15)
+
+### Feature
+
+* Add JS Support ([#133](https://github.com/slalombuild/secureli/issues/133)) ([`df4d916`](https://github.com/slalombuild/secureli/commit/df4d9164d4a2b8649f6400eb647629abf4b0d482))
+
 ## v0.3.21 (2023-06-14)
 
 
