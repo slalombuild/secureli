@@ -15,7 +15,11 @@ if [ -z "$branch" ]; then
     branch="${GITHUB_REF_NAME}"
   fi
   # Format the branch from "feature/abc-123-my-branch" to "abc123"
-  branch=$(echo "$branch" | cut -d'/' -f2 | cut -d'-' -f1-2 | tr '[:upper:]' '[:lower:]' | sed 's/-//g ; s/_//g')
+  if [ branch =~ dependabot ]; then
+    branch=dependabot
+  else
+    branch=$(echo "$branch" | cut -d'/' -f2 | cut -d'-' -f1-2 | tr '[:upper:]' '[:lower:]' | sed 's/-//g ; s/_//g')
+  fi
 
   echo "Branch has been set to $branch" 1>&2
 else
