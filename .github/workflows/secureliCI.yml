@@ -10,10 +10,7 @@
 name: secureliCI
 
 on:
-  push:
-    branches:
-      - main
-      - feature/**
+  push
 
 jobs:
   build-windows:
