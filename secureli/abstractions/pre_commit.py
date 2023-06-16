@@ -805,12 +805,12 @@ class PreCommitAbstraction:
         absolute_secureli_path = f'{Path(f"{__file__}").parent.resolve()}'.rsplit(
             "/", 1
         )[0]
-        absolut_configs_path = Path(
+        absolute_configs_path = Path(
             f"{absolute_secureli_path}/resources/files/{language_config_name}"
         )
 
         #  check if config file exists for current language
-        if Path.exists(absolut_configs_path):
+        if Path.exists(absolute_configs_path):
             language_configs_data = self.data_loader(language_config_name)
             language_configs = yaml.safe_load_all(language_configs_data)
 
