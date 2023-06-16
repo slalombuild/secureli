@@ -23,7 +23,7 @@ else
 fi
 
 # Check if short name work
-if [[ $branch == "main" || $branch =~ ^secureli[0-9][0-9][0-9]$ || $branch =~ ^dependabot* ]]; then
+if [[ $branch == "main" || $branch =~ ^secureli[0-9][0-9][0-9]$ || $branch =~ "dependabot" ]]; then
   echo "The branch name is a valid pattern."
 else
   echo "error The branch name ${branch} does not meet naming requirements. It should look something like feature/secureli-123-mybranchname."
