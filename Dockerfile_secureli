@@ -4,6 +4,7 @@
 FROM python:3.9
 WORKDIR /app
 COPY . /app
+RUN cp /app/ca-certificates/*.crt /usr/local/share/ca-certificates | true && update-ca-certificates
 RUN pip install poetry
 RUN poetry install
 RUN poetry run poe precommit
