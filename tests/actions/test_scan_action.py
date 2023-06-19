@@ -1,6 +1,8 @@
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest import mock
+from unittest.mock import MagicMock, patch
 
+import os
 import pytest
 
 from secureli.actions.action import ActionDependencies
@@ -133,6 +135,7 @@ def scan_action(
     )
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_errors_if_not_successful(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
@@ -147,6 +150,7 @@ def test_that_scan_repo_errors_if_not_successful(
     mock_echo.print.assert_called_with("Bad Error")
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_scans_if_installed(
     scan_action: ScanAction,
     mock_secureli_config: MagicMock,
@@ -164,6 +168,7 @@ def test_that_scan_repo_scans_if_installed(
     mock_scanner.scan_repo.assert_called_once()
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_continue_scan_if_upgrade_canceled(
     scan_action: ScanAction,
     mock_secureli_config: MagicMock,
@@ -182,6 +187,7 @@ def test_that_scan_repo_continue_scan_if_upgrade_canceled(
     mock_scanner.scan_repo.assert_called_once()
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_does_not_scan_if_not_installed(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
@@ -196,6 +202,7 @@ def test_that_scan_repo_does_not_scan_if_not_installed(
     mock_scanner.scan_repo.assert_not_called()
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_handles_declining_to_add_ignore_for_failures(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
@@ -218,6 +225,7 @@ def test_that_scan_repo_handles_declining_to_add_ignore_for_failures(
     mock_settings_repository.save.assert_not_called()
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_adds_ignore_for_all_files_when_prompted(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
@@ -243,6 +251,7 @@ def test_that_scan_repo_adds_ignore_for_all_files_when_prompted(
     assert saved_suppressed_id is expected_suppressed_id
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_adds_ignore_for_all_files_when_settings_exist_when_prompted(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
@@ -268,6 +277,7 @@ def test_that_scan_repo_adds_ignore_for_all_files_when_settings_exist_when_promp
     assert saved_suppressed_id is expected_suppressed_id
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_skips_ignore_for_all_files_when_ignore_already_exists(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
@@ -293,6 +303,7 @@ def test_that_scan_repo_skips_ignore_for_all_files_when_ignore_already_exists(
     assert saved_suppressed_id is expected_suppressed_id
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_adds_ignore_for_one_file_when_prompted(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
@@ -320,6 +331,7 @@ def test_that_scan_repo_adds_ignore_for_one_file_when_prompted(
     assert saved_excluded_file is expected_excluded_file
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_adds_ignore_for_one_file_when_settings_exist_when_prompted(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
@@ -347,6 +359,7 @@ def test_that_scan_repo_adds_ignore_for_one_file_when_settings_exist_when_prompt
     assert saved_excluded_file is expected_excluded_file
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_skips_ignore_for_one_file_when_ignore_already_present(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
@@ -374,6 +387,7 @@ def test_that_scan_repo_skips_ignore_for_one_file_when_ignore_already_present(
     assert saved_excluded_file is expected_excluded_file
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_handles_missing_repo_while_adding_ignore_rule(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
@@ -399,6 +413,7 @@ def test_that_scan_repo_handles_missing_repo_while_adding_ignore_rule(
     )
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_does_not_add_ignore_if_both_ignore_types_declined(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
@@ -422,6 +437,7 @@ def test_that_scan_repo_does_not_add_ignore_if_both_ignore_types_declined(
     assert saved_settings is mock_settings_repository.load.return_value
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_does_not_add_ignore_if_all_failures_declined(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
@@ -445,6 +461,7 @@ def test_that_scan_repo_does_not_add_ignore_if_all_failures_declined(
     assert saved_settings is mock_settings_repository.load.return_value
 
 
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_does_not_add_ignore_if_always_yes_is_true(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
