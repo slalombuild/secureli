@@ -53,9 +53,13 @@ class LanguageSupportService:
         :return: Metadata including version of the language configuration that was just installed
         as well as a secret-detection hook ID, if present.
         """
+        ordered_languages = ["base"]
+
+        for key in languages:
+            ordered_languages.append(key)
 
         # Start by identifying and installing the appropriate pre-commit template (if we have one)
-        for language in languages:
+        for language in ordered_languages:
             install_result = self.pre_commit_hook.install(language)
 
         # Add .secureli/ to the gitignore folder if needed

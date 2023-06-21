@@ -202,8 +202,15 @@ class PreCommitAbstraction:
         # Raises a LanguageNotSupportedError if language doesn't resolve to a yaml file
         language_config = self._get_language_config(language)
 
-        with open(path_to_pre_commit_file, "w") as f:
-            f.write(language_config.config_data)
+        if slugify(language) == "base":
+            with open(path_to_pre_commit_file, "a") as f:
+                f.write(yaml.safe_dump(yaml.safe_load(language_config.config_data)))
+        else:
+            # print(self.all_language_pre_commit_data)
+            with open(path_to_pre_commit_file, "a") as f:
+                f.write(
+                    yaml.safe_dump(yaml.safe_load(language_config.config_data)["repos"])
+                )
 
         completed_process = subprocess.run(["pre-commit", "install"])
         if completed_process.returncode != 0:
@@ -440,15 +447,10 @@ class PreCommitAbstraction:
         :return: The combined configuration data as a dictionary
         """
         slugified_language = slugify(language)
-        base_data = self.data_loader("base-pre-commit.yaml")
         config_data = self.data_loader(f"{slugified_language}-pre-commit.yaml")
 
-        all_configs = list()
+        config = yaml.safe_load(config_data) or {}
 
-        all_configs.append(yaml.safe_load(base_data) or {})
-        all_configs.append(yaml.safe_load(config_data) or {})
-
-        config = self._combine_all_langauge_pre_commit_configs(all_configs)
         if self.ignored_file_patterns:
             config["exclude"] = combine_patterns(self.ignored_file_patterns)
 
@@ -456,15 +458,6 @@ class PreCommitAbstraction:
         self._apply_pre_commit_settings(config)
 
         return config
-
-    def _combine_all_langauge_pre_commit_configs(self, configs: list):
-        result = {"repos": []}
-
-        for config in configs:
-            for repo in config["repos"]:
-                result["repos"].append(repo)
-
-        return result
 
     def _apply_pre_commit_settings(self, config: dict) -> dict:
         """

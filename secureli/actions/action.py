@@ -207,9 +207,6 @@ class Action(ABC):
             self.action_deps.echo.print(
                 f"Overall Detected Language: {overall_language}"
             )
-            self.action_deps.echo.print(
-                f"All supported languages found: {list(all_languages.keys())}"
-            )
 
             metadata = self.action_deps.language_support.apply_support(all_languages)
 
