@@ -440,8 +440,15 @@ class PreCommitAbstraction:
         :return: The combined configuration data as a dictionary
         """
         slugified_language = slugify(language)
+        base_data = self.data_loader("base-pre-commit.yaml")
         config_data = self.data_loader(f"{slugified_language}-pre-commit.yaml")
-        config = yaml.safe_load(config_data) or {}
+
+        all_configs = list()
+
+        all_configs.append(yaml.safe_load(base_data) or {})
+        all_configs.append(yaml.safe_load(config_data) or {})
+
+        config = self._combine_all_langauge_pre_commit_configs(all_configs)
         if self.ignored_file_patterns:
             config["exclude"] = combine_patterns(self.ignored_file_patterns)
 
@@ -449,6 +456,15 @@ class PreCommitAbstraction:
         self._apply_pre_commit_settings(config)
 
         return config
+
+    def _combine_all_langauge_pre_commit_configs(self, configs: list):
+        result = {"repos": []}
+
+        for config in configs:
+            for repo in config["repos"]:
+                result["repos"].append(repo)
+
+        return result
 
     def _apply_pre_commit_settings(self, config: dict) -> dict:
         """

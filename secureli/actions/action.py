@@ -200,12 +200,18 @@ class Action(ABC):
                 self.action_deps.echo.print(
                     f"- {language}: {percentage:.0%}", color=Color.MAGENTA, bold=True
                 )
+
+            # HERE -> decide overall language
+            all_languages = analyze_result.language_proportions
             overall_language = list(analyze_result.language_proportions.keys())[0]
             self.action_deps.echo.print(
                 f"Overall Detected Language: {overall_language}"
             )
+            self.action_deps.echo.print(
+                f"All supported languages found: {list(all_languages.keys())}"
+            )
 
-            metadata = self.action_deps.language_support.apply_support(overall_language)
+            metadata = self.action_deps.language_support.apply_support(all_languages)
 
         except (ValueError, LanguageNotSupportedError, InstallFailedError) as e:
             self.action_deps.echo.error(
