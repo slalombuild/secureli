@@ -58,7 +58,7 @@ def init(
     """
     Detect languages and initialize pre-commit hooks and linters for the project
     """
-    container.initializer_action().initialize_repo(Path("."), reset, yes)
+    container.initializer_action().initialize_repo(Path(directory), reset, yes)
 
 
 @app.command()
