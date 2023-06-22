@@ -139,7 +139,6 @@ class Container(containers.DeclarativeContainer):
         scanner=scanner_service,
         secureli_config=secureli_config_repository,
         updater=updater_service,
-        pre_commit=pre_commit_abstraction,
     )
 
     """The Build Action, used to render the build_data using the echo"""

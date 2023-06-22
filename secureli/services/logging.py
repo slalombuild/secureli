@@ -52,7 +52,7 @@ class LogEntry(pydantic.BaseModel):
     username: str = git_user_email()
     machineid: str = platform.uname().node
     secureli_version: str = secureli_version()
-    primary_language: Optional[str]
+    all_languages: Optional[list[str]]
     status: LogStatus
     action: LogAction
     hook_config: Optional[HookConfiguration]
@@ -78,16 +78,16 @@ class LoggingService:
         :param action: The action that succeeded
         """
         secureli_config = self.secureli_config.load()
-        hook_config = (
-            self.pre_commit.get_configuration(secureli_config.overall_language)
-            if secureli_config.overall_language
-            else None
-        )
+        # hook_config = (
+        #     self.pre_commit.get_configuration(secureli_config.languages)
+        #     if secureli_config.languages
+        #     else None
+        # )
         log_entry = LogEntry(
             status=LogStatus.success,
             action=action,
-            hook_config=hook_config,
-            primary_language=secureli_config.overall_language,
+            # hook_config=hook_config,
+            all_language=secureli_config.languages,
         )
         self._log(log_entry)
 
@@ -106,11 +106,11 @@ class LoggingService:
         :param details: Details about the failure
         """
         secureli_config = self.secureli_config.load()
-        hook_config = (
-            None
-            if not secureli_config.overall_language
-            else self.pre_commit.get_configuration(secureli_config.overall_language)
-        )
+        # hook_config = (
+        #     None
+        #     if not secureli_config.languages
+        #     else self.pre_commit.get_configuration(secureli_config.languages)
+        # )
         log_entry = LogEntry(
             status=LogStatus.failure,
             action=action,
@@ -119,8 +119,8 @@ class LoggingService:
             ),
             total_failure_count=total_failure_count,
             failure_count_details=individual_failure_count,
-            hook_config=hook_config,
-            primary_language=secureli_config.overall_language,
+            # hook_config=hook_config,
+            all_languages=secureli_config.languages,
         )
         self._log(log_entry)
 
