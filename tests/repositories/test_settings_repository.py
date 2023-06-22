@@ -94,3 +94,14 @@ def test_that_repo_saves_config(
     settings_repository.save(settings_file)
 
     mock_open.assert_called_once()
+
+
+def test_that_repo_saves_without_echo_level(
+    existent_path: MagicMock,
+    mock_open: MagicMock,
+    settings_repository: SecureliRepository,
+):
+    settings_file = SecureliFile()
+    settings_repository.save(settings_file)
+
+    mock_open.assert_called_once()
