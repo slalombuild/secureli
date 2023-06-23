@@ -111,8 +111,18 @@ class PreCommitAbstraction:
     def get_configuration(
         self, language: str, install: bool = False
     ) -> GetPreCommitResult:
+        """
+        Gets the Language specific pre commit configuration in its final state. ie any and all changes
+        by .secureli configs. Optionally install pre commit hooks as well.
+        :param langauge: langauge to retrieve pre-commit-config for.
+        :param install: boolean value whether to install pre-commit hooks
+        :return: GetPreCommitResults
+        """
+
+        # Retreive calculated pre-commit
         language_config = self._get_language_config(language)
 
+        # install pre-commit hooks
         install_result = None
         if install:
             install_result = self.install(language)
@@ -124,6 +134,11 @@ class PreCommitAbstraction:
         )
 
     def install(self, language: str) -> InstallResult:
+        """
+        Install pre-commit hooks using dependant pre-commit cli. Write (install) any linter specific
+        configs laguage might have as well.
+        :param langauge: langauge pre commit hooks to install.
+        """
         completed_process = subprocess.run(["pre-commit", "install"])
         if completed_process.returncode != 0:
             raise InstallFailedError(

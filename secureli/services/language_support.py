@@ -8,7 +8,6 @@ from pathlib import Path
 
 from secureli.abstractions.pre_commit import PreCommitAbstraction
 from secureli.services.git_ignore import GitIgnoreService
-from secureli.utilities.patterns import combine_patterns
 
 supported_languages = [
     "C#",
@@ -74,15 +73,12 @@ class LanguageSupportService:
     ):
         self.git_ignore = git_ignore
         self.pre_commit_hook = pre_commit_hook
-        self.all_configs = []
 
     def version_for_language(self, languages: list[str]) -> str:
-        # NOTE previously just called below func
-
         """
         Calculates a hash of the generated pre-commit file for the given language to be used as part
         of the overall installed configuration.
-        :param language: The language specified
+        :param languages: list of all supported languages to use in config hashing
         :raises LanguageNotSupportedError if the associated pre-commit file for the language is not found
         :return: The hash of the language-pre-commit.yaml file found in the resources
         matching the given language.
@@ -95,7 +91,7 @@ class LanguageSupportService:
     def apply_support(self, languages: list[str]) -> LanguageMetadata:
         """
         Applies Secure Build support for the provided languages
-        :param languages: The language to provide support for
+        :param languages: list of support languages to supply support for
         :raises LanguageNotSupportedError if support for the language is not provided
         :return: Metadata including version of the language configuration that was just installed
         as well as a secret-detection hook ID, if present.
@@ -113,7 +109,7 @@ class LanguageSupportService:
             version=version, security_hook_id=self.secret_detection_hook_id(languages)
         )
 
-    def secret_detection_hook_id(self, language: str) -> Optional[str]:
+    def secret_detection_hook_id(self) -> Optional[str]:
         """
         Checks the configuration of the provided language to determine if any configured
         hooks are usable for init-time secrets detection. These supported hooks are derived
@@ -121,11 +117,7 @@ class LanguageSupportService:
         :param language: The language to check support for
         :return: The hook ID to use for secrets analysis if supported, otherwise None.
         """
-
-        # TODO language_config = total config.
-        # language_config = self._get_language_config(languages: str[])
-        # config = yaml.safe_load(language_config.config_data)
-        config = {}
+        config = self._build_pre_commit_config()
 
         secrets_detecting_repos = self.pre_commit_hook.get_secret_detecting_repos()
 
@@ -333,7 +325,7 @@ class LanguageSupportService:
         return config_hash
 
     def _build_pre_commit_config(self, languages: list[str], install=False):
-        self.all_configs = []
+        all_configs = []
 
         languages.append("base")
 
@@ -341,11 +333,11 @@ class LanguageSupportService:
             result = self.pre_commit_hook.get_configuration(language, install)
             if result.successful:
                 for config in result.config_data["repos"]:
-                    self.all_configs.append(config)
+                    all_configs.append(config)
 
         languages.remove("base")
 
-        return {"repos": self.all_configs}
+        return {"repos": all_configs}
 
     def _hash_config(self, config: str) -> str:
         """
