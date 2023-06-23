@@ -108,12 +108,12 @@ class LanguageSupportService:
         """
 
         path_to_config_file = ".pre-commit-config.yaml"
-        pre_commit_config = self._build_pre_commit_config(languages)
+        pre_commit_config = self._build_pre_commit_config(languages, True)
 
         with open(path_to_config_file, "w") as f:
             f.write(yaml.dump(pre_commit_config))
 
-        version = self.version_for_language(languages)
+        version = self._hash_config(yaml.dump(pre_commit_config))
 
         return LanguageMetadata(
             version=version, security_hook_id=self.secret_detection_hook_id(languages)
@@ -338,15 +338,15 @@ class LanguageSupportService:
 
         return config_hash
 
-    def _build_pre_commit_config(self, languages: list[str]):
+    def _build_pre_commit_config(self, languages: list[str], install=False):
         self.all_configs = []
 
         languages.append("base")
 
         for language in languages:
-            result = self.pre_commit_hook.get_and_install(language)
+            result = self.pre_commit_hook.get_configuration(language, install)
             if result.successful:
-                for config in result.pre_commit_config_data["repos"]:
+                for config in result.config_data["repos"]:
                     self.all_configs.append(config)
 
         languages.remove("base")

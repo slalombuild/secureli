@@ -1,5 +1,4 @@
 import subprocess
-import hashlib
 
 from pathlib import Path
 from typing import Callable, Optional, Any
@@ -76,8 +75,17 @@ class InstallResult(pydantic.BaseModel):
     """
 
     successful: bool
-    pre_commit_config_data: Any
-    linter_configs_result: LanguagePreCommitConfigInstallResult
+    linter_configs_result: Optional[LanguagePreCommitConfigInstallResult]
+
+
+class GetPreCommitResult(pydantic.BaseModel):
+    """
+    Results of retreiving and potentially installing language specific pre commit and linter config
+    """
+
+    successful: bool
+    install_result: Optional[InstallResult]
+    config_data: Any
 
 
 class ValidateConfigResult(pydantic.BaseModel):
@@ -124,17 +132,22 @@ class PreCommitAbstraction:
             else PreCommitSettings()
         )
 
-    def get_and_install(self, language: str) -> InstallResult:
-        """
-        Identifies the template we hold for the specified language, writes it, installs it, and cleans up
-        :param language: The language to identify a template for
-        :raises LanguageNotSupportedError if a pre-commit template cannot be found for the specified language
-        :raises InstallFailedError if the template was found, but an error occurred installing it
-        """
-
-        # Raises a LanguageNotSupportedError if language doesn't resolve to a yaml file
+    def get_configuration(
+        self, language: str, install: bool = False
+    ) -> GetPreCommitResult:
         language_config = self._get_language_config(language)
 
+        install_result = None
+        if install:
+            install_result = self.install(language)
+
+        return GetPreCommitResult(
+            successful=True,
+            install_result=install_result,
+            config_data=language_config.config_data,
+        )
+
+    def install(self, language: str) -> InstallResult:
         completed_process = subprocess.run(["pre-commit", "install"])
         if completed_process.returncode != 0:
             raise InstallFailedError(
@@ -146,10 +159,9 @@ class PreCommitAbstraction:
         return InstallResult(
             successful=True,
             linter_configs_result=install_configs_result,
-            pre_commit_config_data=language_config.config_data,
         )
 
-    def get_configuration(self, language: str) -> HookConfiguration:
+    def get_serialized_configuration(self, language: str) -> HookConfiguration:
         """
         Creates a basic, serializable configuration out of the combined specified language config
         :param language: The language to load the configuration for

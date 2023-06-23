@@ -18,7 +18,6 @@ class SecureliConfigRepository:
         Save the specified configuration to the .secureli folder
         :param secureli_config: The populated configuration to save
         """
-        print(secureli_config.version_installed)
         secureli_folder_path = self._initialize_secureli_directory()
         secureli_config_path = secureli_folder_path / "repo-config.yaml"
         with open(secureli_config_path, "w") as f:
