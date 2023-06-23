@@ -18,12 +18,6 @@ class InstallFailedError(Exception):
     pass
 
 
-class ExecuteFailedError(Exception):
-    """Attempting to invoke pre-commit to test our repo did not succeed"""
-
-    pass
-
-
 class LanguageNotSupportedError(Exception):
     """The given language was not supported by the PreCommitHooks abstraction"""
 
@@ -60,15 +54,6 @@ class LoadLanguageConfigsResult(pydantic.BaseModel):
     config_data: list[Any]
 
 
-class UnexpectedReposResult(pydantic.BaseModel):
-    """
-    The result of checking for unexpected repos in config
-    """
-
-    missing_repos: Optional[list[str]] = []
-    unexpected_repos: Optional[list[str]] = []
-
-
 class InstallResult(pydantic.BaseModel):
     """
     The results of calling install
@@ -86,15 +71,6 @@ class GetPreCommitResult(pydantic.BaseModel):
     successful: bool
     install_result: Optional[InstallResult]
     config_data: Any
-
-
-class ValidateConfigResult(pydantic.BaseModel):
-    """
-    The results of calling validate_config
-    """
-
-    successful: bool
-    output: str
 
 
 class Repo(pydantic.BaseModel):
