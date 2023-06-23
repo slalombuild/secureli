@@ -113,7 +113,7 @@ class Container(containers.DeclarativeContainer):
     """Logs branch-level secureli log entries to the disk"""
     logging_service = providers.Factory(
         LoggingService,
-        pre_commit=pre_commit_abstraction,
+        language_support=language_support_service,
         secureli_config=secureli_config_repository,
     )
 

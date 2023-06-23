@@ -109,7 +109,7 @@ class LanguageSupportService:
             version=version, security_hook_id=self.secret_detection_hook_id(languages)
         )
 
-    def secret_detection_hook_id(self) -> Optional[str]:
+    def secret_detection_hook_id(self, languages: list[str]) -> Optional[str]:
         """
         Checks the configuration of the provided language to determine if any configured
         hooks are usable for init-time secrets detection. These supported hooks are derived
@@ -117,7 +117,7 @@ class LanguageSupportService:
         :param language: The language to check support for
         :return: The hook ID to use for secrets analysis if supported, otherwise None.
         """
-        config = self._build_pre_commit_config()
+        config = self._build_pre_commit_config(languages)
 
         secrets_detecting_repos = self.pre_commit_hook.get_secret_detecting_repos()
 
@@ -270,17 +270,18 @@ class LanguageSupportService:
         else:
             return ExecuteResult(successful=True, output=output)
 
-    def _get_current_configuration(self):
+    def get_current_config_hash(self) -> str:
         """
-        Returns the contents of the .pre-commit-config.yaml file.  Note that this should be used to
-        see the current state and not be used for any desired state actions.
-        :return: Dictionary containing the contents of the .pre-commit-config.yaml file
+        Returns a hash of the current .pre-commit-config.yaml file.  This hash is generated in the
+        same way that we generate the version hash for the secureli config file so should be valid
+        for comparison.  Note this is the hash of the config file as it currently exists and not
+        the hash of the combined config.
+        :return: Returns a hash derived from the
         """
-        path_to_pre_commit_file = Path(".pre-commit-config.yaml")
+        config_data = yaml.dump(self._get_current_configuration())
+        config_hash = self._hash_config(config_data)
 
-        with open(path_to_pre_commit_file, "r") as f:
-            data = yaml.safe_load(f)
-            return data
+        return config_hash
 
     def validate_config(self, languages: list[str]) -> bool:
         """
@@ -311,18 +312,25 @@ class LanguageSupportService:
 
         return ValidateConfigResult(successful=config_matches, output=output)
 
-    def get_current_config_hash(self) -> str:
-        """
-        Returns a hash of the current .pre-commit-config.yaml file.  This hash is generated in the
-        same way that we generate the version hash for the secureli config file so should be valid
-        for comparison.  Note this is the hash of the config file as it currently exists and not
-        the hash of the combined config.
-        :return: Returns a hash derived from the
-        """
-        config_data = yaml.dump(self._get_current_configuration())
-        config_hash = self._hash_config(config_data)
+    def get_serialized_config(self, languages: list[str]):
+        configs = []
 
-        return config_hash
+        for language in languages:
+            configs.append(self.pre_commit_hook.get_serialized_configuration(language))
+
+        return configs
+
+    def _get_current_configuration(self):
+        """
+        Returns the contents of the .pre-commit-config.yaml file.  Note that this should be used to
+        see the current state and not be used for any desired state actions.
+        :return: Dictionary containing the contents of the .pre-commit-config.yaml file
+        """
+        path_to_pre_commit_file = Path(".pre-commit-config.yaml")
+
+        with open(path_to_pre_commit_file, "r") as f:
+            data = yaml.safe_load(f)
+            return data
 
     def _build_pre_commit_config(self, languages: list[str], install=False):
         all_configs = []
