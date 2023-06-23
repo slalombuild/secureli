@@ -15,7 +15,10 @@ from secureli.repositories.secureli_config import (
     SecureliConfigRepository,
 )
 from secureli.services.language_analyzer import LanguageAnalyzerService, AnalyzeResult
-from secureli.services.language_support import LanguageSupportService
+from secureli.services.language_support import (
+    LanguageSupportService,
+    format_language_output,
+)
 from secureli.services.scanner import ScannerService, ScanMode
 from secureli.services.updater import UpdaterService
 
@@ -110,10 +113,10 @@ class Action(ABC):
                 return self._update_secureli(always_yes)
 
             self.action_deps.echo.print(
-                f"SeCureLI is installed and up-to-date (languages = {config.languages})"
+                f"SeCureLI is installed and up-to-date (languages = {format_language_output(config.languages)})"
             )
             return VerifyResult(
-                outcome=VerifyOutcome.UP_TO_DATE,
+                outcome=VerifyOutcome.UPDATE_SUCCEEDED,
                 config=config,
             )
 
@@ -192,16 +195,21 @@ class Action(ABC):
             if not analyze_result.language_proportions:
                 raise ValueError("No supported languages found in current repository")
 
-            self.action_deps.echo.print("Detected the following languages:")
+            all_languages = list(analyze_result.language_proportions.keys())
+            self.action_deps.echo.print(
+                f"Detected the following languages: {format_language_output(all_languages)}"
+            )
             for language, percentage in analyze_result.language_proportions.items():
                 self.action_deps.echo.print(
                     f"- {language}: {percentage:.0%}", color=Color.MAGENTA, bold=True
                 )
 
-            # HERE -> decide overall language
+            # HERE -> decide support languages
             all_languages = analyze_result.language_proportions
             languages = list(analyze_result.language_proportions.keys())
-            self.action_deps.echo.print(f"Overall Detected Language: {languages}")
+            self.action_deps.echo.print(
+                f"Languages Installing: {format_language_output(languages)}"
+            )
 
             metadata = self.action_deps.language_support.apply_support(languages)
 
@@ -232,7 +240,7 @@ class Action(ABC):
             )
 
         self.action_deps.echo.print(
-            f"SeCureLI has been installed successfully (language = {config.languages})"
+            f"SeCureLI has been installed successfully (languages = {format_language_output(config.languages)})"
         )
 
         return VerifyResult(

@@ -16,13 +16,13 @@ def mock_pre_commit_hook() -> MagicMock:
     )
 
     mock_pre_commit_hook = MagicMock()
-    mock_pre_commit_hook.version_for_language.return_value = "abc123"
+    # mock_pre_commit_hook.version_for_language.return_value = "abc123"
     mock_pre_commit_hook.install.return_value = InstallResult(
         successful=True,
-        version_installed="abc123",
-        configs_result=mock_pre_commit_config_install_result,
+        # version_installed="abc123",
+        # configs_result=mock_pre_commit_config_install_result,
     )
-    mock_pre_commit_hook.secret_detection_hook_id.return_value = "baddie-finder"
+    # mock_pre_commit_hook.secret_detection_hook_id.return_value = "baddie-finder"
     return mock_pre_commit_hook
 
 

@@ -60,6 +60,10 @@ class Repo(pydantic.BaseModel):
     hooks: list[str]
 
 
+def format_language_output(languages: list[str]) -> str:
+    return " ".join(map(str, languages))
+
+
 class LanguageSupportService:
     """
     Orchestrates a growing list of security best practices for languages. Installs
@@ -73,6 +77,9 @@ class LanguageSupportService:
     ):
         self.git_ignore = git_ignore
         self.pre_commit_hook = pre_commit_hook
+
+    def filter_unsopported_languages(self, languages: list[str]):
+        return [lang for lang in languages if lang in supported_languages]
 
     def version_for_language(self, languages: list[str]) -> str:
         """

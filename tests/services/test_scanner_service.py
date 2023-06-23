@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from secureli.abstractions.pre_commit import ExecuteResult
+from secureli.services.language_support import ExecuteResult
 from secureli.services.scanner import ScannerService, ScanMode, OutputParseErrors
 from pytest_mock import MockerFixture
 
