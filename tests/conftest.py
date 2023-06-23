@@ -19,6 +19,13 @@ def mock_pre_commit() -> MagicMock:
 
 
 @pytest.fixture()
+def mock_language_support() -> MagicMock:
+    mock_language_support = MagicMock()
+
+    return mock_language_support
+
+
+@pytest.fixture()
 def mock_secureli_config() -> MagicMock:
     mock_secureli_config = MagicMock()
     return mock_secureli_config

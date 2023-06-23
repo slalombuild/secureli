@@ -78,9 +78,6 @@ class LanguageSupportService:
         self.git_ignore = git_ignore
         self.pre_commit_hook = pre_commit_hook
 
-    def filter_unsopported_languages(self, languages: list[str]):
-        return [lang for lang in languages if lang in supported_languages]
-
     def version_for_language(self, languages: list[str]) -> str:
         """
         Calculates a hash of the generated pre-commit file for the given language to be used as part
