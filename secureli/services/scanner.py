@@ -61,7 +61,7 @@ class ScannerService:
     """
 
     def __init__(self, language_support: LanguageSupportService):
-        self.language_support = LanguageSupportService
+        self.language_support = language_support
 
     def scan_repo(
         self, scan_mode: ScanMode, specific_test: Optional[str] = None

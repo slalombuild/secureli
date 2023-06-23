@@ -107,27 +107,27 @@ def mock_config_no_black(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
-def scanner_service(mock_pre_commit: MagicMock) -> ScannerService:
-    return ScannerService(mock_pre_commit)
+def scanner_service(mock_language_support: MagicMock) -> ScannerService:
+    return ScannerService(mock_language_support)
 
 
-def test_that_scanner_service_scans_repositories_with_pre_commit(
+def test_that_scanner_service_scans_repositories_with_Language_support(
     scanner_service: ScannerService,
-    mock_pre_commit: MagicMock,
+    mock_language_support: MagicMock,
 ):
     scan_result = scanner_service.scan_repo(ScanMode.ALL_FILES)
 
-    mock_pre_commit.execute_hooks.assert_called_once()
+    mock_language_support.execute_hooks.assert_called_once()
     assert scan_result.successful
 
 
 def test_that_scanner_service_parses_failures(
     scanner_service: ScannerService,
-    mock_pre_commit: MagicMock,
+    mock_language_support: MagicMock,
     mock_scan_output_single_failure: MagicMock,
     mock_config_all_repos: MagicMock,
 ):
-    mock_pre_commit.execute_hooks.return_value = ExecuteResult(
+    mock_language_support.execute_hooks.return_value = ExecuteResult(
         successful=True, output=mock_scan_output_single_failure
     )
     scan_result = scanner_service.scan_repo(ScanMode.ALL_FILES)
@@ -137,11 +137,11 @@ def test_that_scanner_service_parses_failures(
 
 def test_that_scanner_service_parses_multiple_failures(
     scanner_service: ScannerService,
-    mock_pre_commit: MagicMock,
+    mock_language_support: MagicMock,
     mock_scan_output_double_failure: MagicMock,
     mock_config_all_repos: MagicMock,
 ):
-    mock_pre_commit.execute_hooks.return_value = ExecuteResult(
+    mock_language_support.execute_hooks.return_value = ExecuteResult(
         successful=True, output=mock_scan_output_double_failure
     )
     scan_result = scanner_service.scan_repo(ScanMode.ALL_FILES)
@@ -151,11 +151,11 @@ def test_that_scanner_service_parses_multiple_failures(
 
 def test_that_scanner_service_parses_when_no_failures(
     scanner_service: ScannerService,
-    mock_pre_commit: MagicMock,
+    mock_language_support: MagicMock,
     mock_scan_output_no_failure: MagicMock,
     mock_config_all_repos: MagicMock,
 ):
-    mock_pre_commit.execute_hooks.return_value = ExecuteResult(
+    mock_language_support.execute_hooks.return_value = ExecuteResult(
         successful=True, output=mock_scan_output_no_failure
     )
     scan_result = scanner_service.scan_repo(ScanMode.ALL_FILES)
@@ -165,11 +165,11 @@ def test_that_scanner_service_parses_when_no_failures(
 
 def test_that_scanner_service_handles_error_in_missing_repo(
     scanner_service: ScannerService,
-    mock_pre_commit: MagicMock,
+    mock_language_support: MagicMock,
     mock_scan_output_double_failure: MagicMock,
     mock_config_no_black: MagicMock,
 ):
-    mock_pre_commit.execute_hooks.return_value = ExecuteResult(
+    mock_language_support.execute_hooks.return_value = ExecuteResult(
         successful=True, output=mock_scan_output_double_failure
     )
     scan_result = scanner_service.scan_repo(ScanMode.ALL_FILES)
