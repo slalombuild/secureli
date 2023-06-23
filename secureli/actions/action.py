@@ -100,7 +100,7 @@ class Action(ABC):
             # Validates the current .pre-commit-config.yaml against the generated config
             config_validation_result = (
                 self.action_deps.language_support.validate_config(
-                    language=config.languages
+                    languages=config.languages
                 )
             )
 

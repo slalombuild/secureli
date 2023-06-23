@@ -1,4 +1,6 @@
 from typing import Optional
+import subprocess
+import hashlib
 
 import pydantic
 import yaml
@@ -42,6 +44,15 @@ class ValidateConfigResult(pydantic.BaseModel):
     output: str
 
 
+class ExecuteResult(pydantic.BaseModel):
+    """
+    The results of calling execute_hooks
+    """
+
+    successful: bool
+    output: str
+
+
 class Repo(pydantic.BaseModel):
     """A repository containing pre-commit hooks"""
 
@@ -69,6 +80,7 @@ class LanguageSupportService:
     ):
         self.git_ignore = git_ignore
         self.pre_commit_hook = pre_commit_hook
+        self.all_configs = []
 
     def version_for_language(self, languages: list[str]) -> str:
         # NOTE previously just called below func
@@ -81,12 +93,10 @@ class LanguageSupportService:
         :return: The hash of the language-pre-commit.yaml file found in the resources
         matching the given language.
         """
+        pre_commit_config = self._build_pre_commit_config(languages)
+        pre_commit_config_version = self._hash_config(yaml.dump(pre_commit_config))
 
-        # TODO get langauges
-        # language_config = self._get_language_config(languages)
-        # return language_config.version
-
-        return "testVersionOfLanguage"
+        return pre_commit_config_version
 
     def apply_support(self, languages: list[str]) -> LanguageMetadata:
         """
@@ -96,28 +106,18 @@ class LanguageSupportService:
         :return: Metadata including version of the language configuration that was just installed
         as well as a secret-detection hook ID, if present.
         """
-        print(languages)
+
+        path_to_config_file = ".pre-commit-config.yaml"
+        pre_commit_config = self._build_pre_commit_config(languages)
+
+        with open(path_to_config_file, "w") as f:
+            f.write(yaml.dump(pre_commit_config))
+
+        version = self.version_for_language(languages)
 
         return LanguageMetadata(
-            version="TEST", security_hook_id=self.secret_detection_hook_id(languages)
+            version=version, security_hook_id=self.secret_detection_hook_id(languages)
         )
-        # ordered_languages = ["base"]
-
-        # for key in languages:
-        #     ordered_languages.append(key)
-
-        # # Start by identifying and installing the appropriate pre-commit template (if we have one)
-        # for language in ordered_languages:
-        #     install_result = self.pre_commit_hook.install(language)
-
-        # # Add .secureli/ to the gitignore folder if needed
-        # self.git_ignore.ignore_secureli_files()
-        # primary = list(languages.keys())[0]
-
-        # return LanguageMetadata(
-        #     version=install_result.version_installed,
-        #     security_hook_id=self.pre_commit_hook.secret_detection_hook_id(primary),
-        # )
 
     def secret_detection_hook_id(self, language: str) -> Optional[str]:
         """
@@ -165,6 +165,125 @@ class LanguageSupportService:
 
         return None
 
+    def update(self) -> ExecuteResult:
+        """
+        Installs the hooks defined in pre-commit-config.yml.
+        :return: ExecuteResult, indicating success or failure.
+        """
+        subprocess_args = ["pre-commit", "install-hooks", "--color", "always"]
+
+        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
+        output = (
+            completed_process.stdout.decode("utf8") if completed_process.stdout else ""
+        )
+        if completed_process.returncode != 0:
+            return ExecuteResult(successful=False, output=output)
+        else:
+            return ExecuteResult(successful=True, output=output)
+
+    def execute_hooks(
+        self, all_files: bool = False, hook_id: Optional[str] = None
+    ) -> ExecuteResult:
+        """
+        Execute the configured hooks against the repository, either against your staged changes
+        or all the files in the repo
+        :param all_files: True if we want to scan all files, default to false, which only
+        scans our staged changes we're about to commit
+        :param hook_id: A specific hook to run. If None, all hooks will be run
+        :return: ExecuteResult, indicating success or failure.
+        """
+        # always log colors so that we can print them out later, which does not happen by default
+        # when we capture the output (which we do so we can add it to our logs).
+        subprocess_args = [
+            "pre-commit",
+            "run",
+            "--color",
+            "always",
+        ]
+        if all_files:
+            subprocess_args.append("--all-files")
+
+        if hook_id:
+            subprocess_args.append(hook_id)
+
+        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
+        output = (
+            completed_process.stdout.decode("utf8") if completed_process.stdout else ""
+        )
+        if completed_process.returncode != 0:
+            return ExecuteResult(successful=False, output=output)
+        else:
+            return ExecuteResult(successful=True, output=output)
+
+    def autoupdate_hooks(
+        self,
+        bleeding_edge: bool = False,
+        freeze: bool = False,
+        repos: Optional[list] = None,
+    ) -> ExecuteResult:
+        """
+        Updates the precommit hooks but executing precommit's autoupdate command.  Additional info at
+        https://pre-commit.com/#pre-commit-autoupdate
+        :param bleeding edge: True if updating to the bleeding edge of the default branch instead of
+        the latest tagged version (which is the default behavior)
+        :param freeze: Set to True to store "frozen" hashes in rev instead of tag names.
+        :param repos: List of repos (url as a string) to update. This is used to target specific repos instead of all repos.
+        :return: ExecuteResult, indicating success or failure.
+        """
+        subprocess_args = [
+            "pre-commit",
+            "autoupdate",
+        ]
+        if bleeding_edge:
+            subprocess_args.append("--bleeding-edge")
+
+        if freeze:
+            subprocess_args.append("--freeze")
+
+        if repos:
+            repo_args = []
+
+            if isinstance(repos, str):
+                # If a string is passed in, converts to a list containing the string
+                repos = [repos]
+
+            for repo in repos:
+                if isinstance(repo, str):
+                    arg = "--repo {}".format(repo)
+                    repo_args.append(arg)
+                else:
+                    output = "Unable to update repo, string validation failed. Repo parameter should be a dictionary of strings."
+                    return ExecuteResult(successful=False, output=output)
+
+            subprocess_args.extend(repo_args)
+
+        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
+        output = (
+            completed_process.stdout.decode("utf8") if completed_process.stdout else ""
+        )
+        if completed_process.returncode != 0:
+            return ExecuteResult(successful=False, output=output)
+        else:
+            return ExecuteResult(successful=True, output=output)
+
+    def remove_unused_hooks(self) -> ExecuteResult:
+        """
+        Removes unused hook repos from the cache.  Pre-commit determines which flags are "unused" by comparing
+        the repos to the pre-commit-config.yaml file.  Any cached hook repos that are not in the config file
+        will be removed from the cache.
+        :return: ExecuteResult, indicating success or failure.
+        """
+        subprocess_args = ["pre-commit", "gc", "--color", "always"]
+
+        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
+        output = (
+            completed_process.stdout.decode("utf8") if completed_process.stdout else ""
+        )
+        if completed_process.returncode != 0:
+            return ExecuteResult(successful=False, output=output)
+        else:
+            return ExecuteResult(successful=True, output=output)
+
     def _get_current_configuration(self):
         """
         Returns the contents of the .pre-commit-config.yaml file.  Note that this should be used to
@@ -177,7 +296,7 @@ class LanguageSupportService:
             data = yaml.safe_load(f)
             return data
 
-    def validate_config(self, language: str) -> bool:
+    def validate_config(self, languages: list[str]) -> bool:
         """
         Validates that the current configuration matches the expected configuration generated
         by secureli.
@@ -187,11 +306,9 @@ class LanguageSupportService:
         current_config = yaml.dump(self._get_current_configuration())
 
         # TODO generate from all languages
-        generated_config = self._calculate_combined_configuration_data(
-            language=language
-        )
+        generated_config = yaml.dump(self._build_pre_commit_config(languages))
         current_hash = self.get_current_config_hash()
-        expected_hash = self.pre_commit_hook._hash_config(generated_config)
+        expected_hash = self._hash_config(generated_config)
         output = ""
 
         config_matches = current_hash == expected_hash
@@ -217,7 +334,33 @@ class LanguageSupportService:
         :return: Returns a hash derived from the
         """
         config_data = yaml.dump(self._get_current_configuration())
-        config_hash = self.pre_commit_hook._hash_config(config_data)
+        config_hash = self._hash_config(config_data)
+
+        return config_hash
+
+    def _build_pre_commit_config(self, languages: list[str]):
+        self.all_configs = []
+
+        languages.append("base")
+
+        for language in languages:
+            result = self.pre_commit_hook.get_and_install(language)
+            if result.successful:
+                for config in result.pre_commit_config_data["repos"]:
+                    self.all_configs.append(config)
+
+        languages.remove("base")
+
+        return {"repos": self.all_configs}
+
+    def _hash_config(self, config: str) -> str:
+        """
+        Creates an MD5 hash from a config string
+        :return: A hash string
+        """
+        config_hash = hashlib.md5(
+            config.encode("utf8"), usedforsecurity=False
+        ).hexdigest()
 
         return config_hash
 
@@ -232,8 +375,11 @@ class LanguageSupportService:
 
         for repo in repo_list:
             url = repo["repo"]
-            rev = repo["rev"]
-            repos_dict[url] = rev
+            if "rev" in repo.keys():
+                rev = repo["rev"]
+                repos_dict[url] = rev
+            else:
+                repos_dict[url] = ""
 
         return repos_dict
 

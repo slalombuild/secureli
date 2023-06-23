@@ -120,12 +120,12 @@ class Container(containers.DeclarativeContainer):
     """The service that scans the repository using pre-commit configuration"""
     scanner_service = providers.Factory(
         ScannerService,
-        pre_commit=pre_commit_abstraction,
+        language_support=language_support_service,
     )
 
     updater_service = providers.Factory(
         UpdaterService,
-        pre_commit=pre_commit_abstraction,
+        language_support=language_support_service,
         config=secureli_config_repository,
     )
 

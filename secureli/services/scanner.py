@@ -7,6 +7,7 @@ import re
 import yaml
 
 from secureli.abstractions.pre_commit import PreCommitAbstraction
+from secureli.services.language_support import LanguageSupportService
 
 
 class ScanMode(str, Enum):
@@ -59,8 +60,8 @@ class ScannerService:
     Scans the repo according to the repo's SeCureLI config
     """
 
-    def __init__(self, pre_commit: PreCommitAbstraction):
-        self.pre_commit = pre_commit
+    def __init__(self, language_support: LanguageSupportService):
+        self.language_support = LanguageSupportService
 
     def scan_repo(
         self, scan_mode: ScanMode, specific_test: Optional[str] = None
@@ -74,7 +75,9 @@ class ScannerService:
         :return: A ScanResult object containing whether we succeeded and any error
         """
         all_files = True if scan_mode == ScanMode.ALL_FILES else False
-        execute_result = self.pre_commit.execute_hooks(all_files, hook_id=specific_test)
+        execute_result = self.language_support.execute_hooks(
+            all_files, hook_id=specific_test
+        )
         parsed_output = self._parse_scan_ouput(output=execute_result.output)
 
         return ScanResult(

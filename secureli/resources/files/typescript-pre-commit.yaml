@@ -5,6 +5,7 @@ repos:
     -   id: eslint
         files: \.[t]sx?$  # *.ts and *.tsx
         types: [file]
+        name: eslint-typescipt
         args: ['--config', '.secureli/typescript.eslintrc.yaml', '--fix']
         additional_dependencies:
         -   eslint@8.42.0
@@ -17,6 +18,7 @@ repos:
     rev: 'v2.7.1'
     hooks:
     -   id: prettier
+        name: prettier-typescript
         args:
           - --single-quote
           - --trailing-comma

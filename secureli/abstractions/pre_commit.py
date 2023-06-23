@@ -43,8 +43,7 @@ class LanguagePreCommitInstallResult(pydantic.BaseModel):
     """
 
     language: str
-    config_data: str
-    version: str
+    config_data: Any
 
 
 class LanguagePreCommitConfigInstallResult(pydantic.BaseModel):
@@ -71,23 +70,14 @@ class UnexpectedReposResult(pydantic.BaseModel):
     unexpected_repos: Optional[list[str]] = []
 
 
-class ExecuteResult(pydantic.BaseModel):
-    """
-    The results of calling execute_hooks
-    """
-
-    successful: bool
-    output: str
-
-
 class InstallResult(pydantic.BaseModel):
     """
     The results of calling install
     """
 
     successful: bool
-    version_installed: str
-    configs_result: LanguagePreCommitConfigInstallResult
+    pre_commit_config_data: Any
+    linter_configs_result: LanguagePreCommitConfigInstallResult
 
 
 class ValidateConfigResult(pydantic.BaseModel):
@@ -134,7 +124,7 @@ class PreCommitAbstraction:
             else PreCommitSettings()
         )
 
-    def install(self, language: str) -> InstallResult:
+    def get_and_install(self, language: str) -> InstallResult:
         """
         Identifies the template we hold for the specified language, writes it, installs it, and cleans up
         :param language: The language to identify a template for
@@ -142,20 +132,8 @@ class PreCommitAbstraction:
         :raises InstallFailedError if the template was found, but an error occurred installing it
         """
 
-        path_to_pre_commit_file = Path(".pre-commit-config.yaml")
-
         # Raises a LanguageNotSupportedError if language doesn't resolve to a yaml file
         language_config = self._get_language_config(language)
-
-        if slugify(language) == "base":
-            with open(path_to_pre_commit_file, "a") as f:
-                f.write(yaml.safe_dump(yaml.safe_load(language_config.config_data)))
-        else:
-            # print(self.all_language_pre_commit_data)
-            with open(path_to_pre_commit_file, "a") as f:
-                f.write(
-                    yaml.safe_dump(yaml.safe_load(language_config.config_data)["repos"])
-                )
 
         completed_process = subprocess.run(["pre-commit", "install"])
         if completed_process.returncode != 0:
@@ -167,128 +145,9 @@ class PreCommitAbstraction:
 
         return InstallResult(
             successful=True,
-            version_installed=language_config.version,
-            configs_result=install_configs_result,
+            linter_configs_result=install_configs_result,
+            pre_commit_config_data=language_config.config_data,
         )
-
-    def execute_hooks(
-        self, all_files: bool = False, hook_id: Optional[str] = None
-    ) -> ExecuteResult:
-        """
-        Execute the configured hooks against the repository, either against your staged changes
-        or all the files in the repo
-        :param all_files: True if we want to scan all files, default to false, which only
-        scans our staged changes we're about to commit
-        :param hook_id: A specific hook to run. If None, all hooks will be run
-        :return: ExecuteResult, indicating success or failure.
-        """
-        # always log colors so that we can print them out later, which does not happen by default
-        # when we capture the output (which we do so we can add it to our logs).
-        subprocess_args = [
-            "pre-commit",
-            "run",
-            "--color",
-            "always",
-        ]
-        if all_files:
-            subprocess_args.append("--all-files")
-
-        if hook_id:
-            subprocess_args.append(hook_id)
-
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
-        output = (
-            completed_process.stdout.decode("utf8") if completed_process.stdout else ""
-        )
-        if completed_process.returncode != 0:
-            return ExecuteResult(successful=False, output=output)
-        else:
-            return ExecuteResult(successful=True, output=output)
-
-    def autoupdate_hooks(
-        self,
-        bleeding_edge: bool = False,
-        freeze: bool = False,
-        repos: Optional[list] = None,
-    ) -> ExecuteResult:
-        """
-        Updates the precommit hooks but executing precommit's autoupdate command.  Additional info at
-        https://pre-commit.com/#pre-commit-autoupdate
-        :param bleeding edge: True if updating to the bleeding edge of the default branch instead of
-        the latest tagged version (which is the default behavior)
-        :param freeze: Set to True to store "frozen" hashes in rev instead of tag names.
-        :param repos: List of repos (url as a string) to update. This is used to target specific repos instead of all repos.
-        :return: ExecuteResult, indicating success or failure.
-        """
-        subprocess_args = [
-            "pre-commit",
-            "autoupdate",
-        ]
-        if bleeding_edge:
-            subprocess_args.append("--bleeding-edge")
-
-        if freeze:
-            subprocess_args.append("--freeze")
-
-        if repos:
-            repo_args = []
-
-            if isinstance(repos, str):
-                # If a string is passed in, converts to a list containing the string
-                repos = [repos]
-
-            for repo in repos:
-                if isinstance(repo, str):
-                    arg = "--repo {}".format(repo)
-                    repo_args.append(arg)
-                else:
-                    output = "Unable to update repo, string validation failed. Repo parameter should be a dictionary of strings."
-                    return ExecuteResult(successful=False, output=output)
-
-            subprocess_args.extend(repo_args)
-
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
-        output = (
-            completed_process.stdout.decode("utf8") if completed_process.stdout else ""
-        )
-        if completed_process.returncode != 0:
-            return ExecuteResult(successful=False, output=output)
-        else:
-            return ExecuteResult(successful=True, output=output)
-
-    def update(self) -> ExecuteResult:
-        """
-        Installs the hooks defined in pre-commit-config.yml.
-        :return: ExecuteResult, indicating success or failure.
-        """
-        subprocess_args = ["pre-commit", "install-hooks", "--color", "always"]
-
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
-        output = (
-            completed_process.stdout.decode("utf8") if completed_process.stdout else ""
-        )
-        if completed_process.returncode != 0:
-            return ExecuteResult(successful=False, output=output)
-        else:
-            return ExecuteResult(successful=True, output=output)
-
-    def remove_unused_hooks(self) -> ExecuteResult:
-        """
-        Removes unused hook repos from the cache.  Pre-commit determines which flags are "unused" by comparing
-        the repos to the pre-commit-config.yaml file.  Any cached hook repos that are not in the config file
-        will be removed from the cache.
-        :return: ExecuteResult, indicating success or failure.
-        """
-        subprocess_args = ["pre-commit", "gc", "--color", "always"]
-
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
-        output = (
-            completed_process.stdout.decode("utf8") if completed_process.stdout else ""
-        )
-        if completed_process.returncode != 0:
-            return ExecuteResult(successful=False, output=output)
-        else:
-            return ExecuteResult(successful=True, output=output)
 
     def get_configuration(self, language: str) -> HookConfiguration:
         """
@@ -322,7 +181,6 @@ class PreCommitAbstraction:
         the combined configuration
         :return: The combined configuration data as a dictionary
         """
-        print(f"calc lang {language}")
         slugified_language = slugify(language)
         config_data = self.data_loader(f"{slugified_language}-pre-commit.yaml")
 
@@ -336,7 +194,7 @@ class PreCommitAbstraction:
 
         return config
 
-    def _calculate_combined_configuration_data(self, language: str) -> str:
+    def _calculate_combined_configuration_data(self, language: str):
         """
         Combine elements of our configuration for the specified language along with
         repo settings like ignored file patterns and future overrides
@@ -345,7 +203,7 @@ class PreCommitAbstraction:
         :return: The combined configuration data as a string
         """
         config = self._calculate_combined_configuration(language)
-        return yaml.dump(config)
+        return config
 
     def _get_language_config(self, language: str) -> LanguagePreCommitInstallResult:
         """
@@ -359,9 +217,8 @@ class PreCommitAbstraction:
         try:
             config_data = self._calculate_combined_configuration_data(language)
 
-            version = self._hash_config(config_data)
             return LanguagePreCommitInstallResult(
-                language=language, config_data=config_data, version=version
+                language=language, config_data=config_data
             )
         except ValueError:
             raise LanguageNotSupportedError(
@@ -544,17 +401,6 @@ class PreCommitAbstraction:
         ]
         matching_hook["exclude"] = combine_patterns(raw_patterns)
 
-    def _hash_config(self, config: str) -> str:
-        """
-        Creates an MD5 hash from a config string
-        :return: A hash string
-        """
-        config_hash = hashlib.md5(
-            config.encode("utf8"), usedforsecurity=False
-        ).hexdigest()
-
-        return config_hash
-
     def _load_language_config_file(self, language: str) -> LoadLanguageConfigsResult:
         """
         Load any config files for given language if they exist.
@@ -610,14 +456,14 @@ class PreCommitAbstraction:
                         with open(path_to_config_file, "w") as f:
                             f.write(yaml.dump(config[key]))
 
-                        completed_process = subprocess.run(
-                            ["pre-commit", "install-language-config"]
-                        )
+                        # completed_process = subprocess.run(
+                        #     ["pre-commit", "install-language-config"]
+                        # )
 
-                        if completed_process.returncode != 0:
-                            raise InstallLanguageConfigError(
-                                f"Installing config: {key}, was not successful"
-                            )
+                        # if completed_process.returncode != 0:
+                        #     raise InstallLanguageConfigError(
+                        #         f"Installing config: {key}, was not successful"
+                        #     )
                         num_configs_wrote += 1
                 except Exception as e:
                     num_configs_non_success += 1
