@@ -2,6 +2,7 @@ from typing import Optional
 
 import pydantic
 
+from pathlib import Path
 from secureli.abstractions.pre_commit import PreCommitAbstraction
 from secureli.repositories.secureli_config import SecureliConfigRepository
 
@@ -30,6 +31,7 @@ class UpdaterService:
 
     def update_hooks(
         self,
+        folder_path: Path,
         bleeding_edge: bool = False,
         freeze: bool = False,
         repos: Optional[list] = None,
@@ -37,39 +39,42 @@ class UpdaterService:
         """
         Updates the precommit hooks but executing precommit's autoupdate command.  Additional info at
         https://pre-commit.com/#pre-commit-autoupdate
+        :param folder path: specified full path directory (default to current directory)
         :param bleeding edge: True if updating to the bleeding edge of the default branch instead of
         the latest tagged version (which is the default behavior)
         :param freeze: Set to True to store "frozen" hashes in rev instead of tag names.
         :param repos: Dectionary of repos to update. This is used to target specific repos instead of all repos.
         :return: ExecuteResult, indicating success or failure.
         """
-        update_result = self.pre_commit.autoupdate_hooks(bleeding_edge, freeze, repos)
+        update_result = self.pre_commit.autoupdate_hooks(
+            folder_path, bleeding_edge, freeze, repos
+        )
         output = update_result.output
 
         if update_result.successful and not output:
             output = "No changes necessary.\n"
 
         if update_result.successful and update_result.output:
-            prune_result = self.pre_commit.remove_unused_hooks()
+            prune_result = self.pre_commit.remove_unused_hooks(folder_path)
             output = output + "\nRemoving unused environments:\n" + prune_result.output
 
         return UpdateResult(successful=update_result.successful, output=output)
 
-    def update(self):
+    def update(self, folder_path: Path):
         """
         Updates secureli with the latest local configuration.
         :return: ExecuteResult, indicating success or failure.
         """
-        secureli_config = self.config.load()
+        secureli_config = self.config.load(folder_path)
         output = "Updating .pre-commit-config.yaml...\n"
         install_result = self.pre_commit.install(
-            language=secureli_config.overall_language
+            folder_path=folder_path, language=secureli_config.overall_language
         )
         if not install_result.successful:
             output += "Failed to update .pre-commit-config.yaml prior to hook install\n"
             return UpdateResult(successful=install_result.successful, output=output)
 
-        hook_install_result = self.pre_commit.update()
+        hook_install_result = self.pre_commit.update(folder_path)
         output += hook_install_result.output
 
         if (
@@ -79,7 +84,7 @@ class UpdaterService:
             output += "No changes necessary.\n"
 
         if hook_install_result.successful and hook_install_result.output:
-            prune_result = self.pre_commit.remove_unused_hooks()
+            prune_result = self.pre_commit.remove_unused_hooks(folder_path)
             output += "\nRemoving unused environments:\n" + prune_result.output
 
         return UpdateResult(successful=hook_install_result.successful, output=output)

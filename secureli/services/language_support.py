@@ -2,6 +2,7 @@ from typing import Optional
 
 import pydantic
 
+from pathlib import Path
 from secureli.abstractions.pre_commit import PreCommitAbstraction
 from secureli.services.git_ignore import GitIgnoreService
 
@@ -45,7 +46,7 @@ class LanguageSupportService:
         # For now, just a passthrough to pre-commit hook abstraction
         return self.pre_commit_hook.version_for_language(language)
 
-    def apply_support(self, language: str) -> LanguageMetadata:
+    def apply_support(self, folder_path: Path, language: str) -> LanguageMetadata:
         """
         Applies Secure Build support for the provided language
         :param language: The language to provide support for
@@ -55,7 +56,7 @@ class LanguageSupportService:
         """
 
         # Start by identifying and installing the appropriate pre-commit template (if we have one)
-        install_result = self.pre_commit_hook.install(language)
+        install_result = self.pre_commit_hook.install(folder_path, language)
 
         # Add .secureli/ to the gitignore folder if needed
         self.git_ignore.ignore_secureli_files()

@@ -72,12 +72,12 @@ class LoggingService:
         self.pre_commit = pre_commit
         self.secureli_config = secureli_config
 
-    def success(self, action: LogAction) -> LogEntry:
+    def success(self, folder_path: Path, action: LogAction) -> LogEntry:
         """
         Capture that a successful conclusion has been reached for an action
         :param action: The action that succeeded
         """
-        secureli_config = self.secureli_config.load()
+        secureli_config = self.secureli_config.load(folder_path=folder_path)
         hook_config = (
             self.pre_commit.get_configuration(secureli_config.overall_language)
             if secureli_config.overall_language
@@ -89,12 +89,13 @@ class LoggingService:
             hook_config=hook_config,
             primary_language=secureli_config.overall_language,
         )
-        self._log(log_entry)
+        self._log(folder_path, log_entry)
 
         return log_entry
 
     def failure(
         self,
+        folder_path: Path,
         action: LogAction,
         details: str,
         total_failure_count: Optional[int],
@@ -105,7 +106,7 @@ class LoggingService:
         :param action: The action that failed
         :param details: Details about the failure
         """
-        secureli_config = self.secureli_config.load()
+        secureli_config = self.secureli_config.load(folder_path=folder_path)
         hook_config = (
             None
             if not secureli_config.overall_language
@@ -122,13 +123,13 @@ class LoggingService:
             hook_config=hook_config,
             primary_language=secureli_config.overall_language,
         )
-        self._log(log_entry)
+        self._log(folder_path, log_entry)
 
         return log_entry
 
-    def _log(self, log_entry: LogEntry):
+    def _log(self, folder_path: Path, log_entry: LogEntry):
         """Commit a log entry to the branch log file"""
-        log_folder_path = Path(f".secureli/logs")
+        log_folder_path = folder_path / ".secureli/logs"
         path_to_log = log_folder_path / f"{current_branch_name()}"
 
         # Do not simply mkdir the log folder path, in case the branch name contains

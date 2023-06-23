@@ -109,12 +109,18 @@ def update(
         "--latest",
         "-l",
         help="Update the installed pre-commit hooks to their latest versions",
-    )
+    ),
+    directory: Optional[str] = Option(
+        ".",
+        "--directory",
+        "-d",
+        help="Run seCureLI on specified full path directory (default to current directory)",
+    ),
 ):
     """
     Update linters, configuration, and all else needed to maintain a secure repository.
     """
-    container.update_action().update_hooks(latest)
+    container.update_action().update_hooks(Path(directory), latest)
 
 
 if __name__ == "__main__":

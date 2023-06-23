@@ -85,6 +85,7 @@ class ScanAction(Action):
 
         if not scan_result.successful:
             log_data = self.logging.failure(
+                folder_path,
                 LogAction.scan,
                 scan_result_failures_json_string,
                 failure_count,
