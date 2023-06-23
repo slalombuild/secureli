@@ -21,7 +21,7 @@ supported_languages = [
 
 
 class LanguageMetadata(pydantic.BaseModel):
-    version: str
+    version: Optional[str]
     security_hook_id: Optional[str]
 
 
