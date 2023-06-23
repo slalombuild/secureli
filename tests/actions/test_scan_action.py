@@ -94,7 +94,7 @@ def mock_pass_install_verification(
     mock_secureli_config: MagicMock, mock_language_support: MagicMock
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="RadLang", version_installed="abc123"
+        languages=["RadLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "abc123"
 
@@ -107,7 +107,6 @@ def action_deps(
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
-    mock_pre_commit: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -116,7 +115,6 @@ def action_deps(
         mock_scanner,
         mock_secureli_config,
         mock_updater,
-        mock_pre_commit,
     )
 
 
@@ -159,7 +157,7 @@ def test_that_scan_repo_scans_if_installed(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="RadLang", version_installed="abc123"
+        languages=["RadLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "abc123"
 
@@ -177,7 +175,7 @@ def test_that_scan_repo_continue_scan_if_upgrade_canceled(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="RadLang", version_installed="abc123"
+        languages=["RadLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "xyz987"
     mock_echo.confirm.return_value = False
