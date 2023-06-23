@@ -61,12 +61,6 @@ class Repo(pydantic.BaseModel):
     hooks: list[str]
 
 
-class HookConfiguration(pydantic.BaseModel):
-    """A simplified pre-commit configuration representation for logging purposes"""
-
-    repos: list[Repo]
-
-
 class LanguageSupportService:
     """
     Orchestrates a growing list of security best practices for languages. Installs
