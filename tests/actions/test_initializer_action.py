@@ -31,7 +31,6 @@ def action_deps(
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
-    mock_pre_commit: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -40,7 +39,6 @@ def action_deps(
         mock_scanner,
         mock_secureli_config,
         mock_updater,
-        mock_pre_commit,
     )
 
 
