@@ -115,7 +115,7 @@ def test_that_pre_commit_identifies_a_security_hook_we_can_use_during_init(
             "repos": [
                 {
                     "repo": "http://sample-repo.com/baddie-finder",
-                    "rev": "1.0.1",
+                    "rev": "1.0.3",
                     "hooks": [{"id": "baddie-finder-hook"}],
                 }
             ]
@@ -158,6 +158,7 @@ def test_that_pre_commit_does_not_identify_a_security_hook_if_config_uses_matchi
 def test_that_language_support_attempts_to_install_pre_commit_hooks(
     language_support_service: LanguageSupportService,
     mock_pre_commit_hook: MagicMock,
+    mock_open: MagicMock,
 ):
     mock_pre_commit_hook.get_configuration.return_value = GetPreCommitResult(
         successful=True,
@@ -165,7 +166,7 @@ def test_that_language_support_attempts_to_install_pre_commit_hooks(
             "repos": [
                 {
                     "repo": "http://sample-repo.com/baddie-finder",
-                    "rev": "1.0.1",
+                    "rev": "1.0.2",
                     "hooks": [{"id": "baddie-finder-hook"}],
                 }
             ]

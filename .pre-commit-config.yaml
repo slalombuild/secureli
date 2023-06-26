@@ -1,4 +1,3 @@
-
 exclude: ^(?:.+/)?\.idea(?P<ps_d>/).*$
 repos:
 - hooks:
