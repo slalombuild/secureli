@@ -64,7 +64,7 @@ def test_that_logging_service_success_creates_logs_folder_if_not_exists(
         overall_language="RadLang", version_installed="abc123"
     )
     mock_pre_commit.get_configuration.return_value = HookConfiguration(repos=[])
-    logging_service.success(Path(".secureli/logs/fancy-branch"), LogAction.init)
+    logging_service.success(test_folder_path, LogAction.init)
 
     mock_path.parent.mkdir.assert_called_once()
 

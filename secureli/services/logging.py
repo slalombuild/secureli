@@ -13,12 +13,15 @@ from secureli.utilities.git_meta import current_branch_name, git_user_email, ori
 from secureli.utilities.secureli_meta import secureli_version
 
 
-def generate_unique_id() -> str:
+def generate_unique_id(folder_path: Path) -> str:
     """
     A unique identifier representing the log entry, including various
     bits specific to the user and environment
     """
-    origin_email_branch = f"{origin_url()}|{git_user_email()}|{current_branch_name()}"
+    print("$$$$$$$$$$$$$")
+    print(current_branch_name(folder_path))
+    print("$$$$$$$$$$$$$")
+    origin_email_branch = f"{origin_url(folder_path)}|{git_user_email()}|{current_branch_name(folder_path)}"
     return f"{uuid4()}|{origin_email_branch}"
 
 
@@ -47,7 +50,7 @@ class LogFailure(pydantic.BaseModel):
 class LogEntry(pydantic.BaseModel):
     """A distinct entry in the log captured following actions like scan and init"""
 
-    id: str = generate_unique_id()
+    id: str
     timestamp: datetime = datetime.utcnow()
     username: str = git_user_email()
     machineid: str = platform.uname().node
@@ -84,11 +87,14 @@ class LoggingService:
             else None
         )
         log_entry = LogEntry(
+            id=generate_unique_id(folder_path),
             status=LogStatus.success,
             action=action,
             hook_config=hook_config,
             primary_language=secureli_config.overall_language,
         )
+        print("***************")
+        print(log_entry)
         self._log(folder_path, log_entry)
 
         return log_entry
@@ -113,6 +119,7 @@ class LoggingService:
             else self.pre_commit.get_configuration(secureli_config.overall_language)
         )
         log_entry = LogEntry(
+            id=generate_unique_id(folder_path),
             status=LogStatus.failure,
             action=action,
             failure=LogFailure(
@@ -130,7 +137,8 @@ class LoggingService:
     def _log(self, folder_path: Path, log_entry: LogEntry):
         """Commit a log entry to the branch log file"""
         log_folder_path = folder_path / ".secureli/logs"
-        path_to_log = log_folder_path / f"{current_branch_name()}"
+        path_to_log = log_folder_path / f"{current_branch_name(folder_path)}"
+        print(path_to_log)
 
         # Do not simply mkdir the log folder path, in case the branch name contains
         # additional folder structure, like `bugfix/` or `feature/`

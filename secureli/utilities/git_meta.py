@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import subprocess
 import configparser
 
@@ -10,10 +12,10 @@ def git_user_email() -> str:
     return output
 
 
-def origin_url() -> str:
+def origin_url(folder_path: Path) -> str:
     """Leverage the git config file to determine the remote origin URL"""
     git_config_parser = configparser.ConfigParser()
-    git_config_parser.read(".git/config")
+    git_config_parser.read(f"{folder_path}/.git/config")
     return (
         git_config_parser['remote "origin"'].get("url", "UNKNOWN")
         if git_config_parser.has_section('remote "origin"')
@@ -21,10 +23,10 @@ def origin_url() -> str:
     )
 
 
-def current_branch_name() -> str:
+def current_branch_name(folder_path: Path) -> str:
     """Leverage the git HEAD file to determine the current branch name"""
     try:
-        with open(".git/HEAD", "r") as f:
+        with open(f"{folder_path}/.git/HEAD", "r") as f:
             content = f.readlines()
             for line in content:
                 if line[0:4] == "ref:":
