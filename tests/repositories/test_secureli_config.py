@@ -18,9 +18,13 @@ def non_existent_path(mocker: MockerFixture) -> MagicMock:
     config_file_path.exists.return_value = False
     config_file_path.is_dir.return_value = False
     mock_folder_path = MagicMock()
+    mock_folder_path.exists.return_value = False
+    mock_folder_path.is_dir.return_value = False
     mock_folder_path.__truediv__.return_value = config_file_path
 
     mock_secureli_folder_path = MagicMock()
+    mock_secureli_folder_path.exists.return_value = False
+    mock_secureli_folder_path.is_dir.return_value = False
     mock_secureli_folder_path.__truediv__.return_value = mock_folder_path
 
     mock_path_class = MagicMock()

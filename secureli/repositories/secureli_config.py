@@ -29,11 +29,15 @@ class SecureliConfigRepository:
         configuration object, capable of being modified and saved via the `save` method
         """
         secureli_folder_path = self._initialize_secureli_directory(folder_path)
-        secureli_config_path = secureli_folder_path / "repo-config.yaml"
+        secureli_config_path = Path(secureli_folder_path / "repo-config.yaml")
+        print("***************")
+        print(secureli_config_path)
         if not secureli_config_path.exists():
+            print("NOT EXISTS")
             return SecureliConfig()
 
         with open(secureli_config_path, "r") as f:
+            print("EXISTS")
             data = yaml.safe_load(f)
             return SecureliConfig.parse_obj(data)
 
@@ -42,6 +46,8 @@ class SecureliConfigRepository:
         Creates the .secureli folder within the current directory if needed.
         :return: The folder path of the .secureli folder that either exists or was just created.
         """
-        secureli_folder_path = folder_path / ".secureli"
+        secureli_folder_path = Path(folder_path / ".secureli")
+        print("$$$$$$$$$")
+        print(secureli_folder_path)
         secureli_folder_path.mkdir(parents=True, exist_ok=True)
         return secureli_folder_path
