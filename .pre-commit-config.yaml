@@ -23,11 +23,11 @@ repos:
   - id: end-of-file-fixer
   - id: check-yaml
   repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.4.0
+  rev: v4.3.0
 - hooks:
   - id: python-use-type-annotations
   repo: https://github.com/pre-commit/pygrep-hooks
-  rev: v1.10.0
+  rev: v1.9.0
 - hooks:
   - id: detect-secrets
   repo: https://github.com/Yelp/detect-secrets
@@ -40,8 +40,8 @@ repos:
     - medium
     id: bandit
   repo: https://github.com/PyCQA/bandit
-  rev: 1.7.5
+  rev: 1.7.4
 - hooks:
   - id: black
   repo: https://github.com/psf/black
-  rev: 23.3.0
+  rev: 22.10.0

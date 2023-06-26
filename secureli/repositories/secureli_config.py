@@ -32,11 +32,9 @@ class SecureliConfigRepository:
         secureli_config_path = Path(secureli_folder_path / "repo-config.yaml")
 
         if not secureli_config_path.exists():
-            print("NOT EXISTS")
             return SecureliConfig()
 
         with open(secureli_config_path, "r") as f:
-            print("EXISTS")
             data = yaml.safe_load(f)
             return SecureliConfig.parse_obj(data)
 
