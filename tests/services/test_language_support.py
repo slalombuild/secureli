@@ -130,7 +130,6 @@ def test_that_pre_commit_identifies_a_security_hook_we_can_use_during_init(
 def test_that_pre_commit_does_not_identify_a_security_hook_if_config_does_not_use_repo_even_if_hook_id_matches(
     language_support_service: LanguageSupportService, mock_pre_commit_hook: MagicMock
 ):
-
     # hook does not match config hook
     mock_pre_commit_hook.get_secret_detecting_repos.return_value = {
         "http://sample-repo.com/baddie-finder": ["baddie-hook-finder"]
@@ -327,7 +326,6 @@ def test_that_validate_config_detects_missing_repos(
     mock_open_config: MagicMock,
     mock_pre_commit_hook: MagicMock,
 ):
-
     mock_pre_commit_hook.get_configuration.return_value = GetPreCommitResult(
         successful=True,
         config_data={

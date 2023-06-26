@@ -140,12 +140,6 @@ class PreCommitAbstraction:
         configs laguage might have as well.
         :param langauge: langauge pre commit hooks to install.
         """
-        config_data = self._get_language_config(language)
-        if not config_data.config_data:
-            raise LanguageNotSupportedError(
-                f"Language '{language}' is currently unsupported"
-            )
-
         completed_process = subprocess.run(["pre-commit", "install"])
         if completed_process.returncode != 0:
             raise InstallFailedError(

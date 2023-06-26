@@ -163,7 +163,7 @@ def test_that_pre_commit_treats_missing_templates_as_unsupported_language(
 ):
     mock_data_loader.side_effect = ValueError
     with pytest.raises(LanguageNotSupportedError):
-        pre_commit.install("BadLang")
+        pre_commit.get_configuration("BadLang")
 
 
 def test_that_pre_commit_treats_failing_process_as_install_failed_error(
@@ -174,6 +174,29 @@ def test_that_pre_commit_treats_failing_process_as_install_failed_error(
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
     with pytest.raises(InstallFailedError):
         pre_commit.install("Python")
+
+
+def test_that_pre_commit_installs_config_while_creating_if_install_param_set(
+    pre_commit: PreCommitAbstraction,
+    mock_data_loader: MagicMock,
+    mock_subprocess: MagicMock,
+):
+    def mock_loader_side_effect(resource):
+        # Language config file
+        return """
+            repos:
+            -   repo: http://sample-repo.com/baddie-finder
+                hooks:
+                -    id: baddie-finder-hook
+                     args:
+                        - orig_arg
+        """
+
+    mock_data_loader.side_effect = mock_loader_side_effect
+
+    result = pre_commit.get_configuration("RadLang", True)
+
+    assert result.install_result.successful
 
 
 def test_that_pre_commit_overrides_arguments_in_a_security_hook(
