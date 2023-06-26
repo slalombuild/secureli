@@ -30,8 +30,7 @@ class SecureliConfigRepository:
         """
         secureli_folder_path = self._initialize_secureli_directory(folder_path)
         secureli_config_path = Path(secureli_folder_path / "repo-config.yaml")
-        print("***************")
-        print(secureli_config_path)
+
         if not secureli_config_path.exists():
             print("NOT EXISTS")
             return SecureliConfig()
@@ -47,7 +46,6 @@ class SecureliConfigRepository:
         :return: The folder path of the .secureli folder that either exists or was just created.
         """
         secureli_folder_path = Path(folder_path / ".secureli")
-        print("$$$$$$$$$")
-        print(secureli_folder_path)
+
         secureli_folder_path.mkdir(parents=True, exist_ok=True)
         return secureli_folder_path

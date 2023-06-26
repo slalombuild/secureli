@@ -90,9 +90,7 @@ class LoggingService:
             hook_config=hook_config,
             primary_language=secureli_config.overall_language,
         )
-        print("***************")
-        print(log_entry)
-        print("***************")
+
         self._log(folder_path, log_entry)
 
         return log_entry
