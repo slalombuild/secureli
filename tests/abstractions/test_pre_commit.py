@@ -1,3 +1,4 @@
+from pathlib import Path
 from subprocess import CompletedProcess
 from unittest.mock import MagicMock
 
@@ -15,6 +16,8 @@ from secureli.repositories.settings import (
     PreCommitRepo,
     PreCommitHook,
 )
+
+test_folder_path = Path(".")
 
 
 @pytest.fixture()
@@ -109,9 +112,11 @@ def test_that_pre_commit_templates_are_loaded_for_supported_languages(
     pre_commit: PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
-    pre_commit.install("Python")
+    pre_commit.install(test_folder_path, "Python")
 
-    mock_subprocess.run.assert_called_with(["pre-commit", "install"])
+    mock_subprocess.run.assert_called_with(
+        ["pre-commit", "install"], cwd=test_folder_path
+    )
 
 
 def test_that_pre_commit_templates_are_loaded_with_global_exclude_if_provided(
@@ -121,7 +126,7 @@ def test_that_pre_commit_templates_are_loaded_with_global_exclude_if_provided(
 ):
     mock_data_loader.return_value = "yaml: data"
     pre_commit.ignored_file_patterns = ["mock_pattern"]
-    pre_commit.install("Python")
+    pre_commit.install(test_folder_path, "Python")
 
     assert (
         "exclude: mock_pattern"
@@ -136,7 +141,7 @@ def test_that_pre_commit_templates_are_loaded_without_exclude(
 ):
     mock_data_loader.return_value = "yaml: data"
     pre_commit.ignored_file_patterns = []
-    pre_commit.install("Python")
+    pre_commit.install(test_folder_path, "Python")
 
     assert "exclude:" not in mock_open.return_value.write.call_args_list[0].args[0]
 
@@ -151,7 +156,7 @@ def test_that_pre_commit_templates_are_loaded_with_global_exclude_if_provided_mu
         "mock_pattern1",
         "mock_pattern2",
     ]
-    pre_commit.install("Python")
+    pre_commit.install(test_folder_path, "Python")
 
     assert (
         "exclude: ^(mock_pattern1|mock_pattern2)"
@@ -175,7 +180,7 @@ def test_that_pre_commit_treats_missing_templates_as_unsupported_language(
 ):
     mock_data_loader.side_effect = ValueError
     with pytest.raises(LanguageNotSupportedError):
-        pre_commit.install("BadLang")
+        pre_commit.install(test_folder_path, "BadLang")
 
 
 def test_that_pre_commit_treats_missing_templates_as_unsupported_language_when_checking_versions(
@@ -195,7 +200,7 @@ def test_that_pre_commit_treats_failing_process_as_install_failed_error(
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
     with pytest.raises(InstallFailedError):
-        pre_commit.install("Python")
+        pre_commit.install(test_folder_path, "Python")
 
 
 def test_that_pre_commit_executes_hooks_successfully(
@@ -293,7 +298,7 @@ def test_that_pre_commit_overrides_arguments_in_a_security_hook(
 
     mock_data_loader.side_effect = mock_loader_side_effect
 
-    pre_commit.install("RadLang")
+    pre_commit.install(test_folder_path, "RadLang")
 
     assert "arg_a" in mock_open.return_value.write.call_args_list[0].args[0]
     assert "value_a" in mock_open.return_value.write.call_args_list[0].args[0]
@@ -329,7 +334,7 @@ def test_that_pre_commit_overrides_arguments_do_not_apply_to_a_different_hook_id
 
     mock_data_loader.side_effect = mock_loader_side_effect
 
-    pre_commit.install("RadLang")
+    pre_commit.install(test_folder_path, "RadLang")
 
     assert "arg_a" not in mock_open.return_value.write.call_args_list[0].args[0]
     assert "value_a" not in mock_open.return_value.write.call_args_list[0].args[0]
@@ -363,7 +368,7 @@ def test_that_pre_commit_adds_additional_arguments_to_a_hook(
 
     mock_data_loader.side_effect = mock_loader_side_effect
 
-    pre_commit.install("RadLang")
+    pre_commit.install(test_folder_path, "RadLang")
 
     assert "arg_a" in mock_open.return_value.write.call_args_list[0].args[0]
     assert "value_a" in mock_open.return_value.write.call_args_list[0].args[0]
@@ -395,7 +400,7 @@ def test_that_pre_commit_adds_additional_arguments_to_a_hook_if_the_hook_did_not
 
     mock_data_loader.side_effect = mock_loader_side_effect
 
-    pre_commit.install("RadLang")
+    pre_commit.install(test_folder_path, "RadLang")
 
     assert "arg_a" in mock_open.return_value.write.call_args_list[0].args[0]
     assert "value_a" in mock_open.return_value.write.call_args_list[0].args[0]
@@ -750,7 +755,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks()
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path)
 
     assert execute_result.successful
 
@@ -760,7 +765,7 @@ def test_that_pre_commit_autoupdate_hooks_properly_handles_failed_executions(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    execute_result = pre_commit.autoupdate_hooks()
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path)
 
     assert not execute_result.successful
 
@@ -770,7 +775,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_bleeding_ed
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(bleeding_edge=True)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, bleeding_edge=True)
 
     assert execute_result.successful
     assert "--bleeding-edge" in mock_subprocess.run.call_args_list[0].args[0]
@@ -781,7 +786,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_freeze(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(freeze=True)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, freeze=True)
 
     assert execute_result.successful
     assert "--freeze" in mock_subprocess.run.call_args_list[0].args[0]
@@ -793,7 +798,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_repos(
 ):
     test_repos = ["some-repo-url"]
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
 
     assert execute_result.successful
     assert "--repo some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
@@ -805,7 +810,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_multiple_re
 ):
     test_repos = ["some-repo-url", "some-other-repo-url"]
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
 
     assert execute_result.successful
     assert "--repo some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
@@ -818,7 +823,7 @@ def test_that_pre_commit_autoupdate_hooks_fails_with_repos_containing_non_string
 ):
     test_repos = [{"something": "something-else"}]
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
 
     assert not execute_result.successful
 
@@ -830,7 +835,7 @@ def test_that_pre_commit_autoupdate_hooks_ignores_repos_when_repos_is_a_dict(
     test_repos = {}
     test_repos_string = "string"
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
 
     assert execute_result.successful
     assert "--repo {}" not in mock_subprocess.run.call_args_list[0].args[0]
@@ -842,7 +847,7 @@ def test_that_pre_commit_autoupdate_hooks_converts_repos_when_repos_is_a_string(
 ):
     test_repos = "string"
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
 
     assert execute_result.successful
     assert "--repo string" in mock_subprocess.run.call_args_list[0].args[0]
@@ -854,7 +859,7 @@ def test_that_pre_commit_update_executes_successfully(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.update()
+    execute_result = pre_commit.update(test_folder_path)
 
     assert execute_result.successful
 
@@ -864,7 +869,7 @@ def test_that_pre_commit_update_properly_handles_failed_executions(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    execute_result = pre_commit.update()
+    execute_result = pre_commit.update(test_folder_path)
 
     assert not execute_result.successful
 
@@ -875,7 +880,7 @@ def test_that_pre_commit_remove_unused_hookss_executes_successfully(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.remove_unused_hooks()
+    execute_result = pre_commit.remove_unused_hooks(test_folder_path)
 
     assert execute_result.successful
 
@@ -885,7 +890,7 @@ def test_that_pre_commit_remove_unused_hooks_properly_handles_failed_executions(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    execute_result = pre_commit.remove_unused_hooks()
+    execute_result = pre_commit.remove_unused_hooks(test_folder_path)
 
     assert not execute_result.successful
 
@@ -911,9 +916,11 @@ def test_that_pre_commit_language_config_does_not_get_loaded(
 def test_that_pre_commit_language_config_gets_installed(
     pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
 ):
-    result = pre_commit._install_pre_commit_configs("JavaScript")
+    result = pre_commit._install_pre_commit_configs(test_folder_path, "JavaScript")
 
-    mock_subprocess.run.assert_called_with(["pre-commit", "install-language-config"])
+    mock_subprocess.run.assert_called_with(
+        ["pre-commit", "install-language-config"], cwd=test_folder_path
+    )
 
     assert result.num_successful > 0
     assert result.num_non_success == 0
@@ -923,7 +930,7 @@ def test_that_pre_commit_language_config_gets_installed(
 def test_that_pre_commit_language_config_does_not_get_installed(
     pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
 ):
-    result = pre_commit._install_pre_commit_configs("RadLang")
+    result = pre_commit._install_pre_commit_configs(test_folder_path, "RadLang")
 
     assert not mock_subprocess.called
 
@@ -937,7 +944,7 @@ def test_that_pre_commit_install_captures_error_if_cannot_install_config(
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
 
-    result = pre_commit._install_pre_commit_configs("JavaScript")
+    result = pre_commit._install_pre_commit_configs(test_folder_path, "JavaScript")
 
     assert result.num_successful == 0
     assert result.num_non_success > 0
