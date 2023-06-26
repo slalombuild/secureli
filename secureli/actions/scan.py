@@ -95,7 +95,7 @@ class ScanAction(Action):
             post_log(log_data.json(exclude_none=True))
         else:
             self.echo.print("Scan executed successfully and detected no issues!")
-            log_data = self.logging.success(LogAction.scan)
+            log_data = self.logging.success(folder_path, LogAction.scan)
 
             post_log(log_data.json(exclude_none=True))
 
