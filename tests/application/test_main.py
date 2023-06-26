@@ -39,6 +39,6 @@ def test_that_scan_is_tbd(mock_container: MagicMock):
 
 
 def test_that_update_is_tbd(mock_container: MagicMock):
-    secureli.main.update()
+    secureli.main.update(directory=".")
 
     mock_container.update_action.assert_called_once()

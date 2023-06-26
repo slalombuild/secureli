@@ -52,7 +52,7 @@ def test_that_language_support_attempts_to_install_pre_commit_hooks(
 ):
     metadata = language_support_service.apply_support(test_folder_path, "RadLang")
 
-    mock_pre_commit_hook.install.assert_called_once_with("RadLang")
+    mock_pre_commit_hook.install.assert_called_once_with(test_folder_path, "RadLang")
     assert metadata.security_hook_id == "baddie-finder"
 
 

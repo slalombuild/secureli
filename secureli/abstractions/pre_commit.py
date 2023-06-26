@@ -196,7 +196,7 @@ class PreCommitAbstraction:
         :raises LanguageNotSupportedError if a pre-commit template cannot be found for the specified language
         :raises InstallFailedError if the template was found, but an error occurred installing it
         """
-        path_to_pre_commit_file = folder_path / ".pre-commit-config.yaml"
+        path_to_pre_commit_file = Path(folder_path / ".pre-commit-config.yaml")
 
         # Raises a LanguageNotSupportedError if language doesn't resolve to a yaml file
         language_config = self._get_language_config(language)
