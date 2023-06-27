@@ -208,7 +208,7 @@ def test_that_pre_commit_executes_hooks_successfully(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.execute_hooks()
+    execute_result = pre_commit.execute_hooks(test_folder_path)
 
     assert execute_result.successful
     assert "--all-files" not in mock_subprocess.run.call_args_list[0].args[0]
@@ -219,7 +219,7 @@ def test_that_pre_commit_executes_hooks_successfully_including_all_files(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.execute_hooks(all_files=True)
+    execute_result = pre_commit.execute_hooks(test_folder_path, all_files=True)
 
     assert execute_result.successful
     assert "--all-files" in mock_subprocess.run.call_args_list[0].args[0]
@@ -230,7 +230,7 @@ def test_that_pre_commit_executes_hooks_and_reports_failures(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    execute_result = pre_commit.execute_hooks()
+    execute_result = pre_commit.execute_hooks(test_folder_path)
 
     assert not execute_result.successful
 
@@ -240,7 +240,7 @@ def test_that_pre_commit_executes_a_single_hook_if_specified(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    pre_commit.execute_hooks(hook_id="detect-secrets")
+    pre_commit.execute_hooks(test_folder_path, hook_id="detect-secrets")
 
     assert mock_subprocess.run.call_args_list[0].args[0][-1] == "detect-secrets"
 
@@ -637,7 +637,7 @@ def test_that_pre_commit_does_not_identify_a_security_hook_if_config_uses_matchi
 def test_that_get_current_config_returns_config_data(
     pre_commit: PreCommitAbstraction, mock_open_config: MagicMock
 ):
-    config = pre_commit.get_current_configuration()
+    config = pre_commit.get_current_configuration(test_folder_path)
 
     assert config["exclude"] == "some-exclude-regex"
 
@@ -648,7 +648,7 @@ def test_that_validate_config_returns_no_output_on_config_match(
     mock_hashlib: MagicMock,
     mock_data_loader: MagicMock,
 ):
-    validation_result = pre_commit.validate_config("Python")
+    validation_result = pre_commit.validate_config(test_folder_path, "Python")
 
     assert validation_result.successful
     assert validation_result.output == ""
@@ -661,7 +661,7 @@ def test_that_validate_config_detects_mismatched_configs(
     mock_open_config: MagicMock,
 ):
     mock_data_loader.return_value = '{"exclude": "some-exclude-regex","repos":[{"hooks":[{"id":"some-test-hook"}],"repo":"xyz://some-test-repo-url","rev":"1.0.1"}]}'
-    validation_result = pre_commit.validate_config("Python")
+    validation_result = pre_commit.validate_config(test_folder_path, "Python")
 
     assert not validation_result.successful
 
@@ -685,7 +685,7 @@ def test_that_validate_config_detects_mismatched_hook_versions(
       rev: 1.0.0
     """
     mock_data_loader.return_value = load_return_value
-    validation_result = pre_commit.validate_config("Python")
+    validation_result = pre_commit.validate_config(test_folder_path, "Python")
     output_by_line = validation_result.output.splitlines()
 
     assert (
@@ -709,7 +709,7 @@ def test_that_validate_config_detects_extra_repos(
       rev: 1.0.0
     """
     mock_data_loader.return_value = load_return_value
-    validation_result = pre_commit.validate_config("Python")
+    validation_result = pre_commit.validate_config(test_folder_path, "Python")
     output_by_line = validation_result.output.splitlines()
 
     assert output_by_line[-3] == "Found unexpected repos in .pre-commit-config.yaml:"
@@ -739,7 +739,7 @@ def test_that_validate_config_detects_missing_repos(
       rev: 1.0.0
     """
     mock_data_loader.return_value = load_return_value
-    validation_result = pre_commit.validate_config("Python")
+    validation_result = pre_commit.validate_config(test_folder_path, "Python")
     output_by_line = validation_result.output.splitlines()
 
     assert (

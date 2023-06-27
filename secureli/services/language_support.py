@@ -60,7 +60,7 @@ class LanguageSupportService:
         install_result = self.pre_commit_hook.install(folder_path, language)
 
         # Add .secureli/ to the gitignore folder if needed
-        self.git_ignore.ignore_secureli_files()
+        self.git_ignore.ignore_secureli_files(folder_path)
 
         return LanguageMetadata(
             version=install_result.version_installed,

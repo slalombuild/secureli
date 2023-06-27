@@ -1,9 +1,12 @@
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
 
 from secureli.services.git_ignore import GitIgnoreService, BadIgnoreBlockError
+
+test_folder_path = Path(".")
 
 
 @pytest.fixture()
@@ -60,7 +63,7 @@ def test_that_git_ignore_creates_file_if_missing(
 ):
     mock_path.exists.return_value = False
 
-    git_ignore.ignore_secureli_files()
+    git_ignore.ignore_secureli_files(test_folder_path)
 
     mock_open.return_value.write.assert_called_once()
 
@@ -75,7 +78,7 @@ def test_that_git_ignore_appends_to_existing_file_if_block_is_missing(
 ):
     mock_path.exists.return_value = True
 
-    git_ignore.ignore_secureli_files()
+    git_ignore.ignore_secureli_files(test_folder_path)
 
     mock_open_with_gitignore.return_value.write.assert_called_once()
 
@@ -91,7 +94,7 @@ def test_that_git_ignore_updates_existing_file_if_block_is_present(
 ):
     mock_path.exists.return_value = True
 
-    git_ignore.ignore_secureli_files()
+    git_ignore.ignore_secureli_files(test_folder_path)
 
     mock_open_with_gitignore_existing_secureli_config.return_value.write.assert_called_once()
 
@@ -114,7 +117,7 @@ def test_that_git_ignore_is_mad_if_header_is_found_without_footer(
     mock_path.exists.return_value = True
 
     with pytest.raises(BadIgnoreBlockError):
-        git_ignore.ignore_secureli_files()
+        git_ignore.ignore_secureli_files(test_folder_path)
 
 
 def test_that_ignore_ignore_finds_and_reads_file(

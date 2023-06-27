@@ -236,30 +236,30 @@ class PreCommitAbstraction:
         repos = [create_repo(raw_repo) for raw_repo in config.get("repos", [])]
         return HookConfiguration(repos=repos)
 
-    def get_current_configuration(self):
+    def get_current_configuration(self, folder_path: Path):
         """
         Returns the contents of the .pre-commit-config.yaml file.  Note that this should be used to
         see the current state and not be used for any desired state actions.
         :return: Dictionary containing the contents of the .pre-commit-config.yaml file
         """
-        path_to_pre_commit_file = Path(".pre-commit-config.yaml")
+        path_to_pre_commit_file = Path(folder_path / ".pre-commit-config.yaml")
 
         with open(path_to_pre_commit_file, "r") as f:
             data = yaml.safe_load(f)
             return data
 
-    def validate_config(self, language: str) -> bool:
+    def validate_config(self, folder_path: Path, language: str) -> bool:
         """
         Validates that the current configuration matches the expected configuration generated
         by secureli.
         :param language: The language to validate against
         :return: Returns a boolean indicating whether the configs match
         """
-        current_config = yaml.dump(self.get_current_configuration())
+        current_config = yaml.dump(self.get_current_configuration(folder_path))
         generated_config = self._calculate_combined_configuration_data(
             language=language
         )
-        current_hash = self.get_current_config_hash()
+        current_hash = self.get_current_config_hash(folder_path)
         expected_hash = self._hash_config(generated_config)
         output = ""
 
@@ -277,7 +277,7 @@ class PreCommitAbstraction:
 
         return ValidateConfigResult(successful=config_matches, output=output)
 
-    def get_current_config_hash(self) -> str:
+    def get_current_config_hash(self, folder_path: Path) -> str:
         """
         Returns a hash of the current .pre-commit-config.yaml file.  This hash is generated in the
         same way that we generate the version hash for the secureli config file so should be valid
@@ -285,13 +285,13 @@ class PreCommitAbstraction:
         the hash of the combined config.
         :return: Returns a hash derived from the
         """
-        config_data = yaml.dump(self.get_current_configuration())
+        config_data = yaml.dump(self.get_current_configuration(folder_path))
         config_hash = self._hash_config(config_data)
 
         return config_hash
 
     def execute_hooks(
-        self, all_files: bool = False, hook_id: Optional[str] = None
+        self, folder_path: Path, all_files: bool = False, hook_id: Optional[str] = None
     ) -> ExecuteResult:
         """
         Execute the configured hooks against the repository, either against your staged changes
@@ -315,7 +315,9 @@ class PreCommitAbstraction:
         if hook_id:
             subprocess_args.append(hook_id)
 
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
+        completed_process = subprocess.run(
+            subprocess_args, cwd=folder_path, stdout=subprocess.PIPE
+        )
         output = (
             completed_process.stdout.decode("utf8") if completed_process.stdout else ""
         )

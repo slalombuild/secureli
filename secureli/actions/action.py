@@ -108,7 +108,7 @@ class Action(ABC):
 
             # Validates the current .pre-commit-config.yaml against the generated config
             config_validation_result = self.action_deps.pre_commit.validate_config(
-                language=config.overall_language
+                folder_path=folder_path, language=config.overall_language
             )
 
             # If config mismatch between available version and current version prompt for upgrade
@@ -238,7 +238,7 @@ class Action(ABC):
                 f"{config.overall_language} supports secrets detection; running {secret_test_id}."
             )
             self.action_deps.scanner.scan_repo(
-                ScanMode.ALL_FILES, specific_test=secret_test_id
+                folder_path, ScanMode.ALL_FILES, specific_test=secret_test_id
             )
         else:
             self.action_deps.echo.warning(
