@@ -80,7 +80,7 @@ class ScannerService:
         execute_result = self.pre_commit.execute_hooks(
             folder_path, all_files, hook_id=specific_test
         )
-        print(execute_result)
+
         parsed_output = self._parse_scan_ouput(
             folder_path=folder_path, output=execute_result.output
         )
