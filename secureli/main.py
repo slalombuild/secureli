@@ -48,17 +48,11 @@ def init(
         "-y",
         help="Say 'yes' to every prompt automatically without input",
     ),
-    directory: Optional[str] = Option(
-        ".",
-        "--directory",
-        "-d",
-        help="Run seCureLI on specified full path directory (default to current directory)",
-    ),
 ):
     """
     Detect languages and initialize pre-commit hooks and linters for the project
     """
-    container.initializer_action().initialize_repo(Path(directory), reset, yes)
+    container.initializer_action().initialize_repo(Path("."), reset, yes)
 
 
 @app.command()
@@ -81,17 +75,11 @@ def scan(
         "-t",
         help="Limit the scan to a specific hook ID from your pre-commit config",
     ),
-    directory: Optional[str] = Option(
-        ".",
-        "--directory",
-        "-d",
-        help="Run seCureLI on specified full path directory (default to current directory)",
-    ),
 ):
     """
     Performs an explicit check of the repository to detect security issues without remote logging.
     """
-    container.scan_action().scan_repo(Path(directory), mode, yes, specific_test)
+    container.scan_action().scan_repo(Path("."), mode, yes, specific_test)
 
 
 @app.command(hidden=True)
@@ -109,18 +97,12 @@ def update(
         "--latest",
         "-l",
         help="Update the installed pre-commit hooks to their latest versions",
-    ),
-    directory: Optional[str] = Option(
-        ".",
-        "--directory",
-        "-d",
-        help="Run seCureLI on specified full path directory (default to current directory)",
-    ),
+    )
 ):
     """
     Update linters, configuration, and all else needed to maintain a secure repository.
     """
-    container.update_action().update_hooks(Path(directory), latest)
+    container.update_action().update_hooks(latest)
 
 
 if __name__ == "__main__":
