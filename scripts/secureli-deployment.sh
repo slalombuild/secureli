@@ -23,4 +23,5 @@ else
     git push origin secureli-${secureliVersion}-formula-generation --repo https://github.com/slalombuild/homebrew-secureli.git
     gh release create v${secureliVersion}
     gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation"
+    gh pr merge
 fi

@@ -13,6 +13,7 @@ supported_languages = [
     "TypeScript",
     "JavaScript",
     "Go",
+    "Swift",
 ]
 
 

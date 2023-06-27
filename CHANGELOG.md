@@ -2,6 +2,26 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.1 (2023-06-27)
+
+
+
+## v0.6.0 (2023-06-27)
+
+### Feature
+
+* Adding optional directory command for init, scan, and update ([#147](https://github.com/slalombuild/secureli/issues/147)) ([`4aea1d3`](https://github.com/slalombuild/secureli/commit/4aea1d38babff9bc33e9cb4cb967ef09b573a42e))
+
+## v0.5.1 (2023-06-27)
+
+
+
+## v0.5.0 (2023-06-26)
+
+### Feature
+
+* #63 swift language support ([#145](https://github.com/slalombuild/secureli/issues/145)) ([`c1bd648`](https://github.com/slalombuild/secureli/commit/c1bd6487cbad2fc715f1e100fa005904fea0e53c))
+
 ## v0.4.5 (2023-06-19)
 
 
