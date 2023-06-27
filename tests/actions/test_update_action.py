@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -5,6 +6,8 @@ import pytest
 from secureli.actions.action import ActionDependencies
 from secureli.actions.update import UpdateAction
 from secureli.services.updater import UpdateResult
+
+test_folder_path = Path(".")
 
 
 @pytest.fixture()
@@ -65,7 +68,7 @@ def test_that_update_action_executes_successfully(
         successful=True, output="Some update performed"
     )
 
-    update_action.update_hooks()
+    update_action.update_hooks(test_folder_path)
 
     mock_echo.print.assert_called_with("Update executed successfully.")
 
@@ -79,7 +82,7 @@ def test_that_update_action_handles_failed_execution(
         successful=False, output="Failed to update"
     )
 
-    update_action.update_hooks()
+    update_action.update_hooks(test_folder_path)
 
     mock_echo.print.assert_called_with("Failed to update")
 
@@ -88,7 +91,7 @@ def test_that_latest_flag_initiates_update(
     update_action: UpdateAction,
     mock_echo: MagicMock,
 ):
-    update_action.update_hooks(latest=True)
+    update_action.update_hooks(test_folder_path, latest=True)
 
     mock_echo.print.assert_called_with("Hooks successfully updated to latest version")
 
@@ -101,6 +104,6 @@ def test_that_latest_flag_handles_failed_update(
     mock_updater.update_hooks.return_value = UpdateResult(
         successful=False, output="Update failed"
     )
-    update_action.update_hooks(latest=True)
+    update_action.update_hooks(test_folder_path, latest=True)
 
     mock_echo.print.assert_called_with("Update failed")

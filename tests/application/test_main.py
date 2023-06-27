@@ -21,7 +21,7 @@ def test_that_setup_wires_up_container(mock_container: MagicMock):
 
 
 def test_that_init_creates_initializer_action_and_executes(mock_container: MagicMock):
-    secureli.main.init()
+    secureli.main.init(directory=".")
 
     mock_container.initializer_action.assert_called_once()
 
@@ -33,12 +33,12 @@ def test_that_build_creates_build_action_and_executes(mock_container: MagicMock)
 
 
 def test_that_scan_is_tbd(mock_container: MagicMock):
-    secureli.main.scan()
+    secureli.main.scan(directory=".")
 
     mock_container.scan_action.assert_called_once()
 
 
 def test_that_update_is_tbd(mock_container: MagicMock):
-    secureli.main.update()
+    secureli.main.update(directory=".")
 
     mock_container.update_action.assert_called_once()
