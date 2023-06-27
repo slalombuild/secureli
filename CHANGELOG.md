@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.1 (2023-06-27)
+
+
+
+## v0.6.0 (2023-06-27)
+
+### Feature
+
+* Adding optional directory command for init, scan, and update ([#147](https://github.com/slalombuild/secureli/issues/147)) ([`4aea1d3`](https://github.com/slalombuild/secureli/commit/4aea1d38babff9bc33e9cb4cb967ef09b573a42e))
+
 ## v0.5.1 (2023-06-27)
 
 
