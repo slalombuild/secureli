@@ -200,7 +200,7 @@ class ScannerService:
         :return: Dict containing the contents of the .pre-commit-config.yaml file
         """
         path_to_config = Path(folder_path / ".pre-commit-config.yaml")
-        print(path_to_config)
+
         with open(path_to_config, "r") as f:
             data = yaml.safe_load(f)
             return data
