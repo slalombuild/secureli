@@ -1,3 +1,4 @@
+from pathlib import Path
 from subprocess import CompletedProcess
 from unittest.mock import MagicMock
 
@@ -5,6 +6,8 @@ import pytest
 from pytest_mock import MockerFixture
 
 from secureli.utilities.git_meta import git_user_email, origin_url, current_branch_name
+
+test_folder_path = Path(".")
 
 
 @pytest.fixture()
@@ -51,16 +54,16 @@ def test_git_user_email_loads_user_email_via_git_subprocess(mock_subprocess: Mag
 
 
 def test_origin_url_parses_config_to_get_origin_url(mock_configparser: MagicMock):
-    result = origin_url()
+    result = origin_url(test_folder_path)
 
-    mock_configparser.read.assert_called_once_with(".git/config")
+    mock_configparser.read.assert_called_once_with(f"{test_folder_path}/.git/config")
     assert result == "https://fake-build.com/git/repo"
 
 
 def test_current_branch_name_finds_ref_name_from_head_file(
     mock_open_git_head: MagicMock,
 ):
-    result = current_branch_name()
+    result = current_branch_name(test_folder_path)
 
     assert result == "feature/wicked-sick-branch"
 
@@ -68,6 +71,6 @@ def test_current_branch_name_finds_ref_name_from_head_file(
 def test_current_branch_name_yields_unknown_due_to_io_error(
     mock_open_io_error: MagicMock,
 ):
-    result = current_branch_name()
+    result = current_branch_name(test_folder_path)
 
     assert result == "UNKNOWN"

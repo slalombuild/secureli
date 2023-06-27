@@ -8,6 +8,8 @@ from secureli.abstractions.pre_commit import HookConfiguration
 from secureli.repositories.secureli_config import SecureliConfig
 from secureli.services.logging import LoggingService, LogAction
 
+test_folder_path = Path(".")
+
 
 @pytest.fixture()
 def mock_path(mocker: MockerFixture) -> MagicMock:
@@ -62,7 +64,7 @@ def test_that_logging_service_success_creates_logs_folder_if_not_exists(
         overall_language="RadLang", version_installed="abc123"
     )
     mock_pre_commit.get_configuration.return_value = HookConfiguration(repos=[])
-    logging_service.success(LogAction.init)
+    logging_service.success(test_folder_path, LogAction.init)
 
     mock_path.parent.mkdir.assert_called_once()
 
@@ -77,7 +79,9 @@ def test_that_logging_service_failure_creates_logs_folder_if_not_exists(
         overall_language=None, version_installed=None
     )
 
-    logging_service.failure(LogAction.init, "Horrible Failure", None, None)
+    logging_service.failure(
+        test_folder_path, LogAction.init, "Horrible Failure", None, None
+    )
 
     mock_path.parent.mkdir.assert_called_once()
 
@@ -93,6 +97,6 @@ def test_that_logging_service_success_logs_none_for_hook_config_if_not_initializ
         overall_language=None, version_installed=None
     )
 
-    log_entry = logging_service.success(LogAction.build)
+    log_entry = logging_service.success(test_folder_path, LogAction.build)
 
     assert log_entry.hook_config is None

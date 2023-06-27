@@ -189,15 +189,14 @@ class PreCommitAbstraction:
 
         return None
 
-    def install(self, language: str) -> InstallResult:
+    def install(self, folder_path: Path, language: str) -> InstallResult:
         """
         Identifies the template we hold for the specified language, writes it, installs it, and cleans up
         :param language: The language to identify a template for
         :raises LanguageNotSupportedError if a pre-commit template cannot be found for the specified language
         :raises InstallFailedError if the template was found, but an error occurred installing it
         """
-
-        path_to_pre_commit_file = Path(".pre-commit-config.yaml")
+        path_to_pre_commit_file = Path(folder_path / ".pre-commit-config.yaml")
 
         # Raises a LanguageNotSupportedError if language doesn't resolve to a yaml file
         language_config = self._get_language_config(language)
@@ -205,13 +204,13 @@ class PreCommitAbstraction:
         with open(path_to_pre_commit_file, "w") as f:
             f.write(language_config.config_data)
 
-        completed_process = subprocess.run(["pre-commit", "install"])
+        completed_process = subprocess.run(["pre-commit", "install"], cwd=folder_path)
         if completed_process.returncode != 0:
             raise InstallFailedError(
                 f"Installing the pre-commit script for {language} failed"
             )
 
-        install_configs_result = self._install_pre_commit_configs(language)
+        install_configs_result = self._install_pre_commit_configs(folder_path, language)
 
         return InstallResult(
             successful=True,
@@ -327,6 +326,7 @@ class PreCommitAbstraction:
 
     def autoupdate_hooks(
         self,
+        folder_path: Path,
         bleeding_edge: bool = False,
         freeze: bool = False,
         repos: Optional[list] = None,
@@ -334,6 +334,7 @@ class PreCommitAbstraction:
         """
         Updates the precommit hooks but executing precommit's autoupdate command.  Additional info at
         https://pre-commit.com/#pre-commit-autoupdate
+        :param folder path: specified full path directory (default to current directory)
         :param bleeding edge: True if updating to the bleeding edge of the default branch instead of
         the latest tagged version (which is the default behavior)
         :param freeze: Set to True to store "frozen" hashes in rev instead of tag names.
@@ -367,7 +368,9 @@ class PreCommitAbstraction:
 
             subprocess_args.extend(repo_args)
 
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
+        completed_process = subprocess.run(
+            subprocess_args, cwd=folder_path, stdout=subprocess.PIPE
+        )
         output = (
             completed_process.stdout.decode("utf8") if completed_process.stdout else ""
         )
@@ -376,14 +379,16 @@ class PreCommitAbstraction:
         else:
             return ExecuteResult(successful=True, output=output)
 
-    def update(self) -> ExecuteResult:
+    def update(self, folder_path: Path) -> ExecuteResult:
         """
         Installs the hooks defined in pre-commit-config.yml.
         :return: ExecuteResult, indicating success or failure.
         """
         subprocess_args = ["pre-commit", "install-hooks", "--color", "always"]
 
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
+        completed_process = subprocess.run(
+            subprocess_args, cwd=folder_path, stdout=subprocess.PIPE
+        )
         output = (
             completed_process.stdout.decode("utf8") if completed_process.stdout else ""
         )
@@ -392,7 +397,7 @@ class PreCommitAbstraction:
         else:
             return ExecuteResult(successful=True, output=output)
 
-    def remove_unused_hooks(self) -> ExecuteResult:
+    def remove_unused_hooks(self, folder_path: Path) -> ExecuteResult:
         """
         Removes unused hook repos from the cache.  Pre-commit determines which flags are "unused" by comparing
         the repos to the pre-commit-config.yaml file.  Any cached hook repos that are not in the config file
@@ -401,7 +406,9 @@ class PreCommitAbstraction:
         """
         subprocess_args = ["pre-commit", "gc", "--color", "always"]
 
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
+        completed_process = subprocess.run(
+            subprocess_args, cwd=folder_path, stdout=subprocess.PIPE
+        )
         output = (
             completed_process.stdout.decode("utf8") if completed_process.stdout else ""
         )
@@ -819,7 +826,7 @@ class PreCommitAbstraction:
         return LoadLanguageConfigsResult(success=False, config_data=list())
 
     def _install_pre_commit_configs(
-        self, language: str
+        self, folder_path: Path, language: str
     ) -> LanguagePreCommitConfigInstallResult:
         """
         Install any config files for given language to support any pre-commit commands.
@@ -841,13 +848,13 @@ class PreCommitAbstraction:
                 try:
                     for key in config:
                         config_name = f"{slugify(language)}.{key}.yaml"
-                        path_to_config_file = Path(f".secureli/{config_name}")
+                        path_to_config_file = folder_path / f".secureli/{config_name}"
 
                         with open(path_to_config_file, "w") as f:
                             f.write(yaml.dump(config[key]))
 
                         completed_process = subprocess.run(
-                            ["pre-commit", "install-language-config"]
+                            ["pre-commit", "install-language-config"], cwd=folder_path
                         )
 
                         if completed_process.returncode != 0:

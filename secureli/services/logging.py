@@ -13,12 +13,12 @@ from secureli.utilities.git_meta import current_branch_name, git_user_email, ori
 from secureli.utilities.secureli_meta import secureli_version
 
 
-def generate_unique_id() -> str:
+def generate_unique_id(folder_path: Path) -> str:
     """
     A unique identifier representing the log entry, including various
     bits specific to the user and environment
     """
-    origin_email_branch = f"{origin_url()}|{git_user_email()}|{current_branch_name()}"
+    origin_email_branch = f"{origin_url(folder_path)}|{git_user_email()}|{current_branch_name(folder_path)}"
     return f"{uuid4()}|{origin_email_branch}"
 
 
@@ -47,7 +47,7 @@ class LogFailure(pydantic.BaseModel):
 class LogEntry(pydantic.BaseModel):
     """A distinct entry in the log captured following actions like scan and init"""
 
-    id: str = generate_unique_id()
+    id: str
     timestamp: datetime = datetime.utcnow()
     username: str = git_user_email()
     machineid: str = platform.uname().node
@@ -72,29 +72,32 @@ class LoggingService:
         self.pre_commit = pre_commit
         self.secureli_config = secureli_config
 
-    def success(self, action: LogAction) -> LogEntry:
+    def success(self, folder_path: Path, action: LogAction) -> LogEntry:
         """
         Capture that a successful conclusion has been reached for an action
         :param action: The action that succeeded
         """
-        secureli_config = self.secureli_config.load()
+        secureli_config = self.secureli_config.load(folder_path=folder_path)
         hook_config = (
             self.pre_commit.get_configuration(secureli_config.overall_language)
             if secureli_config.overall_language
             else None
         )
         log_entry = LogEntry(
+            id=generate_unique_id(folder_path),
             status=LogStatus.success,
             action=action,
             hook_config=hook_config,
             primary_language=secureli_config.overall_language,
         )
-        self._log(log_entry)
+
+        self._log(folder_path, log_entry)
 
         return log_entry
 
     def failure(
         self,
+        folder_path: Path,
         action: LogAction,
         details: str,
         total_failure_count: Optional[int],
@@ -105,13 +108,14 @@ class LoggingService:
         :param action: The action that failed
         :param details: Details about the failure
         """
-        secureli_config = self.secureli_config.load()
+        secureli_config = self.secureli_config.load(folder_path=folder_path)
         hook_config = (
             None
             if not secureli_config.overall_language
             else self.pre_commit.get_configuration(secureli_config.overall_language)
         )
         log_entry = LogEntry(
+            id=generate_unique_id(folder_path),
             status=LogStatus.failure,
             action=action,
             failure=LogFailure(
@@ -122,14 +126,14 @@ class LoggingService:
             hook_config=hook_config,
             primary_language=secureli_config.overall_language,
         )
-        self._log(log_entry)
+        self._log(folder_path, log_entry)
 
         return log_entry
 
-    def _log(self, log_entry: LogEntry):
+    def _log(self, folder_path: Path, log_entry: LogEntry):
         """Commit a log entry to the branch log file"""
-        log_folder_path = Path(f".secureli/logs")
-        path_to_log = log_folder_path / f"{current_branch_name()}"
+        log_folder_path = Path(folder_path / ".secureli/logs")
+        path_to_log = log_folder_path / f"{current_branch_name(folder_path)}"
 
         # Do not simply mkdir the log folder path, in case the branch name contains
         # additional folder structure, like `bugfix/` or `feature/`
