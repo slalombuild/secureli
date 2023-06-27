@@ -1,4 +1,3 @@
-from pathlib import Path
 from secureli.abstractions.echo import EchoAbstraction, Color
 from secureli.services.logging import LoggingService, LogAction
 
@@ -21,4 +20,4 @@ class BuildAction:
         """
         self.echo.print(self.build_data, color=color, bold=True)
 
-        self.logging.success(Path("."), LogAction.build)
+        self.logging.success(LogAction.build)

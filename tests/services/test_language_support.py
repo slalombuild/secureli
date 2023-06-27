@@ -1,4 +1,3 @@
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -8,8 +7,6 @@ from secureli.abstractions.pre_commit import (
     LanguagePreCommitConfigInstallResult,
 )
 from secureli.services.language_support import LanguageSupportService
-
-test_folder_path = Path(".")
 
 
 @pytest.fixture()
@@ -50,9 +47,9 @@ def test_that_language_support_attempts_to_install_pre_commit_hooks(
     language_support_service: LanguageSupportService,
     mock_pre_commit_hook: MagicMock,
 ):
-    metadata = language_support_service.apply_support(test_folder_path, "RadLang")
+    metadata = language_support_service.apply_support("RadLang")
 
-    mock_pre_commit_hook.install.assert_called_once_with(test_folder_path, "RadLang")
+    mock_pre_commit_hook.install.assert_called_once_with("RadLang")
     assert metadata.security_hook_id == "baddie-finder"
 
 
