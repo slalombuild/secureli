@@ -10,7 +10,8 @@ repos:
     rev: v1.4.0
     hooks:
     -   id: detect-secrets
+        exclude: .xcscheme$
 -   repo: https://github.com/realm/SwiftLint
-    rev: 0.49.1
+    rev: 0.52.2
     hooks:
     -   id: swiftlint

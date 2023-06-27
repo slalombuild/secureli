@@ -5,7 +5,16 @@ import pydantic
 from secureli.abstractions.pre_commit import PreCommitAbstraction
 from secureli.services.git_ignore import GitIgnoreService
 
-supported_languages = ["C#", "Python", "Java", "Terraform", "TypeScript", "JavaScript"]
+supported_languages = [
+    "C#",
+    "Python",
+    "Java",
+    "Terraform",
+    "TypeScript",
+    "JavaScript",
+    "Go",
+    "Swift",
+]
 
 
 class LanguageMetadata(pydantic.BaseModel):
