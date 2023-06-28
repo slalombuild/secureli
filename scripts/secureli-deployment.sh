@@ -20,7 +20,5 @@ else
     git checkout -b "secureli-${secureliVersion}-formula-generation"
     git add ./Formula/secureli.rb
     git commit -m "Creating pull request with latest Secureli formula for version ${secureliVersion}"
-    git push origin secureli-${secureliVersion}-formula-generation --repo https://github.com/slalombuild/homebrew-secureli.git
-    gh release create v${secureliVersion}
-    gh pr create --title "Secureli Formula Automated Creation for version ${secureliVersion}" --body "Automated formula creation"
+    git push origin main --repo https://github.com/slalombuild/homebrew-secureli.git
 fi
