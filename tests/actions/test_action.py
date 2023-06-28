@@ -250,12 +250,11 @@ def test_that_initialize_repo_is_aborted_by_the_user_if_the_process_is_canceled(
 
 def test_that_verify_install_updates_if_config_validation_fails(
     action: Action,
-    mock_pre_commit: MagicMock,
     mock_language_support: MagicMock,
     mock_updater: MagicMock,
     mock_secureli_config: MagicMock,
 ):
-    mock_pre_commit.validate_config.return_value = ValidateConfigResult(
+    mock_language_support.validate_config.return_value = ValidateConfigResult(
         successful=False, output="Configs don't match"
     )
     mock_language_support.version_for_language.return_value = "abc123"
