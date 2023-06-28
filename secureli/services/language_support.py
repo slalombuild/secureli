@@ -3,6 +3,7 @@ import subprocess
 import hashlib
 
 import pydantic
+from typing import Any
 import yaml
 from pathlib import Path
 
@@ -19,6 +20,12 @@ supported_languages = [
     "Go",
     "Swift",
 ]
+
+
+class InstallFailedException(Exception):
+    """Exeception if installing pre-commit-config failed"""
+
+    pass
 
 
 class LanguageMetadata(pydantic.BaseModel):
@@ -61,6 +68,14 @@ class Repo(pydantic.BaseModel):
     hooks: list[str]
 
 
+class BuildConfigResult(pydantic.BaseModel):
+    """Result about building config for all laguages"""
+
+    successful: bool
+    languages_added: list[str]
+    config_data: dict
+
+
 def format_language_output(languages: list[str]) -> str:
     return " ".join(map(str, languages))
 
@@ -88,7 +103,7 @@ class LanguageSupportService:
         :return: The hash of the language-pre-commit.yaml file found in the resources
         matching the given language.
         """
-        pre_commit_config = self._build_pre_commit_config(languages)
+        pre_commit_config = self._build_pre_commit_config(languages).config_data
         pre_commit_config_version = self._hash_config(yaml.dump(pre_commit_config))
 
         return pre_commit_config_version
@@ -103,12 +118,17 @@ class LanguageSupportService:
         """
 
         path_to_config_file = ".pre-commit-config.yaml"
-        pre_commit_config = self._build_pre_commit_config(languages, True)
+        build_result = self._build_pre_commit_config(languages, True)
+
+        if not build_result.successful:
+            raise InstallFailedException(
+                f"Install failed for {languages}.\n Config: {build_result.config_data}"
+            )
 
         with open(path_to_config_file, "w") as f:
-            f.write(yaml.dump(pre_commit_config))
+            f.write(yaml.dump(build_result.config_data))
 
-        version = self._hash_config(yaml.dump(pre_commit_config))
+        version = self._hash_config(yaml.dump(build_result.config_data))
 
         return LanguageMetadata(
             version=version, security_hook_id=self.secret_detection_hook_id(languages)
@@ -122,7 +142,7 @@ class LanguageSupportService:
         :param language: The language to check support for
         :return: The hook ID to use for secrets analysis if supported, otherwise None.
         """
-        config = self._build_pre_commit_config(languages)
+        config = self._build_pre_commit_config(languages).config_data
 
         secrets_detecting_repos = self.pre_commit_hook.get_secret_detecting_repos()
 
@@ -297,8 +317,9 @@ class LanguageSupportService:
         """
         current_config = yaml.dump(self._get_current_configuration())
 
-        # TODO generate from all languages
-        generated_config = yaml.dump(self._build_pre_commit_config(languages))
+        build_result = self._build_pre_commit_config(languages)
+        generated_config = yaml.dump(build_result.config_data)
+
         current_hash = self.get_current_config_hash()
         expected_hash = self._hash_config(generated_config)
         output = ""
@@ -337,20 +358,28 @@ class LanguageSupportService:
             data = yaml.safe_load(f)
             return data
 
-    def _build_pre_commit_config(self, languages: list[str], install=False):
-        all_configs = []
+    def _build_pre_commit_config(
+        self, languages: list[str], install=False
+    ) -> BuildConfigResult:
+        config_data = []
+        successful_languages = []
 
         languages.append("base")
 
         for language in languages:
             result = self.pre_commit_hook.get_configuration(language, install)
             if result.successful:
+                successful_languages.append(language)
                 for config in result.config_data["repos"]:
-                    all_configs.append(config)
+                    config_data.append(config)
 
         languages.remove("base")
 
-        return {"repos": all_configs}
+        return BuildConfigResult(
+            successful=True if len(config_data) > 0 else False,
+            languages_added=successful_languages,
+            config_data={"repos": config_data},
+        )
 
     def _hash_config(self, config: str) -> str:
         """
@@ -401,7 +430,7 @@ class LanguageSupportService:
         for repo in expected_repos_dict:
             expected_rev = expected_repos_dict.get(repo)
             current_rev = current_repos_dict.get(repo)
-            if expected_rev != current_rev:
+            if expected_rev != current_rev and repo != "local":
                 output += (
                     "Expected {} to be rev {} but it is configured to rev {}\n".format(
                         repo, expected_rev, current_rev

@@ -9,8 +9,13 @@ from secureli.abstractions.pre_commit import (
     LanguagePreCommitConfigInstallResult,
     GetPreCommitResult,
     LanguageNotSupportedError,
+    HookConfiguration,
+    Repo,
 )
-from secureli.services.language_support import LanguageSupportService
+from secureli.services.language_support import (
+    LanguageSupportService,
+    InstallFailedException,
+)
 from secureli.repositories.settings import (
     PreCommitSettings,
     PreCommitRepo,
@@ -130,6 +135,19 @@ def test_that_pre_commit_identifies_a_security_hook_we_can_use_during_init(
 def test_that_pre_commit_does_not_identify_a_security_hook_if_config_does_not_use_repo_even_if_hook_id_matches(
     language_support_service: LanguageSupportService, mock_pre_commit_hook: MagicMock
 ):
+    mock_pre_commit_hook.get_configuration.return_value = GetPreCommitResult(
+        successful=True,
+        config_data={
+            "repos": [
+                {
+                    "repo": "http://sample-repo.com/baddie-finder",
+                    "rev": "1.0.3",
+                    "hooks": [{"id": "baddie-finder-hook"}],
+                }
+            ]
+        },
+    )
+
     # hook does not match config hook
     mock_pre_commit_hook.get_secret_detecting_repos.return_value = {
         "http://sample-repo.com/baddie-finder": ["baddie-hook-finder"]
@@ -143,6 +161,19 @@ def test_that_pre_commit_does_not_identify_a_security_hook_if_config_does_not_us
 def test_that_pre_commit_does_not_identify_a_security_hook_if_config_uses_matching_repo_but_not_matching_hook(
     language_support_service: LanguageSupportService, mock_pre_commit_hook: MagicMock
 ):
+    mock_pre_commit_hook.get_configuration.return_value = GetPreCommitResult(
+        successful=True,
+        config_data={
+            "repos": [
+                {
+                    "repo": "http://sample-repo.com/baddie-finder",
+                    "rev": "1.0.3",
+                    "hooks": [{"id": "baddie-finder-hook"}],
+                }
+            ]
+        },
+    )
+
     # repo url does not match config url
     mock_pre_commit_hook.get_secret_detecting_repos.return_value = {
         "http://sample-repo.com/baddie-finder-wrong": ["baddie-finder-hook"]
@@ -176,6 +207,19 @@ def test_that_language_support_attempts_to_install_pre_commit_hooks(
 
     mock_pre_commit_hook.get_configuration.assert_called()
     assert metadata.security_hook_id == "baddie-finder-hook"
+
+
+def test_that_language_support_fails_if_config_is_unsuccessful(
+    language_support_service: LanguageSupportService,
+    mock_pre_commit_hook: MagicMock,
+    mock_open: MagicMock,
+):
+    mock_pre_commit_hook.get_configuration.return_value = GetPreCommitResult(
+        successful=False, config_data={}
+    )
+
+    with pytest.raises(InstallFailedException):
+        language_support_service.apply_support(["radLang", "lameLang"])
 
 
 #### version_for_language ####
@@ -303,6 +347,28 @@ def test_that_validate_config_detects_mismatched_hook_versions(
     )
 
 
+def test_that_validate_config_works_with_local_repos_that_do_not_have_revs(
+    language_support_service: LanguageSupportService,
+    mock_pre_commit_hook: MagicMock,
+    mock_hashlib_no_match: MagicMock,
+    mock_open_config: MagicMock,
+):
+    mock_pre_commit_hook.get_configuration.return_value = GetPreCommitResult(
+        successful=True,
+        config_data={
+            "repos": [
+                {
+                    "repo": "local",
+                    "hooks": [{"id": "local hook"}],
+                }
+            ]
+        },
+    )
+
+    validation_result = language_support_service.validate_config(["Python"])
+    assert "Expected local" not in validation_result.output
+
+
 def test_that_validate_config_detects_extra_repos(
     language_support_service: LanguageSupportService,
     mock_hashlib_no_match: MagicMock,
@@ -345,6 +411,11 @@ def test_that_validate_config_detects_missing_repos(
                     "rev": "1.0.0",
                     "hooks": [{"id": "some-third-hook"}],
                 },
+                {
+                    "repo": "http://sample-repo.com/baddie-finder",
+                    "rev": "1.0.0",
+                    "hooks": [{"id": "some-test-hook"}],
+                },
             ]
         },
     )
@@ -357,9 +428,8 @@ def test_that_validate_config_detects_missing_repos(
     )
     assert output_by_line[-6] == "- xyz://some-third-test-repo-url"
 
-    ##### autoupdate_hooks #####
 
-
+##### autoupdate_hooks #####
 def test_that_pre_commit_autoupdate_hooks_executes_successfully(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
@@ -503,3 +573,16 @@ def test_that_pre_commit_remove_unused_hooks_properly_handles_failed_executions(
     execute_result = language_support_service.remove_unused_hooks()
 
     assert not execute_result.successful
+
+
+##### get_serialized_config ####
+def test_that_language_support_builds_serializable_config_for_multiple_languages(
+    language_support_service: LanguageSupportService, mock_pre_commit_hook: MagicMock
+):
+    mock_pre_commit_hook.get_serialized_configuration.return_value = HookConfiguration(
+        repos=[Repo(repo="http://example/repo.com", revision="1.0.0", hooks=["hook_1"])]
+    )
+
+    result = language_support_service.get_serialized_config(["RadLang", "CoolLag"])
+
+    assert len(result) == 2
