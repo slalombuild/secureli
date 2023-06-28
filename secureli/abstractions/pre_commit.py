@@ -460,14 +460,6 @@ class PreCommitAbstraction:
                         with open(path_to_config_file, "w") as f:
                             f.write(yaml.dump(config[key]))
 
-                        # completed_process = subprocess.run(
-                        #     ["pre-commit", "install-language-config"]
-                        # )
-
-                        # if completed_process.returncode != 0:
-                        #     raise InstallLanguageConfigError(
-                        #         f"Installing config: {key}, was not successful"
-                        #     )
                         num_configs_wrote += 1
                 except Exception as e:
                     num_configs_non_success += 1

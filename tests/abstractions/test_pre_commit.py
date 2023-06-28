@@ -166,6 +166,28 @@ def test_that_pre_commit_treats_missing_templates_as_unsupported_language(
         pre_commit.get_configuration("BadLang")
 
 
+def test_that_pre_commit_applies_ignore_pattern(
+    pre_commit: PreCommitAbstraction, mock_data_loader: MagicMock
+):
+    def mock_loader_side_effect(resource):
+        # Language config file
+        return """
+        repos:
+        -   repo: http://sample-repo.com/hooks
+            rev: 1.0.25
+            hooks:
+            -    id: hook-a
+            -    id: hook-b
+        """
+
+    mock_data_loader.side_effect = mock_loader_side_effect
+    pre_commit.ignored_file_patterns.append("mock_pattern")
+
+    hook_configuration = pre_commit.get_configuration("RadLang")
+
+    assert "exclude" in str(hook_configuration.config_data)
+
+
 def test_that_pre_commit_treats_failing_process_as_install_failed_error(
     pre_commit: PreCommitAbstraction,
     mock_data_loader: MagicMock,
@@ -354,39 +376,34 @@ def test_that_pre_commit_calculates_a_serializable_hook_configuration(
     assert "hook-a" in hook_configuration.repos[0].hooks
 
 
-# def test_that_pre_commit_excludes_files_in_specific_hooks(
-#     language_support_service: LanguageSupportService,
-#     mock_data_loader: MagicMock,
-#     mock_hashlib: MagicMock,
-# ):
-#     def mock_loader_side_effect(resource):
-#         # Language config file
-#         return """
-#         repos:
-#         -   repo: http://example-repo.com/
-#             rev: 1.0.25
-#             hooks:
-#             -    id: hook-id
-#             -    id: hook-id-2
-#         """
+def test_that_pre_commit_excludes_files_in_specific_hooks(
+    pre_commit: PreCommitAbstraction,
+    mock_data_loader: MagicMock,
+    mock_hashlib: MagicMock,
+):
+    def mock_loader_side_effect(resource):
+        # Language config file
+        return """
+        repos:
+        -   repo: http://example-repo.com/
+            rev: 1.0.25
+            hooks:
+            -    id: hook-id
+            -    id: hook-id-2
+        """
 
-#     language_support_service.pre_commit_settings.repos[0].hooks[0].exclude_file_patterns = [
-#         "file_a.py"
-#     ]
-#     mock_data_loader.side_effect = mock_loader_side_effect
+    pre_commit.pre_commit_settings.repos[0].hooks[0].exclude_file_patterns = [
+        "file_a.py"
+    ]
+    mock_data_loader.side_effect = mock_loader_side_effect
 
-#     pre_commit.version_for_language("RadLang")
+    result_1 = pre_commit.get_configuration("RadLang")
 
-#     pre_commit.pre_commit_settings.repos[0].hooks[0].exclude_file_patterns = []
+    pre_commit.pre_commit_settings.repos[0].hooks[0].exclude_file_patterns = []
 
-#     pre_commit.version_for_language("RadLang")
+    result_2 = pre_commit.get_configuration("RadLang")
 
-#     assert mock_hashlib.md5.call_count == 2
-#     call_1_config, _ = mock_hashlib.md5.call_args_list[0]
-#     call_2_config, _ = mock_hashlib.md5.call_args_list[1]
-
-#     assert "file_a" in str(call_1_config)
-#     assert "file_a" not in str(call_2_config)
+    assert result_2 != result_1
 
 
 def test_that_pre_commit_suppresses_hooks_in_repo(
@@ -470,7 +487,6 @@ def test_that_pre_commit_removes_the_one_hook_multiple_times_without_a_problem(
 def test_that_pre_commit_removes_repo_when_repo_suppressed(
     pre_commit: PreCommitAbstraction,
     mock_data_loader: MagicMock,
-    mock_hashlib: MagicMock,
 ):
     def mock_loader_side_effect(resource):
         # Language config file
@@ -491,6 +507,34 @@ def test_that_pre_commit_removes_repo_when_repo_suppressed(
     assert "http://example-repo.com/" not in result
 
 
+#### _getpre_commit_settings ####
+def test_that_if_config_does_not_contain_repos_it_does_not_get_changed(
+    pre_commit: PreCommitAbstraction,
+):
+    mock_config = {"repo": "fake_repo"}
+
+    result = pre_commit._apply_pre_commit_settings(mock_config)
+
+    assert mock_config == result
+
+
+#### get_secret_detecting_repos ####
+def test_that_pre_commit_retreives_secret_detecting_repo_file(
+    pre_commit: PreCommitAbstraction, mock_data_loader: MagicMock
+):
+    def mock_loader_side_effect(resource):
+        return """
+            "https://github.com/yelp/detect-secrets":
+            - "detect-secrets"
+        """
+
+    mock_data_loader.side_effect = mock_loader_side_effect
+
+    result = pre_commit.get_secret_detecting_repos()
+
+    assert result is not None
+
+
 #### _load_language_config_files ####
 def test_that_pre_commit_langauge_config_gets_loaded(
     pre_commit: PreCommitAbstraction,
@@ -508,17 +552,15 @@ def test_that_pre_commit_language_config_does_not_get_loaded(
     assert not result.success
 
 
-#### _install_pre_commit_configs ####
-# def test_that_pre_commit_language_config_gets_installed(
-#     pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
-# ):
-#     result = pre_commit._install_pre_commit_configs("JavaScript")
+### _install_pre_commit_configs ####
+def test_that_pre_commit_language_config_gets_installed(
+    pre_commit: PreCommitAbstraction, mock_open: MagicMock
+):
+    result = pre_commit._install_pre_commit_configs("JavaScript")
 
-#     mock_subprocess.run.assert_called_with(["pre-commit", "install-language-config"])
-
-#     assert result.num_successful > 0
-#     assert result.num_non_success == 0
-#     assert len(result.non_success_messages) == 0
+    assert result.num_successful > 0
+    assert result.num_non_success == 0
+    assert len(result.non_success_messages) == 0
 
 
 def test_that_pre_commit_language_config_does_not_get_installed(
@@ -533,12 +575,15 @@ def test_that_pre_commit_language_config_does_not_get_installed(
     assert len(result.non_success_messages) == 0
 
 
-# def test_that_pre_commit_install_captures_error_if_cannot_install_config(
-#     pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
-# ):
-#     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
+def test_that_pre_commit_install_captures_error_if_cannot_install_config(
+    pre_commit: PreCommitAbstraction, mock_open: MagicMock
+):
+    def mocked_side_effect():
+        Exception()
 
-#     result = pre_commit._install_pre_commit_configs("JavaScript")
+    mock_open.side_effect = mocked_side_effect
 
-#     assert result.num_successful == 0
-#     assert result.num_non_success > 0
+    result = pre_commit._install_pre_commit_configs("JavaScript")
+
+    assert result.num_successful == 0
+    assert result.num_non_success > 0
