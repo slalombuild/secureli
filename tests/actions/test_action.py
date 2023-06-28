@@ -11,7 +11,7 @@ from secureli.services.language_support import LanguageMetadata
 from secureli.services.updater import UpdateResult
 from secureli.abstractions.pre_commit import ValidateConfigResult
 
-test_folder_path = Path(".")
+test_folder_path = Path("does-not-matter")
 
 
 @pytest.fixture()
@@ -280,7 +280,7 @@ def test_that_update_secureli_handles_declined_update(
     mock_echo: MagicMock,
 ):
     mock_echo.confirm.return_value = False
-    update_result = action._update_secureli(test_folder_path, always_yes=False)
+    update_result = action._update_secureli(always_yes=False)
 
     assert update_result.outcome == "update-canceled"
 
@@ -292,6 +292,6 @@ def test_that_update_secureli_handles_failed_update(
     mock_updater.update.return_value = UpdateResult(
         successful=False, outcome="update failed"
     )
-    update_result = action._update_secureli(test_folder_path, always_yes=False)
+    update_result = action._update_secureli(always_yes=False)
 
     assert update_result.outcome == "update-failed"

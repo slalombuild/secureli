@@ -87,11 +87,7 @@ class Action(ABC):
         :param always_yes: Assume "Yes" to all prompts
         """
 
-        config = (
-            SecureliConfig()
-            if reset
-            else self.action_deps.secureli_config.load(folder_path=folder_path)
-        )
+        config = SecureliConfig() if reset else self.action_deps.secureli_config.load()
 
         if not config.overall_language or not config.version_installed:
             return self._install_secureli(folder_path, always_yes)
@@ -102,9 +98,7 @@ class Action(ABC):
 
             # Check for a new version and prompt for upgrade if available
             if available_version != config.version_installed:
-                return self._upgrade_secureli(
-                    folder_path, config, available_version, always_yes
-                )
+                return self._upgrade_secureli(config, available_version, always_yes)
 
             # Validates the current .pre-commit-config.yaml against the generated config
             config_validation_result = self.action_deps.pre_commit.validate_config(
@@ -114,7 +108,7 @@ class Action(ABC):
             # If config mismatch between available version and current version prompt for upgrade
             if not config_validation_result.successful:
                 self.action_deps.echo.print(config_validation_result.output)
-                return self._update_secureli(folder_path, always_yes)
+                return self._update_secureli(always_yes)
 
             self.action_deps.echo.print(
                 f"SeCureLI is installed and up-to-date (language = {config.overall_language})"
@@ -125,11 +119,7 @@ class Action(ABC):
             )
 
     def _upgrade_secureli(
-        self,
-        folder_path: Path,
-        config: SecureliConfig,
-        available_version: str,
-        always_yes: bool,
+        self, config: SecureliConfig, available_version: str, always_yes: bool
     ) -> VerifyResult:
         """
         Installs SeCureLI into the given folder path and returns the new configuration
@@ -154,12 +144,12 @@ class Action(ABC):
 
         try:
             metadata = self.action_deps.language_support.apply_support(
-                folder_path, config.overall_language
+                config.overall_language
             )
 
             # Update config with new version installed and save it
             config.version_installed = metadata.version
-            self.action_deps.secureli_config.save(folder_path, config)
+            self.action_deps.secureli_config.save(config)
             self.action_deps.echo.print("SeCureLI has been upgraded successfully")
             return VerifyResult(
                 outcome=VerifyOutcome.UPGRADE_SUCCEEDED,
@@ -215,9 +205,7 @@ class Action(ABC):
                 f"Overall Detected Language: {overall_language}"
             )
 
-            metadata = self.action_deps.language_support.apply_support(
-                folder_path, overall_language
-            )
+            metadata = self.action_deps.language_support.apply_support(overall_language)
 
         except (ValueError, LanguageNotSupportedError, InstallFailedError) as e:
             self.action_deps.echo.error(
@@ -231,7 +219,7 @@ class Action(ABC):
             overall_language=overall_language,
             version_installed=metadata.version,
         )
-        self.action_deps.secureli_config.save(folder_path, config)
+        self.action_deps.secureli_config.save(config)
 
         if secret_test_id := metadata.security_hook_id:
             self.action_deps.echo.print(
@@ -255,7 +243,7 @@ class Action(ABC):
             analyze_result=analyze_result,
         )
 
-    def _update_secureli(self, folder_path: Path, always_yes: bool):
+    def _update_secureli(self, always_yes: bool):
         """
         Prompts the user to update to the latest secureli install.
         :param always_yes: Assume "Yes" to all prompts
@@ -272,7 +260,7 @@ class Action(ABC):
             self.action_deps.echo.print("\nUpdate declined.\n")
             return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)
 
-        update_result = self.action_deps.updater.update(folder_path)
+        update_result = self.action_deps.updater.update()
         details = update_result.output
         self.action_deps.echo.print(details)
 

@@ -1,4 +1,3 @@
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -9,8 +8,6 @@ from secureli.repositories.secureli_config import (
     SecureliConfig,
 )
 
-test_folder_path = Path(".")
-
 
 @pytest.fixture()
 def non_existent_path(mocker: MockerFixture) -> MagicMock:
@@ -18,13 +15,9 @@ def non_existent_path(mocker: MockerFixture) -> MagicMock:
     config_file_path.exists.return_value = False
     config_file_path.is_dir.return_value = False
     mock_folder_path = MagicMock()
-    mock_folder_path.exists.return_value = False
-    mock_folder_path.is_dir.return_value = False
     mock_folder_path.__truediv__.return_value = config_file_path
 
     mock_secureli_folder_path = MagicMock()
-    mock_secureli_folder_path.exists.return_value = False
-    mock_secureli_folder_path.is_dir.return_value = False
     mock_secureli_folder_path.__truediv__.return_value = mock_folder_path
 
     mock_path_class = MagicMock()
@@ -72,7 +65,7 @@ def test_that_repo_synthesizes_default_config_when_missing(
     non_existent_path: MagicMock,
     secureli_config: SecureliConfigRepository,
 ):
-    config = secureli_config.load(test_folder_path)
+    config = secureli_config.load()
 
     assert config.overall_language is None
 
@@ -81,7 +74,7 @@ def test_that_repo_loads_config_when_present(
     existent_path: MagicMock,
     secureli_config: SecureliConfigRepository,
 ):
-    config = secureli_config.load(test_folder_path)
+    config = secureli_config.load()
 
     assert config.overall_language == "RadLang"
 
@@ -92,6 +85,6 @@ def test_that_repo_saves_config(
     secureli_config: SecureliConfigRepository,
 ):
     config = SecureliConfig(overall_language="AwesomeLang")
-    secureli_config.save(test_folder_path, config)
+    secureli_config.save(config)
 
     mock_open.assert_called_once()
