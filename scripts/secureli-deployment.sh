@@ -17,7 +17,6 @@ else
     git config --global user.name "Secureli Automation"
     python ./scripts/get-secureli-dependencies.py
     cd homebrew-secureli
-    git checkout -b "secureli-${secureliVersion}-formula-generation"
     git add ./Formula/secureli.rb
     git commit -m "Creating pull request with latest Secureli formula for version ${secureliVersion}"
     git push origin main --repo https://github.com/slalombuild/homebrew-secureli.git
