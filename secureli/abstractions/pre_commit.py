@@ -1,4 +1,5 @@
 import subprocess
+import hashlib
 
 from pathlib import Path
 from typing import Callable, Optional, Any
