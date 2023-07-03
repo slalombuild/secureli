@@ -1,5 +1,4 @@
 import subprocess
-import hashlib
 
 from pathlib import Path
 from typing import Callable, Optional, Any
@@ -21,12 +20,6 @@ class InstallFailedError(Exception):
 
 class LanguageNotSupportedError(Exception):
     """The given language was not supported by the PreCommitHooks abstraction"""
-
-    pass
-
-
-class InstallLanguageConfigError(Exception):
-    """Attempting to install language specific config to .secureli was not successful"""
 
     pass
 

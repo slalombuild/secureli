@@ -1,9 +1,7 @@
 from subprocess import CompletedProcess
 from unittest.mock import MagicMock
-import hashlib
 
 import pytest
-import yaml
 from pytest_mock import MockerFixture
 
 from secureli.abstractions.pre_commit import (

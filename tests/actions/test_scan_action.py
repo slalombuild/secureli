@@ -15,8 +15,6 @@ from secureli.repositories.settings import (
     PreCommitHook,
     EchoSettings,
     EchoLevel,
-    LanguageSupportSettings,
-    RepoFilesSettings,
 )
 from secureli.services.scanner import ScanMode, ScanResult, Failure, OutputParseErrors
 

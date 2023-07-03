@@ -6,7 +6,6 @@ import pydantic
 import re
 import yaml
 
-from secureli.abstractions.pre_commit import PreCommitAbstraction
 from secureli.services.language_support import LanguageSupportService
 
 

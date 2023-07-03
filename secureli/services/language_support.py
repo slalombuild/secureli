@@ -60,14 +60,6 @@ class ExecuteResult(pydantic.BaseModel):
     output: str
 
 
-class Repo(pydantic.BaseModel):
-    """A repository containing pre-commit hooks"""
-
-    repo: str
-    revision: str
-    hooks: list[str]
-
-
 class BuildConfigResult(pydantic.BaseModel):
     """Result about building config for all laguages"""
 

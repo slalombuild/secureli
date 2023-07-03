@@ -16,11 +16,6 @@ from secureli.services.language_support import (
     LanguageSupportService,
     InstallFailedException,
 )
-from secureli.repositories.settings import (
-    PreCommitSettings,
-    PreCommitRepo,
-    PreCommitHook,
-)
 
 
 @pytest.fixture()
@@ -111,7 +106,7 @@ def language_support_service(
 
 
 #### secret_detection_hook ####
-def test_that_pre_commit_identifies_a_security_hook_we_can_use_during_init(
+def test_that_language_support_identifies_a_security_hook_we_can_use_during_init(
     language_support_service: LanguageSupportService, mock_pre_commit_hook: MagicMock
 ):
     mock_pre_commit_hook.get_configuration.return_value = GetPreCommitResult(
@@ -132,7 +127,7 @@ def test_that_pre_commit_identifies_a_security_hook_we_can_use_during_init(
     assert hook_id == "baddie-finder-hook"
 
 
-def test_that_pre_commit_does_not_identify_a_security_hook_if_config_does_not_use_repo_even_if_hook_id_matches(
+def test_that_language_support_does_not_identify_a_security_hook_if_config_does_not_use_repo_even_if_hook_id_matches(
     language_support_service: LanguageSupportService, mock_pre_commit_hook: MagicMock
 ):
     mock_pre_commit_hook.get_configuration.return_value = GetPreCommitResult(
@@ -158,7 +153,7 @@ def test_that_pre_commit_does_not_identify_a_security_hook_if_config_does_not_us
     assert hook_id is None
 
 
-def test_that_pre_commit_does_not_identify_a_security_hook_if_config_uses_matching_repo_but_not_matching_hook(
+def test_that_language_support_does_not_identify_a_security_hook_if_config_uses_matching_repo_but_not_matching_hook(
     language_support_service: LanguageSupportService, mock_pre_commit_hook: MagicMock
 ):
     mock_pre_commit_hook.get_configuration.return_value = GetPreCommitResult(
@@ -246,7 +241,7 @@ def test_that_unsopported_language_raises_LanguageNotSupportedError(
 
 
 #### execute_hooks ####
-def test_that_pre_commit_executes_hooks_successfully(
+def test_that_language_support_executes_hooks_successfully(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -257,7 +252,7 @@ def test_that_pre_commit_executes_hooks_successfully(
     assert "--all-files" not in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_executes_hooks_successfully_including_all_files(
+def test_that_language_support_executes_hooks_successfully_including_all_files(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -268,7 +263,7 @@ def test_that_pre_commit_executes_hooks_successfully_including_all_files(
     assert "--all-files" in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_executes_hooks_and_reports_failures(
+def test_that_language_support_executes_hooks_and_reports_failures(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -278,7 +273,7 @@ def test_that_pre_commit_executes_hooks_and_reports_failures(
     assert not execute_result.successful
 
 
-def test_that_pre_commit_executes_a_single_hook_if_specified(
+def test_that_language_support_executes_a_single_hook_if_specified(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -289,7 +284,7 @@ def test_that_pre_commit_executes_a_single_hook_if_specified(
 
 
 #### _get_current_config ####
-def test_that_get_current_config_returns_config_data(
+def test_that_language_support_gets_current_config_returns_config_data(
     language_support_service: LanguageSupportService, mock_open_config: MagicMock
 ):
     config = language_support_service._get_current_configuration()
@@ -430,7 +425,7 @@ def test_that_validate_config_detects_missing_repos(
 
 
 ##### autoupdate_hooks #####
-def test_that_pre_commit_autoupdate_hooks_executes_successfully(
+def test_that_language_support_autoupdate_hooks_executes_successfully(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -440,7 +435,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully(
     assert execute_result.successful
 
 
-def test_that_pre_commit_autoupdate_hooks_properly_handles_failed_executions(
+def test_that_language_support_autoupdate_hooks_properly_handles_failed_executions(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -450,7 +445,7 @@ def test_that_pre_commit_autoupdate_hooks_properly_handles_failed_executions(
     assert not execute_result.successful
 
 
-def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_bleeding_edge(
+def test_that_language_support_autoupdate_hooks_executes_successfully_with_bleeding_edge(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -461,7 +456,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_bleeding_ed
     assert "--bleeding-edge" in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_freeze(
+def test_that_language_support_autoupdate_hooks_executes_successfully_with_freeze(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -472,7 +467,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_freeze(
     assert "--freeze" in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_repos(
+def test_that_language_support_autoupdate_hooks_executes_successfully_with_repos(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -484,7 +479,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_repos(
     assert "--repo some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_multiple_repos(
+def test_that_language_support_autoupdate_hooks_executes_successfully_with_multiple_repos(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -497,7 +492,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_multiple_re
     assert "--repo some-other-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_autoupdate_hooks_fails_with_repos_containing_non_strings(
+def test_that_language_support_autoupdate_hooks_fails_with_repos_containing_non_strings(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -508,7 +503,7 @@ def test_that_pre_commit_autoupdate_hooks_fails_with_repos_containing_non_string
     assert not execute_result.successful
 
 
-def test_that_pre_commit_autoupdate_hooks_ignores_repos_when_repos_is_a_dict(
+def test_that_language_support_autoupdate_hooks_ignores_repos_when_repos_is_a_dict(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -521,7 +516,7 @@ def test_that_pre_commit_autoupdate_hooks_ignores_repos_when_repos_is_a_dict(
     assert "--repo {}" not in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_autoupdate_hooks_converts_repos_when_repos_is_a_string(
+def test_that_language_support_autoupdate_hooks_converts_repos_when_repos_is_a_string(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -534,7 +529,7 @@ def test_that_pre_commit_autoupdate_hooks_converts_repos_when_repos_is_a_string(
 
 
 ##### update #####
-def test_that_pre_commit_update_executes_successfully(
+def test_that_language_support_update_executes_successfully(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -544,7 +539,7 @@ def test_that_pre_commit_update_executes_successfully(
     assert execute_result.successful
 
 
-def test_that_pre_commit_update_properly_handles_failed_executions(
+def test_that_language_support_update_properly_handles_failed_executions(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -555,7 +550,7 @@ def test_that_pre_commit_update_properly_handles_failed_executions(
 
 
 ##### remove_unused_hooks #####
-def test_that_pre_commit_remove_unused_hookss_executes_successfully(
+def test_that_language_support_remove_unused_hookss_executes_successfully(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):
@@ -565,7 +560,7 @@ def test_that_pre_commit_remove_unused_hookss_executes_successfully(
     assert execute_result.successful
 
 
-def test_that_pre_commit_remove_unused_hooks_properly_handles_failed_executions(
+def test_that_language_support_remove_unused_hooks_properly_handles_failed_executions(
     language_support_service: LanguageSupportService,
     mock_subprocess: MagicMock,
 ):

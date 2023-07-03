@@ -2,7 +2,6 @@ from typing import Optional
 
 import pydantic
 
-from secureli.abstractions.pre_commit import PreCommitAbstraction
 from secureli.repositories.secureli_config import SecureliConfigRepository
 from secureli.services.language_support import LanguageSupportService
 
