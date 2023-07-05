@@ -2,4 +2,4 @@ repos:
 - hooks:
   - id: checkstyle-java
   repo: https://github.com/rgraue/pre-commit-mirror-checkstyle
-  rev: v0.1.14
+  rev: v0.1.15
