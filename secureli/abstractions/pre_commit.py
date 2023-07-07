@@ -1,16 +1,8 @@
 import subprocess
-import hashlib
 
-from pathlib import Path
-from typing import Callable, Optional, Any
+from typing import Optional
 
-import pathspec
 import pydantic
-import yaml
-
-from secureli.repositories.settings import PreCommitSettings, PreCommitRepo
-from secureli.utilities.patterns import combine_patterns
-from secureli.resources.slugify import slugify
 
 
 class InstallFailedError(Exception):

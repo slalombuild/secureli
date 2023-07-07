@@ -1,6 +1,4 @@
 import pytest
-import pydantic
-
 from unittest.mock import MagicMock
 
 
@@ -54,7 +52,7 @@ def language_config_service(
     )
 
 
-def test_that_pre_commit_treats_missing_templates_as_unsupported_language(
+def test_that_language_config_service_treats_missing_templates_as_unsupported_language(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
 ):
@@ -63,7 +61,7 @@ def test_that_pre_commit_treats_missing_templates_as_unsupported_language(
         language_config_service.get_language_config("BadLang")
 
 
-def test_that_pre_commit_treats_missing_templates_as_unsupported_language_when_checking_versions(
+def test_that_language_config_service_treats_missing_templates_as_unsupported_language_when_checking_versions(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
 ):
@@ -80,7 +78,7 @@ def test_that_version_identifiers_are_calculated_for_known_languages(
     assert version != None
 
 
-def test_that_pre_commit_templates_are_loaded_with_global_exclude_if_provided_multiple_patterns(
+def test_that_language_config_service_templates_are_loaded_with_global_exclude_if_provided_multiple_patterns(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
 ):
@@ -94,7 +92,7 @@ def test_that_pre_commit_templates_are_loaded_with_global_exclude_if_provided_mu
     assert "exclude: ^(mock_pattern1|mock_pattern2)" in result.config_data
 
 
-def test_that_pre_commit_templates_are_loaded_without_exclude(
+def test_that_language_config_service_templates_are_loaded_without_exclude(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
     mock_open: MagicMock,
@@ -106,7 +104,7 @@ def test_that_pre_commit_templates_are_loaded_without_exclude(
     assert "exclude:" not in result.config_data
 
 
-def test_that_pre_commit_overrides_arguments_in_a_security_hook(
+def test_that_language_config_service_overrides_arguments_in_a_security_hook(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
     settings_dict: dict,
@@ -144,7 +142,7 @@ def test_that_pre_commit_overrides_arguments_in_a_security_hook(
     assert "orig_arg" not in result.config_data
 
 
-def test_that_pre_commit_overrides_arguments_do_not_apply_to_a_different_hook_id(
+def test_that_language_config_service_overrides_arguments_do_not_apply_to_a_different_hook_id(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
     settings_dict: dict,
@@ -182,7 +180,7 @@ def test_that_pre_commit_overrides_arguments_do_not_apply_to_a_different_hook_id
     assert "orig_arg" in result.config_data
 
 
-def test_that_pre_commit_adds_additional_arguments_to_a_hook(
+def test_that_language_config_service_adds_additional_arguments_to_a_hook(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
     settings_dict: dict,
@@ -220,7 +218,7 @@ def test_that_pre_commit_adds_additional_arguments_to_a_hook(
     assert "orig_arg" in result.config_data
 
 
-def test_that_pre_commit_adds_additional_arguments_to_a_hook_if_the_hook_did_not_have_any_originally(
+def test_that_language_config_service_adds_additional_arguments_to_a_hook_if_the_hook_did_not_have_any_originally(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
     settings_dict: dict,
@@ -254,7 +252,7 @@ def test_that_pre_commit_adds_additional_arguments_to_a_hook_if_the_hook_did_not
     assert "value_a" in result.config_data
 
 
-def test_that_pre_commit_excludes_files_in_specific_hooks(
+def test_that_language_config_service_excludes_files_in_specific_hooks(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
 ):
@@ -286,7 +284,7 @@ def test_that_pre_commit_excludes_files_in_specific_hooks(
     assert "file_a" not in result_2.config_data
 
 
-def test_that_pre_commit_suppresses_hooks_in_repo(
+def test_that_language_config_service_suppresses_hooks_in_repo(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
 ):
@@ -312,7 +310,7 @@ def test_that_pre_commit_suppresses_hooks_in_repo(
     assert "hook-id" in result.config_data
 
 
-def test_that_pre_commit_removes_repo_when_all_hooks_suppressed(
+def test_that_language_config_service_removes_repo_when_all_hooks_suppressed(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
 ):
@@ -338,7 +336,7 @@ def test_that_pre_commit_removes_repo_when_all_hooks_suppressed(
     assert "http://example-repo.com/" not in result.config_data
 
 
-def test_that_pre_commit_removes_the_one_hook_multiple_times_without_a_problem(
+def test_that_language_config_service_removes_the_one_hook_multiple_times_without_a_problem(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
 ):
@@ -363,7 +361,7 @@ def test_that_pre_commit_removes_the_one_hook_multiple_times_without_a_problem(
     assert "hook-id" not in result.config_data
 
 
-def test_that_pre_commit_removes_repo_when_repo_suppressed(
+def test_that_language_config_service_removes_repo_when_repo_suppressed(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
 ):
@@ -389,7 +387,7 @@ def test_that_pre_commit_removes_repo_when_repo_suppressed(
 
 
 #### _load_language_config_files ####
-def test_that_pre_commit_langauge_config_gets_loaded(
+def test_that_language_config_service_langauge_config_gets_loaded(
     language_config_service: LanguageConfigService,
 ):
     result = language_config_service._load_linter_config_file("JavaScript")
@@ -397,7 +395,7 @@ def test_that_pre_commit_langauge_config_gets_loaded(
     assert result.successful
 
 
-def test_that_pre_commit_language_config_does_not_get_loaded(
+def test_that_language_config_service_language_config_does_not_get_loaded(
     language_config_service: LanguageConfigService,
 ):
     result = language_config_service._load_linter_config_file("RadLang")
@@ -405,7 +403,7 @@ def test_that_pre_commit_language_config_does_not_get_loaded(
     assert not result.successful
 
 
-def test_that_pre_commit_templates_are_loaded_with_global_exclude_if_provided(
+def test_that_language_config_service_templates_are_loaded_with_global_exclude_if_provided(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
     mock_open: MagicMock,

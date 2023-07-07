@@ -1,5 +1,4 @@
 from unittest.mock import MagicMock
-import hashlib
 
 import pytest
 from pytest_mock import MockerFixture
@@ -154,7 +153,7 @@ def test_that_language_support_calculates_version_for_language(
     assert version is not None
 
 
-def test_that_pre_commit_identifies_a_security_hook_we_can_use_during_init(
+def test_that_language_support_identifies_a_security_hook_we_can_use_during_init(
     language_support_service: LanguageSupportService,
     mock_data_loader: MagicMock,
     mock_language_config_service: MagicMock,
@@ -184,7 +183,7 @@ def test_that_pre_commit_identifies_a_security_hook_we_can_use_during_init(
     assert hook_id == "baddie-finder-hook"
 
 
-def test_that_pre_commit_does_not_identify_a_security_hook_if_config_does_not_use_repo_even_if_hook_id_matches(
+def test_that_language_support_does_not_identify_a_security_hook_if_config_does_not_use_repo_even_if_hook_id_matches(
     language_support_service: LanguageSupportService,
     mock_data_loader: MagicMock,
     mock_language_config_service: MagicMock,
@@ -214,7 +213,7 @@ def test_that_pre_commit_does_not_identify_a_security_hook_if_config_does_not_us
     assert hook_id is None
 
 
-def test_that_pre_commit_calculates_a_serializable_hook_configuration(
+def test_that_language_support_calculates_a_serializable_hook_configuration(
     language_support_service: LanguageSupportService,
     mock_language_config_service: LanguageConfigService,
 ):
@@ -240,7 +239,7 @@ def test_that_pre_commit_calculates_a_serializable_hook_configuration(
     assert "hook-a" in hook_configuration.repos[0].hooks
 
 
-def test_that_pre_commit_does_not_identify_a_security_hook_if_config_uses_matching_repo_but_not_matching_hook(
+def test_that_language_support_does_not_identify_a_security_hook_if_config_uses_matching_repo_but_not_matching_hook(
     language_support_service: LanguageSupportService,
     mock_data_loader: MagicMock,
     mock_language_config_service: MagicMock,

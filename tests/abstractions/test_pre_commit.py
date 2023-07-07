@@ -285,39 +285,3 @@ def test_that_pre_commit_remove_unused_hooks_properly_handles_failed_executions(
     execute_result = pre_commit.remove_unused_hooks()
 
     assert not execute_result.successful
-
-
-# #### _install_pre_commit_configs ####
-# def test_that_pre_commit_language_config_gets_installed(
-#     pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
-# ):
-#     result = pre_commit._install_pre_commit_configs("JavaScript")
-
-#     mock_subprocess.run.assert_called_with(["pre-commit", "install-language-config"])
-
-#     assert result.num_successful > 0
-#     assert result.num_non_success == 0
-#     assert len(result.non_success_messages) == 0
-
-
-# def test_that_pre_commit_language_config_does_not_get_installed(
-#     pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
-# ):
-#     result = pre_commit._install_pre_commit_configs("RadLang")
-
-#     assert not mock_subprocess.called
-
-#     assert result.num_non_success == 0
-#     assert result.num_successful == 0
-#     assert len(result.non_success_messages) == 0
-
-
-# def test_that_pre_commit_install_captures_error_if_cannot_install_config(
-#     pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
-# ):
-#     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-
-#     result = pre_commit._install_pre_commit_configs("JavaScript")
-
-#     assert result.num_successful == 0
-#     assert result.num_non_success > 0
