@@ -80,14 +80,16 @@ class LoggingService:
         secureli_config = self.secureli_config.load()
         hook_config = (
             self.language_support.get_configuration(secureli_config.languages[0])
-            if secureli_config.languages[0]
+            if secureli_config.languages
             else None
         )
         log_entry = LogEntry(
             status=LogStatus.success,
             action=action,
             hook_config=hook_config,
-            primary_language=secureli_config.languages[0],
+            primary_language=secureli_config.languages[0]
+            if secureli_config.languages
+            else None,
         )
         self._log(log_entry)
 
@@ -108,7 +110,7 @@ class LoggingService:
         secureli_config = self.secureli_config.load()
         hook_config = (
             None
-            if not secureli_config.languages[0]
+            if not secureli_config.languages
             else self.language_support.get_configuration(secureli_config.languages[0])
         )
         log_entry = LogEntry(
@@ -120,7 +122,9 @@ class LoggingService:
             total_failure_count=total_failure_count,
             failure_count_details=individual_failure_count,
             hook_config=hook_config,
-            primary_language=secureli_config.languages[0],
+            primary_language=secureli_config.languages[0]
+            if secureli_config.languages
+            else None,
         )
         self._log(log_entry)
 

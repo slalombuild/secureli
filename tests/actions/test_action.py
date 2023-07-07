@@ -171,7 +171,7 @@ def test_that_initialize_repo_selects_previously_selected_language(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="PreviousLang", version_installed="abc123"
+        languages=["PreviousLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "abc123"
 
@@ -189,7 +189,7 @@ def test_that_initialize_repo_prompts_to_upgrade_when_out_of_sync(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="PreviousLang", version_installed="abc123"
+        languages=["PreviousLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "xyz987"
     mock_echo.confirm.return_value = False
@@ -206,7 +206,7 @@ def test_that_initialize_repo_auto_upgrades_when_out_of_sync(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="PreviousLang", version_installed="abc123"
+        languages=["PreviousLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "xyz987"
 
@@ -222,7 +222,7 @@ def test_that_initialize_repo_reports_errors_when_upgrade_fails(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="PreviousLang", version_installed="abc123"
+        languages=["PreviousLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "xyz987"
     mock_language_support.apply_support.side_effect = InstallFailedError
@@ -258,7 +258,7 @@ def test_that_verify_install_updates_if_config_validation_fails(
     )
     mock_language_support.version_for_language.return_value = "abc123"
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="PreviousLang", version_installed="abc123"
+        languages=["PreviousLang"], version_installed="abc123"
     )
     mock_updater.update.return_value = UpdateResult(
         successful=True, output="Some output"
