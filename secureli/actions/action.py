@@ -86,11 +86,11 @@ class Action(ABC):
 
         config = SecureliConfig() if reset else self.action_deps.secureli_config.load()
 
-        if not config.overall_language or not config.version_installed:
+        if not config.languages or not config.version_installed:
             return self._install_secureli(folder_path, always_yes)
         else:
             available_version = self.action_deps.language_support.version_for_language(
-                config.overall_language
+                config.languages[0]
             )
 
             # Check for a new version and prompt for upgrade if available
@@ -100,7 +100,7 @@ class Action(ABC):
             # Validates the current .pre-commit-config.yaml against the generated config
             config_validation_result = (
                 self.action_deps.language_support.validate_config(
-                    language=config.overall_language
+                    language=config.languages[0]
                 )
             )
 
@@ -110,7 +110,7 @@ class Action(ABC):
                 return self._update_secureli(always_yes)
 
             self.action_deps.echo.print(
-                f"SeCureLI is installed and up-to-date (language = {config.overall_language})"
+                f"SeCureLI is installed and up-to-date (language = {config.languages[0]})"
             )
             return VerifyResult(
                 outcome=VerifyOutcome.UP_TO_DATE,
@@ -143,7 +143,7 @@ class Action(ABC):
 
         try:
             metadata = self.action_deps.language_support.apply_support(
-                config.overall_language
+                config.languages[0]
             )
 
             # Update config with new version installed and save it
@@ -199,12 +199,14 @@ class Action(ABC):
                 self.action_deps.echo.print(
                     f"- {language}: {percentage:.0%}", color=Color.MAGENTA, bold=True
                 )
-            overall_language = list(analyze_result.language_proportions.keys())[0]
+            overall_language = list(analyze_result.language_proportions.keys())
             self.action_deps.echo.print(
-                f"Overall Detected Language: {overall_language}"
+                f"Overall Detected Language: {overall_language[0]}"
             )
 
-            metadata = self.action_deps.language_support.apply_support(overall_language)
+            metadata = self.action_deps.language_support.apply_support(
+                overall_language[0]
+            )
 
         except (ValueError, LanguageNotSupportedError, InstallFailedError) as e:
             self.action_deps.echo.error(
@@ -215,25 +217,25 @@ class Action(ABC):
             )
 
         config = SecureliConfig(
-            overall_language=overall_language,
+            languages=overall_language,
             version_installed=metadata.version,
         )
         self.action_deps.secureli_config.save(config)
 
         if secret_test_id := metadata.security_hook_id:
             self.action_deps.echo.print(
-                f"{config.overall_language} supports secrets detection; running {secret_test_id}."
+                f"{config.languages[0]} supports secrets detection; running {secret_test_id}."
             )
             self.action_deps.scanner.scan_repo(
                 ScanMode.ALL_FILES, specific_test=secret_test_id
             )
         else:
             self.action_deps.echo.warning(
-                f"{config.overall_language} does not support secrets detection, skipping"
+                f"{config.languages[0]} does not support secrets detection, skipping"
             )
 
         self.action_deps.echo.print(
-            f"SeCureLI has been installed successfully (language = {config.overall_language})"
+            f"SeCureLI has been installed successfully (language = {config.languages[0]})"
         )
 
         return VerifyResult(

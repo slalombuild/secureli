@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 
 class SecureliConfig(BaseModel):
-    overall_language: Optional[str]
+    languages: Optional[list[str]]
     version_installed: Optional[str]
 
 
