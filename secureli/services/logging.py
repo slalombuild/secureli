@@ -7,11 +7,10 @@ from uuid import uuid4
 
 import pydantic
 
-from secureli.abstractions.pre_commit import HookConfiguration
+from secureli.services.language_support import LanguageSupportService, HookConfiguration
 from secureli.repositories.secureli_config import SecureliConfigRepository
 from secureli.utilities.git_meta import current_branch_name, git_user_email, origin_url
 from secureli.utilities.secureli_meta import secureli_version
-from secureli.services.language_support import LanguageSupportService
 
 
 def generate_unique_id() -> str:
@@ -53,10 +52,10 @@ class LogEntry(pydantic.BaseModel):
     username: str = git_user_email()
     machineid: str = platform.uname().node
     secureli_version: str = secureli_version()
-    all_languages: Optional[list[str]]
+    primary_language: Optional[str]
     status: LogStatus
     action: LogAction
-    hook_config: Optional[list[HookConfiguration]]
+    hook_config: Optional[HookConfiguration]
     failure: Optional[LogFailure] = None
     total_failure_count: Optional[int]
     failure_count_details: Optional[object]
@@ -67,11 +66,11 @@ class LoggingService:
 
     def __init__(
         self,
-        secureli_config: SecureliConfigRepository,
         language_support: LanguageSupportService,
+        secureli_config: SecureliConfigRepository,
     ):
-        self.secureli_config = secureli_config
         self.language_support = language_support
+        self.secureli_config = secureli_config
 
     def success(self, action: LogAction) -> LogEntry:
         """
@@ -80,15 +79,15 @@ class LoggingService:
         """
         secureli_config = self.secureli_config.load()
         hook_config = (
-            self.language_support.get_serialized_config(secureli_config.languages)
-            if secureli_config.languages
+            self.language_support.get_configuration(secureli_config.overall_language)
+            if secureli_config.overall_language
             else None
         )
         log_entry = LogEntry(
             status=LogStatus.success,
             action=action,
             hook_config=hook_config,
-            all_languages=secureli_config.languages,
+            primary_language=secureli_config.overall_language,
         )
         self._log(log_entry)
 
@@ -109,8 +108,10 @@ class LoggingService:
         secureli_config = self.secureli_config.load()
         hook_config = (
             None
-            if not secureli_config.languages
-            else self.language_support.get_serialized_config(secureli_config.languages)
+            if not secureli_config.overall_language
+            else self.language_support.get_configuration(
+                secureli_config.overall_language
+            )
         )
         log_entry = LogEntry(
             status=LogStatus.failure,
@@ -121,7 +122,7 @@ class LoggingService:
             total_failure_count=total_failure_count,
             failure_count_details=individual_failure_count,
             hook_config=hook_config,
-            all_languages=secureli_config.languages,
+            primary_language=secureli_config.overall_language,
         )
         self._log(log_entry)
 

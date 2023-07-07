@@ -4,9 +4,9 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from secureli.abstractions.pre_commit import HookConfiguration
 from secureli.repositories.secureli_config import SecureliConfig
 from secureli.services.logging import LoggingService, LogAction
+from secureli.services.language_support import HookConfiguration
 
 
 @pytest.fixture()
@@ -42,6 +42,13 @@ def mock_open(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
+def mock_language_support() -> MagicMock:
+    mock_language_support = MagicMock()
+
+    return mock_language_support
+
+
+@pytest.fixture()
 def logging_service(
     mock_language_support: MagicMock, mock_secureli_config: MagicMock
 ) -> LoggingService:
@@ -59,11 +66,9 @@ def test_that_logging_service_success_creates_logs_folder_if_not_exists(
     mock_language_support: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        languages=["RadLang"], version_installed="abc123"
+        overall_language="RadLang", version_installed="abc123"
     )
-    mock_language_support.get_serialized_config.return_value = [
-        HookConfiguration(repos=[])
-    ]
+    mock_language_support.get_configuration.return_value = HookConfiguration(repos=[])
     logging_service.success(LogAction.init)
 
     mock_path.parent.mkdir.assert_called_once()

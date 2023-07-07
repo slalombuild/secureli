@@ -44,8 +44,7 @@ def existent_path(mocker: MockerFixture) -> MagicMock:
 
     mock_open = mocker.mock_open(
         read_data="""
-        languages:
-        - RadLang
+        overall_language: RadLang
         version_installed: mock-version-id
     """
     )
@@ -68,7 +67,7 @@ def test_that_repo_synthesizes_default_config_when_missing(
 ):
     config = secureli_config.load()
 
-    assert config.languages is None
+    assert config.overall_language is None
 
 
 def test_that_repo_loads_config_when_present(
@@ -77,7 +76,7 @@ def test_that_repo_loads_config_when_present(
 ):
     config = secureli_config.load()
 
-    assert config.languages == ["RadLang"]
+    assert config.overall_language == "RadLang"
 
 
 def test_that_repo_saves_config(
@@ -85,7 +84,7 @@ def test_that_repo_saves_config(
     mock_open: MagicMock,
     secureli_config: SecureliConfigRepository,
 ):
-    config = SecureliConfig(languages=["AwesomeLang"])
+    config = SecureliConfig(overall_language="AwesomeLang")
     secureli_config.save(config)
 
     mock_open.assert_called_once()

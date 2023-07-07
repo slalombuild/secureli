@@ -7,9 +7,8 @@ from secureli.abstractions.pre_commit import InstallFailedError
 from secureli.repositories.secureli_config import SecureliConfig
 from secureli.services.language_analyzer import AnalyzeResult, SkippedFile
 from secureli.actions.action import Action, ActionDependencies
-from secureli.services.language_support import LanguageMetadata
+from secureli.services.language_support import LanguageMetadata, ValidateConfigResult
 from secureli.services.updater import UpdateResult
-from secureli.services.language_support import ValidateConfigResult
 
 test_folder_path = Path("does-not-matter")
 
@@ -74,7 +73,7 @@ def test_that_initialize_repo_install_flow_selects_rad_lang(
     mock_language_analyzer.analyze.return_value = AnalyzeResult(
         language_proportions={
             "RadLang": 0.75,
-            "CoolLang": 0.25,
+            "BadLang": 0.25,
         },
         skipped_files=[],
     )
@@ -82,7 +81,7 @@ def test_that_initialize_repo_install_flow_selects_rad_lang(
     action.verify_install(test_folder_path, reset=True, always_yes=True)
 
     mock_echo.print.assert_called_with(
-        "SeCureLI has been installed successfully (languages = RadLang CoolLang)"
+        "SeCureLI has been installed successfully (language = RadLang)"
     )
 
 
@@ -172,14 +171,14 @@ def test_that_initialize_repo_selects_previously_selected_language(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        languages=["PreviousLang"], version_installed="abc123"
+        overall_language="PreviousLang", version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "abc123"
 
     action.verify_install(test_folder_path, reset=False, always_yes=True)
 
     mock_echo.print.assert_called_once_with(
-        "SeCureLI is installed and up-to-date (languages = PreviousLang)"
+        "SeCureLI is installed and up-to-date (language = PreviousLang)"
     )
 
 
@@ -190,7 +189,7 @@ def test_that_initialize_repo_prompts_to_upgrade_when_out_of_sync(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        languages=["PreviousLang"], version_installed="abc123"
+        overall_language="PreviousLang", version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "xyz987"
     mock_echo.confirm.return_value = False
@@ -207,7 +206,7 @@ def test_that_initialize_repo_auto_upgrades_when_out_of_sync(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        languages=["PreviousLang"], version_installed="abc123"
+        overall_language="PreviousLang", version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "xyz987"
 
@@ -223,7 +222,7 @@ def test_that_initialize_repo_reports_errors_when_upgrade_fails(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        languages=["PreviousLang"], version_installed="abc123"
+        overall_language="PreviousLang", version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "xyz987"
     mock_language_support.apply_support.side_effect = InstallFailedError
@@ -259,7 +258,7 @@ def test_that_verify_install_updates_if_config_validation_fails(
     )
     mock_language_support.version_for_language.return_value = "abc123"
     mock_secureli_config.load.return_value = SecureliConfig(
-        languages=["PreviousLang"], version_installed="abc123"
+        overall_language="PreviousLang", version_installed="abc123"
     )
     mock_updater.update.return_value = UpdateResult(
         successful=True, output="Some output"

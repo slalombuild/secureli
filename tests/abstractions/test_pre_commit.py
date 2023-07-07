@@ -2,11 +2,11 @@ from subprocess import CompletedProcess
 from unittest.mock import MagicMock
 
 import pytest
+import yaml
 from pytest_mock import MockerFixture
 
 from secureli.abstractions.pre_commit import (
     PreCommitAbstraction,
-    LanguageNotSupportedError,
     InstallFailedError,
 )
 from secureli.repositories.settings import (
@@ -35,29 +35,30 @@ def settings_dict() -> dict:
 
 
 @pytest.fixture()
+def mock_hashlib(mocker: MockerFixture) -> MagicMock:
+    mock_hashlib = MagicMock()
+    mock_md5 = MagicMock()
+    mock_hashlib.md5.return_value = mock_md5
+    mock_md5.hexdigest.return_value = "mock-hash-code"
+    mocker.patch("secureli.utilities.hash.hashlib", mock_hashlib)
+    return mock_hashlib
+
+
+@pytest.fixture()
+def mock_hashlib_no_match(mocker: MockerFixture) -> MagicMock:
+    mock_hashlib = MagicMock()
+    mock_md5 = MagicMock()
+    mock_hashlib.md5.return_value = mock_md5
+    mock_md5.hexdigest.side_effect = ["first-hash-code", "second-hash-code"]
+    mocker.patch("secureli.utilities.hash.hashlib", mock_hashlib)
+    return mock_hashlib
+
+
+@pytest.fixture()
 def mock_data_loader() -> MagicMock:
     mock_data_loader = MagicMock()
     mock_data_loader.return_value = "a: 1"
     return mock_data_loader
-
-
-@pytest.fixture()
-def mock_open_config(mocker: MockerFixture) -> MagicMock:
-    mock_open = mocker.mock_open(
-        read_data="""
-    exclude: some-exclude-regex
-    repos:
-    - hooks:
-      - id: some-test-hook
-      repo: xyz://some-test-repo-url
-      rev: 1.0.0
-    - hooks:
-      - id: some-other-test-hook
-      repo: xyz://some-other-test-repo-url
-      rev: 1.0.0
-    """
-    )
-    mocker.patch("builtins.open", mock_open)
 
 
 @pytest.fixture()
@@ -69,38 +70,13 @@ def mock_subprocess(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
-def mock_hashlib(mocker: MockerFixture) -> MagicMock:
-    mock_hashlib = MagicMock()
-    mock_md5 = MagicMock()
-    mock_hashlib.md5.return_value = mock_md5
-    mock_md5.hexdigest.return_value = "mock-hash-code"
-    mocker.patch("secureli.abstractions.pre_commit.hashlib", mock_hashlib)
-    return mock_hashlib
-
-
-@pytest.fixture()
-def mock_hashlib_no_match(mocker: MockerFixture) -> MagicMock:
-    mock_hashlib = MagicMock()
-    mock_md5 = MagicMock()
-    mock_hashlib.md5.return_value = mock_md5
-    mock_md5.hexdigest.side_effect = ["first-hash-code", "second-hash-code"]
-    mocker.patch("secureli.abstractions.pre_commit.hashlib", mock_hashlib)
-    return mock_hashlib
-
-
-@pytest.fixture()
 def pre_commit(
     mock_hashlib: MagicMock,
-    mock_data_loader: MagicMock,
     mock_open: MagicMock,
     mock_subprocess: MagicMock,
-    settings_dict: dict,
 ) -> PreCommitAbstraction:
     return PreCommitAbstraction(
         command_timeout_seconds=300,
-        data_loader=mock_data_loader,
-        ignored_file_patterns=[],
-        pre_commit_settings=settings_dict,
     )
 
 
@@ -113,79 +89,6 @@ def test_that_pre_commit_templates_are_loaded_for_supported_languages(
     mock_subprocess.run.assert_called_with(["pre-commit", "install"])
 
 
-def test_that_pre_commit_templates_are_loaded_with_global_exclude_if_provided(
-    pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    mock_subprocess: MagicMock,
-):
-    mock_data_loader.return_value = "yaml: data"
-    pre_commit.ignored_file_patterns = ["mock_pattern"]
-
-    result = pre_commit.install("Python")
-
-    assert result.successful
-
-
-def test_that_pre_commit_templates_are_loaded_without_exclude(
-    pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    mock_subprocess: MagicMock,
-):
-    mock_data_loader.return_value = "yaml: data"
-    pre_commit.ignored_file_patterns = []
-
-    result = pre_commit.install("Python")
-
-    assert result.successful
-
-
-def test_that_pre_commit_templates_are_loaded_with_global_exclude_if_provided_multiple_patterns(
-    pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    mock_open: MagicMock,
-):
-    mock_data_loader.return_value = "yaml: data"
-    pre_commit.ignored_file_patterns = [
-        "mock_pattern1",
-        "mock_pattern2",
-    ]
-    result = pre_commit.install("Python")
-
-    assert result.successful
-
-
-def test_that_pre_commit_treats_missing_templates_as_unsupported_language(
-    pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    mock_subprocess: MagicMock,
-):
-    mock_data_loader.side_effect = ValueError
-    with pytest.raises(LanguageNotSupportedError):
-        pre_commit.get_configuration("BadLang")
-
-
-def test_that_pre_commit_applies_ignore_pattern(
-    pre_commit: PreCommitAbstraction, mock_data_loader: MagicMock
-):
-    def mock_loader_side_effect(resource):
-        # Language config file
-        return """
-        repos:
-        -   repo: http://sample-repo.com/hooks
-            rev: 1.0.25
-            hooks:
-            -    id: hook-a
-            -    id: hook-b
-        """
-
-    mock_data_loader.side_effect = mock_loader_side_effect
-    pre_commit.ignored_file_patterns.append("mock_pattern")
-
-    hook_configuration = pre_commit.get_configuration("RadLang")
-
-    assert "exclude" in str(hook_configuration.config_data)
-
-
 def test_that_pre_commit_treats_failing_process_as_install_failed_error(
     pre_commit: PreCommitAbstraction,
     mock_data_loader: MagicMock,
@@ -196,392 +99,189 @@ def test_that_pre_commit_treats_failing_process_as_install_failed_error(
         pre_commit.install("Python")
 
 
-def test_that_pre_commit_installs_config_while_creating_if_install_param_set(
+def test_that_pre_commit_executes_hooks_successfully(
     pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
     mock_subprocess: MagicMock,
 ):
-    def mock_loader_side_effect(resource):
-        # Language config file
-        return """
-            repos:
-            -   repo: http://sample-repo.com/baddie-finder
-                hooks:
-                -    id: baddie-finder-hook
-                     args:
-                        - orig_arg
-        """
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+    execute_result = pre_commit.execute_hooks()
 
-    mock_data_loader.side_effect = mock_loader_side_effect
-
-    result = pre_commit.get_configuration("RadLang", True)
-
-    assert result.install_result.successful
+    assert execute_result.successful
+    assert "--all-files" not in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_overrides_arguments_in_a_security_hook(
+def test_that_pre_commit_executes_hooks_successfully_including_all_files(
     pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    settings_dict: dict,
+    mock_subprocess: MagicMock,
 ):
-    def mock_loader_side_effect(resource):
-        # Language config file
-        return """
-            repos:
-            -   repo: http://sample-repo.com/baddie-finder
-                hooks:
-                -    id: baddie-finder-hook
-                     args:
-                        - orig_arg
-        """
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+    execute_result = pre_commit.execute_hooks(all_files=True)
 
-    pre_commit.pre_commit_settings.repos[0].url = "http://sample-repo.com/baddie-finder"
-    pre_commit.pre_commit_settings.repos[0].hooks[0].id = "baddie-finder-hook"
-    pre_commit.pre_commit_settings.repos[0].hooks[0].arguments = [
-        "arg_a",
-        "value_a",
-    ]
-
-    mock_data_loader.side_effect = mock_loader_side_effect
-
-    result = pre_commit.get_configuration("RadLang")
-
-    assert "arg_a" in result.config_data["repos"][0]["hooks"][0]["args"]
-    assert "value_a" in result.config_data["repos"][0]["hooks"][0]["args"]
-    assert "orig_arg" not in result.config_data["repos"][0]["hooks"][0]["args"]
+    assert execute_result.successful
+    assert "--all-files" in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_overrides_arguments_do_not_apply_to_a_different_hook_id(
+def test_that_pre_commit_executes_hooks_and_reports_failures(
     pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    settings_dict: dict,
+    mock_subprocess: MagicMock,
 ):
-    def mock_loader_side_effect(resource):
-        # Language config file
-        return """
-            repos:
-            -   repo: http://sample-repo.com/baddie-finder
-                hooks:
-                -    id: baddie-finder-hook
-                     args:
-                        - orig_arg
-        """
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
+    execute_result = pre_commit.execute_hooks()
 
-    pre_commit.pre_commit_settings.repos[0].url = "http://sample-repo.com/baddie-finder"
-    pre_commit.pre_commit_settings.repos[0].hooks[
-        0
-    ].id = "goodie-finder-hook"  # doesn't match
-    pre_commit.pre_commit_settings.repos[0].hooks[0].arguments = [
-        "arg_a",
-        "value_a",
-    ]
-
-    mock_data_loader.side_effect = mock_loader_side_effect
-
-    result = pre_commit.get_configuration("RadLang")
-
-    assert "arg_a" not in result.config_data["repos"][0]["hooks"][0]["args"]
-    assert "value_a" not in result.config_data["repos"][0]["hooks"][0]["args"]
-    assert "orig_arg" in result.config_data["repos"][0]["hooks"][0]["args"]
+    assert not execute_result.successful
 
 
-def test_that_pre_commit_adds_additional_arguments_to_a_hook(
+def test_that_pre_commit_executes_a_single_hook_if_specified(
     pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    settings_dict: dict,
-    mock_open: MagicMock,
+    mock_subprocess: MagicMock,
 ):
-    def mock_loader_side_effect(resource):
-        # Language config file
-        return """
-            repos:
-            -   repo: http://sample-repo.com/baddie-finder
-                hooks:
-                -    id: baddie-finder-hook
-                     args:
-                        - orig_arg
-        """
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+    pre_commit.execute_hooks(hook_id="detect-secrets")
 
-    pre_commit.pre_commit_settings.repos[0].url = "http://sample-repo.com/baddie-finder"
-    pre_commit.pre_commit_settings.repos[0].hooks[0].id = "baddie-finder-hook"
-    pre_commit.pre_commit_settings.repos[0].hooks[0].additional_args = [
-        "arg_a",
-        "value_a",
-    ]
-
-    mock_data_loader.side_effect = mock_loader_side_effect
-
-    result = pre_commit.get_configuration("RadLang")
-
-    assert "arg_a" in result.config_data["repos"][0]["hooks"][0]["args"]
-    assert "value_a" in result.config_data["repos"][0]["hooks"][0]["args"]
-    # assert the original arg was left in place
-    assert "orig_arg" in result.config_data["repos"][0]["hooks"][0]["args"]
+    assert mock_subprocess.run.call_args_list[0].args[0][-1] == "detect-secrets"
 
 
-def test_that_pre_commit_adds_additional_arguments_to_a_hook_if_the_hook_did_not_have_any_originally(
+##### autoupdate_hooks #####
+def test_that_pre_commit_autoupdate_hooks_executes_successfully(
     pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    settings_dict: dict,
-    mock_open: MagicMock,
+    mock_subprocess: MagicMock,
 ):
-    def mock_loader_side_effect(resource):
-        # Language config file
-        return """
-            repos:
-            -   repo: http://sample-repo.com/baddie-finder
-                hooks:
-                -    id: baddie-finder-hook
-        """
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+    execute_result = pre_commit.autoupdate_hooks()
 
-    pre_commit.pre_commit_settings.repos[0].url = "http://sample-repo.com/baddie-finder"
-    pre_commit.pre_commit_settings.repos[0].hooks[0].id = "baddie-finder-hook"
-    pre_commit.pre_commit_settings.repos[0].hooks[0].additional_args = [
-        "arg_a",
-        "value_a",
-    ]
-
-    mock_data_loader.side_effect = mock_loader_side_effect
-
-    result = pre_commit.get_configuration("RadLang")
-
-    assert "arg_a" in result.config_data["repos"][0]["hooks"][0]["args"]
-    assert "value_a" in result.config_data["repos"][0]["hooks"][0]["args"]
+    assert execute_result.successful
 
 
-def test_that_pre_commit_calculates_a_serializable_hook_configuration(
+def test_that_pre_commit_autoupdate_hooks_properly_handles_failed_executions(
     pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
+    mock_subprocess: MagicMock,
 ):
-    def mock_loader_side_effect(resource):
-        # Language config file
-        return """
-        repos:
-        -   repo: http://sample-repo.com/hooks
-            rev: 1.0.25
-            hooks:
-            -    id: hook-a
-            -    id: hook-b
-        """
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
+    execute_result = pre_commit.autoupdate_hooks()
 
-    mock_data_loader.side_effect = mock_loader_side_effect
-
-    hook_configuration = pre_commit.get_serialized_configuration("RadLang")
-
-    assert len(hook_configuration.repos) == 1
-    assert hook_configuration.repos[0].revision == "1.0.25"
-    assert len(hook_configuration.repos[0].hooks) == 2
-    assert "hook-a" in hook_configuration.repos[0].hooks
+    assert not execute_result.successful
 
 
-def test_that_pre_commit_excludes_files_in_specific_hooks(
+def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_bleeding_edge(
     pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    mock_hashlib: MagicMock,
+    mock_subprocess: MagicMock,
 ):
-    def mock_loader_side_effect(resource):
-        # Language config file
-        return """
-        repos:
-        -   repo: http://example-repo.com/
-            rev: 1.0.25
-            hooks:
-            -    id: hook-id
-            -    id: hook-id-2
-        """
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+    execute_result = pre_commit.autoupdate_hooks(bleeding_edge=True)
 
-    pre_commit.pre_commit_settings.repos[0].hooks[0].exclude_file_patterns = [
-        "file_a.py"
-    ]
-    mock_data_loader.side_effect = mock_loader_side_effect
-
-    result_1 = pre_commit.get_configuration("RadLang")
-
-    pre_commit.pre_commit_settings.repos[0].hooks[0].exclude_file_patterns = []
-
-    result_2 = pre_commit.get_configuration("RadLang")
-
-    assert result_2 != result_1
+    assert execute_result.successful
+    assert "--bleeding-edge" in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_suppresses_hooks_in_repo(
+def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_freeze(
     pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    mock_hashlib: MagicMock,
+    mock_subprocess: MagicMock,
 ):
-    def mock_loader_side_effect(resource):
-        # Language config file
-        return """
-        repos:
-        -   repo: http://example-repo.com/
-            rev: 1.0.25
-            hooks:
-            -    id: hook-id
-            -    id: hook-id-2
-        """
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+    execute_result = pre_commit.autoupdate_hooks(freeze=True)
 
-    pre_commit.pre_commit_settings.repos[0].suppressed_hook_ids = ["hook-id-2"]
-    mock_data_loader.side_effect = mock_loader_side_effect
-
-    result = pre_commit.get_configuration("RadLang")
-
-    assert "hook-id-2" not in result
-    assert "hook-id" == result.config_data["repos"][0]["hooks"][0]["id"]
+    assert execute_result.successful
+    assert "--freeze" in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_removes_repo_when_all_hooks_suppressed(
+def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_repos(
     pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    mock_hashlib: MagicMock,
+    mock_subprocess: MagicMock,
 ):
-    def mock_loader_side_effect(resource):
-        # Language config file
-        return """
-        repos:
-        -   repo: http://example-repo.com/
-            rev: 1.0.25
-            hooks:
-            -    id: hook-id
-            -    id: hook-id-2
-        """
+    test_repos = ["some-repo-url"]
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
 
-    pre_commit.pre_commit_settings.repos[0].suppressed_hook_ids = [
-        "hook-id",
-        "hook-id-2",
-    ]
-    mock_data_loader.side_effect = mock_loader_side_effect
-
-    result = pre_commit.get_configuration("RadLang")
-
-    assert "http://example-repo.com/" not in result
+    assert execute_result.successful
+    assert "--repo some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_removes_the_one_hook_multiple_times_without_a_problem(
+def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_multiple_repos(
     pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    mock_hashlib: MagicMock,
+    mock_subprocess: MagicMock,
 ):
-    def mock_loader_side_effect(resource):
-        # Language config file
-        return """
-        repos:
-        -   repo: http://example-repo.com/
-            rev: 1.0.25
-            hooks:
-            -    id: hook-id
-        """
+    test_repos = ["some-repo-url", "some-other-repo-url"]
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
 
-    pre_commit.pre_commit_settings.repos[0].suppressed_hook_ids = [
-        "hook-id",
-        "hook-id",
-    ]
-    mock_data_loader.side_effect = mock_loader_side_effect
-
-    result = pre_commit.get_configuration("RadLang")
-
-    assert "hook-id" not in result
+    assert execute_result.successful
+    assert "--repo some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
+    assert "--repo some-other-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_removes_repo_when_repo_suppressed(
+def test_that_pre_commit_autoupdate_hooks_fails_with_repos_containing_non_strings(
     pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
+    mock_subprocess: MagicMock,
 ):
-    def mock_loader_side_effect(resource):
-        # Language config file
-        return """
-        repos:
-        -   repo: http://example-repo.com/
-            rev: 1.0.25
-            hooks:
-            -    id: hook-id
-            -    id: hook-id-2
-        """
+    test_repos = [{"something": "something-else"}]
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
 
-    pre_commit.pre_commit_settings.suppressed_repos = ["http://example-repo.com/"]
-    mock_data_loader.side_effect = mock_loader_side_effect
-
-    result = pre_commit.get_configuration("RadLang")
-
-    assert "http://example-repo.com/" not in result
+    assert not execute_result.successful
 
 
-#### _getpre_commit_settings ####
-def test_that_if_config_does_not_contain_repos_it_does_not_get_changed(
+def test_that_pre_commit_autoupdate_hooks_ignores_repos_when_repos_is_a_dict(
     pre_commit: PreCommitAbstraction,
+    mock_subprocess: MagicMock,
 ):
-    mock_config = {"repo": "fake_repo"}
+    test_repos = {}
+    test_repos_string = "string"
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
 
-    result = pre_commit._apply_pre_commit_settings(mock_config)
-
-    assert mock_config == result
-
-
-#### get_secret_detecting_repos ####
-def test_that_pre_commit_retreives_secret_detecting_repo_file(
-    pre_commit: PreCommitAbstraction, mock_data_loader: MagicMock
-):
-    def mock_loader_side_effect(resource):
-        return """
-            "https://github.com/yelp/detect-secrets":
-            - "detect-secrets"
-        """
-
-    mock_data_loader.side_effect = mock_loader_side_effect
-
-    result = pre_commit.get_secret_detecting_repos()
-
-    assert result is not None
+    assert execute_result.successful
+    assert "--repo {}" not in mock_subprocess.run.call_args_list[0].args[0]
 
 
-#### _load_language_config_files ####
-def test_that_pre_commit_langauge_config_gets_loaded(
+def test_that_pre_commit_autoupdate_hooks_converts_repos_when_repos_is_a_string(
     pre_commit: PreCommitAbstraction,
+    mock_subprocess: MagicMock,
 ):
-    result = pre_commit._load_language_config_file("JavaScript")
+    test_repos = "string"
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
 
-    assert result.success
+    assert execute_result.successful
+    assert "--repo string" in mock_subprocess.run.call_args_list[0].args[0]
 
 
-def test_that_pre_commit_language_config_does_not_get_loaded(
+##### update #####
+def test_that_pre_commit_update_executes_successfully(
     pre_commit: PreCommitAbstraction,
+    mock_subprocess: MagicMock,
 ):
-    result = pre_commit._load_language_config_file("RadLang")
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+    execute_result = pre_commit.update()
 
-    assert not result.success
+    assert execute_result.successful
 
 
-### _install_pre_commit_configs ####
-def test_that_pre_commit_language_config_gets_installed(
-    pre_commit: PreCommitAbstraction, mock_open: MagicMock
+def test_that_pre_commit_update_properly_handles_failed_executions(
+    pre_commit: PreCommitAbstraction,
+    mock_subprocess: MagicMock,
 ):
-    result = pre_commit._install_pre_commit_configs("JavaScript")
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
+    execute_result = pre_commit.update()
 
-    assert result.num_successful > 0
-    assert result.num_non_success == 0
-    assert len(result.non_success_messages) == 0
+    assert not execute_result.successful
 
 
-def test_that_pre_commit_language_config_does_not_get_installed(
-    pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
+##### remove_unused_hooks #####
+def test_that_pre_commit_remove_unused_hookss_executes_successfully(
+    pre_commit: PreCommitAbstraction,
+    mock_subprocess: MagicMock,
 ):
-    result = pre_commit._install_pre_commit_configs("RadLang")
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+    execute_result = pre_commit.remove_unused_hooks()
 
-    assert not mock_subprocess.called
-
-    assert result.num_non_success == 0
-    assert result.num_successful == 0
-    assert len(result.non_success_messages) == 0
+    assert execute_result.successful
 
 
-def test_that_pre_commit_install_captures_error_if_cannot_install_config(
-    pre_commit: PreCommitAbstraction, mock_open: MagicMock
+def test_that_pre_commit_remove_unused_hooks_properly_handles_failed_executions(
+    pre_commit: PreCommitAbstraction,
+    mock_subprocess: MagicMock,
 ):
-    def mocked_side_effect():
-        Exception()
+    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
+    execute_result = pre_commit.remove_unused_hooks()
 
-    mock_open.side_effect = mocked_side_effect
-
-    result = pre_commit._install_pre_commit_configs("JavaScript")
-
-    assert result.num_successful == 0
-    assert result.num_non_success > 0
+    assert not execute_result.successful
