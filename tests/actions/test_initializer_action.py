@@ -3,10 +3,10 @@ from unittest.mock import MagicMock, ANY
 
 import pytest
 
-from secureli.abstractions.pre_commit import LanguageNotSupportedError
 from secureli.actions.action import ActionDependencies
 from secureli.actions.initializer import InitializerAction
 from secureli.services.logging import LogAction
+from secureli.services.language_config import LanguageNotSupportedError
 
 test_folder_path = Path("does-not-matter")
 
@@ -31,7 +31,6 @@ def action_deps(
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
-    mock_pre_commit: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -40,7 +39,6 @@ def action_deps(
         mock_scanner,
         mock_secureli_config,
         mock_updater,
-        mock_pre_commit,
     )
 
 

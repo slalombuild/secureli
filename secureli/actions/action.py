@@ -8,7 +8,6 @@ import pydantic
 from secureli.abstractions.echo import EchoAbstraction, Color
 from secureli.abstractions.pre_commit import (
     InstallFailedError,
-    LanguageNotSupportedError,
 )
 from secureli.repositories.secureli_config import (
     SecureliConfig,
@@ -18,7 +17,7 @@ from secureli.services.language_analyzer import LanguageAnalyzerService, Analyze
 from secureli.services.language_support import LanguageSupportService
 from secureli.services.scanner import ScannerService, ScanMode
 from secureli.services.updater import UpdaterService
-from secureli.abstractions.pre_commit import PreCommitAbstraction
+from secureli.services.language_config import LanguageNotSupportedError
 
 
 class VerifyOutcome(str, Enum):
@@ -60,7 +59,6 @@ class ActionDependencies:
         scanner: ScannerService,
         secureli_config: SecureliConfigRepository,
         updater: UpdaterService,
-        pre_commit: PreCommitAbstraction,
     ):
         self.echo = echo
         self.language_analyzer = language_analyzer
@@ -68,7 +66,6 @@ class ActionDependencies:
         self.scanner = scanner
         self.secureli_config = secureli_config
         self.updater = updater
-        self.pre_commit = pre_commit
 
 
 class Action(ABC):
@@ -101,8 +98,10 @@ class Action(ABC):
                 return self._upgrade_secureli(config, available_version, always_yes)
 
             # Validates the current .pre-commit-config.yaml against the generated config
-            config_validation_result = self.action_deps.pre_commit.validate_config(
-                language=config.overall_language
+            config_validation_result = (
+                self.action_deps.language_support.validate_config(
+                    language=config.overall_language
+                )
             )
 
             # If config mismatch between available version and current version prompt for upgrade
