@@ -7,9 +7,8 @@ from secureli.abstractions.pre_commit import InstallFailedError
 from secureli.repositories.secureli_config import SecureliConfig
 from secureli.services.language_analyzer import AnalyzeResult, SkippedFile
 from secureli.actions.action import Action, ActionDependencies
-from secureli.services.language_support import LanguageMetadata
+from secureli.services.language_support import LanguageMetadata, ValidateConfigResult
 from secureli.services.updater import UpdateResult
-from secureli.abstractions.pre_commit import ValidateConfigResult
 
 test_folder_path = Path("does-not-matter")
 
@@ -34,7 +33,6 @@ def action_deps(
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
-    mock_pre_commit: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -43,7 +41,6 @@ def action_deps(
         mock_scanner,
         mock_secureli_config,
         mock_updater,
-        mock_pre_commit,
     )
 
 
@@ -252,12 +249,11 @@ def test_that_initialize_repo_is_aborted_by_the_user_if_the_process_is_canceled(
 
 def test_that_verify_install_updates_if_config_validation_fails(
     action: Action,
-    mock_pre_commit: MagicMock,
     mock_language_support: MagicMock,
     mock_updater: MagicMock,
     mock_secureli_config: MagicMock,
 ):
-    mock_pre_commit.validate_config.return_value = ValidateConfigResult(
+    mock_language_support.validate_config.return_value = ValidateConfigResult(
         successful=False, output="Configs don't match"
     )
     mock_language_support.version_for_language.return_value = "abc123"
