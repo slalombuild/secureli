@@ -4,9 +4,9 @@ from unittest.mock import MagicMock
 import pytest
 
 from secureli.abstractions.pre_commit import InstallFailedError
-from secureli.repositories.secureli_config import SecureliConfig
+from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
 from secureli.services.language_analyzer import AnalyzeResult, SkippedFile
-from secureli.actions.action import Action, ActionDependencies
+from secureli.actions.action import Action, ActionDependencies, VerifyOutcome
 from secureli.services.language_support import LanguageMetadata, ValidateConfigResult
 from secureli.services.updater import UpdateResult
 
@@ -171,7 +171,7 @@ def test_that_initialize_repo_selects_previously_selected_language(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="PreviousLang", version_installed="abc123"
+        languages=["PreviousLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "abc123"
 
@@ -189,7 +189,7 @@ def test_that_initialize_repo_prompts_to_upgrade_when_out_of_sync(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="PreviousLang", version_installed="abc123"
+        languages=["PreviousLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "xyz987"
     mock_echo.confirm.return_value = False
@@ -199,6 +199,45 @@ def test_that_initialize_repo_prompts_to_upgrade_when_out_of_sync(
     mock_echo.warning.assert_called_with("User canceled upgrade process")
 
 
+def test_that_initialize_repo_prompts_to_upgrade_config_if_old_schema(
+    action: Action,
+    mock_secureli_config: MagicMock,
+    mock_language_support: MagicMock,
+    mock_echo: MagicMock,
+):
+    mock_secureli_config.verify.return_value = VerifyConfigOutcome.OUT_OF_DATE
+
+    mock_language_support.version_for_language.return_value = "xyz987"
+    mock_echo.confirm.return_value = False
+
+    action.verify_install(test_folder_path, reset=False, always_yes=False)
+
+    mock_echo.error.assert_called_with("SeCureLI could not be verified.")
+
+
+def test_that_initialize_repo_updates_repo_config_if_old_schema(
+    action: Action,
+    mock_secureli_config: MagicMock,
+    mock_language_support: MagicMock,
+    mock_echo: MagicMock,
+):
+    mock_secureli_config.verify.return_value = VerifyConfigOutcome.OUT_OF_DATE
+
+    mock_secureli_config.update.return_value = SecureliConfig(
+        languages=["PreviousLang"], version_installed="abc123"
+    )
+
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["PreviousLang"], version_installed="abc123"
+    )
+
+    mock_language_support.version_for_language.return_value = "abc123"
+
+    result = action.verify_install(test_folder_path, reset=False, always_yes=True)
+
+    assert result.outcome == VerifyOutcome.UP_TO_DATE
+
+
 def test_that_initialize_repo_auto_upgrades_when_out_of_sync(
     action: Action,
     mock_secureli_config: MagicMock,
@@ -206,7 +245,7 @@ def test_that_initialize_repo_auto_upgrades_when_out_of_sync(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="PreviousLang", version_installed="abc123"
+        languages=["PreviousLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "xyz987"
 
@@ -222,7 +261,7 @@ def test_that_initialize_repo_reports_errors_when_upgrade_fails(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="PreviousLang", version_installed="abc123"
+        languages=["PreviousLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "xyz987"
     mock_language_support.apply_support.side_effect = InstallFailedError
@@ -230,6 +269,21 @@ def test_that_initialize_repo_reports_errors_when_upgrade_fails(
     action.verify_install(test_folder_path, reset=False, always_yes=True)
 
     mock_echo.error.assert_called_with("SeCureLI could not be upgraded due to an error")
+
+
+def test_that_initialize_repo_reports_errors_when_schema_upgdate_fails(
+    action: Action,
+    mock_secureli_config: MagicMock,
+    mock_language_support: MagicMock,
+    mock_echo: MagicMock,
+):
+    mock_secureli_config.verify.return_value = VerifyConfigOutcome.OUT_OF_DATE
+
+    mock_secureli_config.update.side_effect = Exception
+
+    action.verify_install(test_folder_path, reset=False, always_yes=True)
+
+    mock_echo.error.assert_called_with("SeCureLI could not be verified.")
 
 
 def test_that_initialize_repo_is_aborted_by_the_user_if_the_process_is_canceled(
@@ -258,7 +312,7 @@ def test_that_verify_install_updates_if_config_validation_fails(
     )
     mock_language_support.version_for_language.return_value = "abc123"
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="PreviousLang", version_installed="abc123"
+        languages=["PreviousLang"], version_installed="abc123"
     )
     mock_updater.update.return_value = UpdateResult(
         successful=True, output="Some output"

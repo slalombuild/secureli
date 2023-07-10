@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "secureli"
-version = "0.6.6"
+version = "0.6.8"
 description = "Secure Project Manager"
 authors = ["Caleb Tonn <caleb.tonn@slalom.com>"]
 license = "Apache-2.0"
@@ -46,7 +46,7 @@ pytest-mock = "^3.10.0"
 coverage = ">=6.5,<8.0"
 black = ">=22.10,<24.0"
 identify = "^2.5.7"
-poethepoet = ">=0.16.4,<0.21.0"
+poethepoet = ">=0.16.4,<0.22.0"
 python-semantic-release = "^7.33.1"
 
 [build-system]
