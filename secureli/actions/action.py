@@ -12,6 +12,7 @@ from secureli.abstractions.pre_commit import (
 from secureli.repositories.secureli_config import (
     SecureliConfig,
     SecureliConfigRepository,
+    VerifyConfigOutcome,
 )
 from secureli.services.language_analyzer import LanguageAnalyzerService, AnalyzeResult
 from secureli.services.language_support import LanguageSupportService
@@ -83,6 +84,14 @@ class Action(ABC):
         :param reset: If true, disregard existing configuration and start fresh
         :param always_yes: Assume "Yes" to all prompts
         """
+
+        if self.action_deps.secureli_config.verify() == VerifyConfigOutcome.OUT_OF_DATE:
+            update_config = self._update_secureli_config_only(always_yes)
+            if update_config.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
+                self.action_deps.echo.error(f"SeCureLI could not be verified.")
+                return VerifyResult(
+                    outcome=update_config.outcome,
+                )
 
         config = SecureliConfig() if reset else self.action_deps.secureli_config.load()
 
@@ -268,4 +277,24 @@ class Action(ABC):
         if update_result.successful:
             return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
         else:
+            return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
+
+    def _update_secureli_config_only(self, always_yes: bool) -> VerifyResult:
+        self.action_deps.echo.print("SeCureLI is using an out-of-date config.")
+        response = always_yes or self.action_deps.echo.confirm(
+            "Update config only now?",
+            default_response=True,
+        )
+        if not response:
+            self.action_deps.echo.error("User canceled update process")
+            return VerifyResult(
+                outcome=VerifyOutcome.UPDATE_CANCELED,
+            )
+
+        try:
+            updated_config = self.action_deps.secureli_config.update()
+            self.action_deps.secureli_config.save(updated_config)
+
+            return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
+        except:
             return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
