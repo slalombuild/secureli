@@ -65,7 +65,7 @@ def test_that_initialize_repo_raises_value_error_without_any_supported_languages
     )
 
 
-def test_that_initialize_repo_install_flow_selects_rad_lang(
+def test_that_initialize_repo_install_flow_selects_both_languages(
     action: Action,
     mock_language_analyzer: MagicMock,
     mock_echo: MagicMock,
@@ -73,7 +73,7 @@ def test_that_initialize_repo_install_flow_selects_rad_lang(
     mock_language_analyzer.analyze.return_value = AnalyzeResult(
         language_proportions={
             "RadLang": 0.75,
-            "BadLang": 0.25,
+            "CoolLang": 0.25,
         },
         skipped_files=[],
     )
@@ -81,7 +81,7 @@ def test_that_initialize_repo_install_flow_selects_rad_lang(
     action.verify_install(test_folder_path, reset=True, always_yes=True)
 
     mock_echo.print.assert_called_with(
-        "SeCureLI has been installed successfully (language = RadLang)"
+        "SeCureLI has been installed successfully (languages = ['RadLang', 'CoolLang'])"
     )
 
 
@@ -178,7 +178,7 @@ def test_that_initialize_repo_selects_previously_selected_language(
     action.verify_install(test_folder_path, reset=False, always_yes=True)
 
     mock_echo.print.assert_called_once_with(
-        "SeCureLI is installed and up-to-date (language = PreviousLang)"
+        "SeCureLI is installed and up-to-date (languages = ['PreviousLang'])"
     )
 
 

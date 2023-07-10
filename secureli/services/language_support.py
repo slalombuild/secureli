@@ -201,7 +201,7 @@ class LanguageSupportService:
             output += "\n"
             output += self._compare_repo_versions(
                 current_config=yaml.safe_load(current_config),
-                expected_config=yaml.safe_load(generated_config.config_data),
+                expected_config=generated_config.config_data,
             )
 
         return ValidateConfigResult(successful=config_matches, output=output)
@@ -437,8 +437,6 @@ class LanguageSupportService:
         num_configs_non_success = 0
         non_success_warnings = list[str]()
 
-        print(linter_configs)
-
         # if successfully loaded any language specific configs
         for language_linters in linter_configs:
             for language in language_linters:
@@ -453,7 +451,6 @@ class LanguageSupportService:
 
                             num_configs_wrote += 1
                         except Exception as e:
-                            print(e)
                             num_configs_non_success += 1
                             non_success_warnings.append(
                                 f"Unable to install config: {e}"

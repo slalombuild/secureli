@@ -151,9 +151,7 @@ class Action(ABC):
             )
 
         try:
-            metadata = self.action_deps.language_support.apply_support(
-                config.languages[0]
-            )
+            metadata = self.action_deps.language_support.apply_support(config.languages)
 
             # Update config with new version installed and save it
             config.version_installed = metadata.version
