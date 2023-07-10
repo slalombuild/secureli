@@ -907,13 +907,13 @@ testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "poethepoet"
-version = "0.20.0"
+version = "0.21.0"
 description = "A task runner that works well with poetry."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "poethepoet-0.20.0-py3-none-any.whl", hash = "sha256:cb37be15f3895ccc65ddf188c2e3d8fb79e26cc9d469a6098cb1c6f994659f6f"},
-    {file = "poethepoet-0.20.0.tar.gz", hash = "sha256:ca5a2a955f52dfb0a53fad3c989ef0b69ce3d5ec0f6bfa9b1da1f9e32d262e20"},
+    {file = "poethepoet-0.21.0-py3-none-any.whl", hash = "sha256:9a50f98ef0e1f7deea2c6e9bf79062d7221ea82b4d72b8ee11973ac0686315e2"},
+    {file = "poethepoet-0.21.0.tar.gz", hash = "sha256:fadaa8b27a3772358038bbfffa51424dbcfa2fc81eba8db052a025927f9b479c"},
 ]
 
 [package.dependencies]
@@ -1078,13 +1078,13 @@ yaml = ["PyYaml (>=5.2)"]
 
 [[package]]
 name = "python-semantic-release"
-version = "7.34.4"
+version = "7.34.6"
 description = "Automatic Semantic Versioning for Python projects"
 optional = false
 python-versions = "*"
 files = [
-    {file = "python-semantic-release-7.34.4.tar.gz", hash = "sha256:1b35dd1619db3a94a264441ac1ebcc79f3017dd7ee4844af576eb85c420f56ed"},
-    {file = "python_semantic_release-7.34.4-py3-none-any.whl", hash = "sha256:15d94b2047c454f98ff0d1ca640325b4f0150616e6e5a5976fd7396d7df6d33e"},
+    {file = "python-semantic-release-7.34.6.tar.gz", hash = "sha256:e9b8fb788024ae9510a924136d573588415a16eeca31cc5240f2754a80a2e831"},
+    {file = "python_semantic_release-7.34.6-py3-none-any.whl", hash = "sha256:7e3969ba4663d9b2087b02bf3ac140e202551377bf045c34e09bfe19753e19ab"},
 ]
 
 [package.dependencies]
@@ -1092,7 +1092,7 @@ click = ">=7,<9"
 click-log = ">=0.3,<1"
 dotty-dict = ">=1.3.0,<2"
 gitpython = ">=3.0.8,<4"
-invoke = ">=1.4.1,<2"
+invoke = ">=1.4.1,<3"
 packaging = "*"
 python-gitlab = ">=2,<4"
 requests = ">=2.25,<3"
@@ -1508,4 +1508,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "0991e8f3d8f1dd713fe637089873ee03f019b48b3d43135bc2c937b764b55f87"
+content-hash = "08467d1054319cec02f641152f309ed108a6b442825e5ca4115c409e7c072815"
