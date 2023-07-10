@@ -19,6 +19,7 @@ from secureli.services.logging import LoggingService
 from secureli.services.scanner import ScannerService
 from secureli.services.updater import UpdaterService
 from secureli.services.secureli_ignore import SecureliIgnoreService
+from secureli.services.language_config import LanguageConfigService
 from secureli.settings import Settings
 
 
@@ -81,9 +82,6 @@ class Container(containers.DeclarativeContainer):
     pre_commit_abstraction = providers.Factory(
         PreCommitAbstraction,
         command_timeout_seconds=config.language_support.command_timeout_seconds,
-        data_loader=read_resource,
-        ignored_file_patterns=secureli_ignored_file_patterns,
-        pre_commit_settings=config.pre_commit,
     )
 
     # Services
@@ -96,11 +94,21 @@ class Container(containers.DeclarativeContainer):
     """
     git_ignore_service = providers.Factory(GitIgnoreService)
 
+    language_config_service = providers.Factory(
+        LanguageConfigService,
+        data_loader=read_resource,
+        pre_commit_settings=config.pre_commit,
+        command_timeout_seconds=config.language_support.command_timeout_seconds,
+        ignored_file_patterns=secureli_ignored_file_patterns,
+    )
+
     """Identifies the configuration version for the language and installs it"""
     language_support_service = providers.Factory(
         LanguageSupportService,
         pre_commit_hook=pre_commit_abstraction,
         git_ignore=git_ignore_service,
+        language_config=language_config_service,
+        data_loader=read_resource,
     )
 
     """Analyzes a given repo to try to identify the most common language"""
@@ -120,12 +128,12 @@ class Container(containers.DeclarativeContainer):
     """The service that scans the repository using pre-commit configuration"""
     scanner_service = providers.Factory(
         ScannerService,
-        language_support=language_support_service,
+        pre_commit=pre_commit_abstraction,
     )
 
     updater_service = providers.Factory(
         UpdaterService,
-        language_support=language_support_service,
+        pre_commit=pre_commit_abstraction,
         config=secureli_config_repository,
     )
 

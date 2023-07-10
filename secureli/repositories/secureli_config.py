@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Optional
+from enum import Enum
 import yaml
 
 from pydantic import BaseModel
@@ -8,6 +9,21 @@ from pydantic import BaseModel
 class SecureliConfig(BaseModel):
     languages: Optional[list[str]]
     version_installed: Optional[str]
+
+
+class DeprecatedSecureliConfig(BaseModel):
+    """
+    Represents a model containing all current and past options for repo-config.yaml
+    """
+
+    overall_language: Optional[str]
+    version_installed: Optional[str]
+
+
+class VerifyConfigOutcome(str, Enum):
+    UP_TO_DATE = ("up-to-date",)
+    OUT_OF_DATE = ("out-of-date",)
+    MISSING = "missing"
 
 
 class SecureliConfigRepository:
@@ -36,6 +52,49 @@ class SecureliConfigRepository:
         with open(secureli_config_path, "r") as f:
             data = yaml.safe_load(f)
             return SecureliConfig.parse_obj(data)
+
+    def verify(self) -> VerifyConfigOutcome:
+        """
+        Check secureli config and verify that it matches most current schema.
+        """
+        secureli_folder_path = self._initialize_secureli_directory()
+        secureli_config_path = secureli_folder_path / "repo-config.yaml"
+        if not secureli_config_path.exists():
+            return VerifyConfigOutcome.MISSING
+
+        with open(secureli_config_path, "r") as f:
+            current_data = yaml.safe_load(f)
+
+        expected_config_schema = SecureliConfig.schema()
+
+        expected_keys = []
+
+        for key in expected_config_schema["properties"]:
+            expected_keys.append(key)
+
+        for key in current_data:
+            if key not in expected_keys:
+                return VerifyConfigOutcome.OUT_OF_DATE
+
+        return VerifyConfigOutcome.UP_TO_DATE
+
+    def update(self) -> SecureliConfig:
+        """
+        Update any older config version to match most current config.
+        """
+        secureli_folder_path = self._initialize_secureli_directory()
+        secureli_config_path = secureli_folder_path / "repo-config.yaml"
+        if not secureli_config_path.exists():
+            return SecureliConfig()
+
+        with open(secureli_config_path, "r") as f:
+            data = yaml.safe_load(f)
+            old_config = DeprecatedSecureliConfig.parse_obj(data)
+
+        return SecureliConfig(
+            languages=[old_config.overall_language],
+            version_installed=old_config.version_installed,
+        )
 
     def _initialize_secureli_directory(self):
         """

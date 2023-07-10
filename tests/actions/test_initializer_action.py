@@ -3,10 +3,10 @@ from unittest.mock import MagicMock, ANY
 
 import pytest
 
-from secureli.abstractions.pre_commit import LanguageNotSupportedError
 from secureli.actions.action import ActionDependencies
 from secureli.actions.initializer import InitializerAction
 from secureli.services.logging import LogAction
+from secureli.services.language_config import LanguageNotSupportedError
 
 test_folder_path = Path("does-not-matter")
 

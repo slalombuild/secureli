@@ -1,14 +1,14 @@
-from typing import Optional
-import subprocess
-import hashlib
+from typing import Callable, Optional, Any
 
 import pydantic
-from typing import Any
 import yaml
 from pathlib import Path
 
 from secureli.abstractions.pre_commit import PreCommitAbstraction
 from secureli.services.git_ignore import GitIgnoreService
+from secureli.services.language_config import LanguageConfigService
+from secureli.utilities.hash import hash_config
+from secureli.resources.slugify import slugify
 
 supported_languages = [
     "C#",
@@ -22,24 +22,9 @@ supported_languages = [
 ]
 
 
-class InstallFailedException(Exception):
-    """Exeception if installing pre-commit-config failed"""
-
-    pass
-
-
 class LanguageMetadata(pydantic.BaseModel):
-    version: Optional[str]
+    version: str
     security_hook_id: Optional[str]
-
-
-class UnexpectedReposResult(pydantic.BaseModel):
-    """
-    The result of checking for unexpected repos in config
-    """
-
-    missing_repos: Optional[list[str]] = []
-    unexpected_repos: Optional[list[str]] = []
 
 
 class ValidateConfigResult(pydantic.BaseModel):
@@ -51,25 +36,35 @@ class ValidateConfigResult(pydantic.BaseModel):
     output: str
 
 
-class ExecuteResult(pydantic.BaseModel):
+class Repo(pydantic.BaseModel):
+    """A repository containing pre-commit hooks"""
+
+    repo: str
+    revision: str
+    hooks: list[str]
+
+
+class HookConfiguration(pydantic.BaseModel):
+    """A simplified pre-commit configuration representation for logging purposes"""
+
+    repos: list[Repo]
+
+
+class LanguageLinterWriteResult(pydantic.BaseModel):
+    """Results from installing langauge specific configs for pre-commit hooks"""
+
+    num_successful: int
+    num_non_success: int
+    non_success_messages: list[str]
+
+
+class UnexpectedReposResult(pydantic.BaseModel):
     """
-    The results of calling execute_hooks
+    The result of checking for unexpected repos in config
     """
 
-    successful: bool
-    output: str
-
-
-class BuildConfigResult(pydantic.BaseModel):
-    """Result about building config for all laguages"""
-
-    successful: bool
-    languages_added: list[str]
-    config_data: dict
-
-
-def format_language_output(languages: list[str]) -> str:
-    return " ".join(map(str, languages))
+    missing_repos: Optional[list[str]] = []
+    unexpected_repos: Optional[list[str]] = []
 
 
 class LanguageSupportService:
@@ -81,52 +76,59 @@ class LanguageSupportService:
     def __init__(
         self,
         pre_commit_hook: PreCommitAbstraction,
+        language_config: LanguageConfigService,
         git_ignore: GitIgnoreService,
+        data_loader: Callable[[str], str],
     ):
         self.git_ignore = git_ignore
         self.pre_commit_hook = pre_commit_hook
+        self.language_config = language_config
+        self.data_loader = data_loader
 
-    def version_for_language(self, languages: list[str]) -> str:
+    def version_for_language(self, language: str) -> str:
         """
-        Calculates a hash of the generated pre-commit file for the given language to be used as part
-        of the overall installed configuration.
-        :param languages: list of all supported languages to use in config hashing
-        :raises LanguageNotSupportedError if the associated pre-commit file for the language is not found
-        :return: The hash of the language-pre-commit.yaml file found in the resources
-        matching the given language.
+        May eventually grow to become a combination of pre-commit hook and other elements
+        :param language: The language to determine the version of the current config
+        :raises LanguageNotSupportedError if support for the language is not provided
+        :return: The version of the current config for the provided language available for install
         """
-        pre_commit_config = self._build_pre_commit_config(languages).config_data
-        pre_commit_config_version = self._hash_config(yaml.dump(pre_commit_config))
+        # For now, just a passthrough to pre-commit hook abstraction
+        return self.language_config.get_language_config(language).version
 
-        return pre_commit_config_version
-
-    def apply_support(self, languages: list[str]) -> LanguageMetadata:
+    def apply_support(self, language: str) -> LanguageMetadata:
         """
-        Applies Secure Build support for the provided languages
-        :param languages: list of support languages to supply support for
+        Applies Secure Build support for the provided language
+        :param language: The language to provide support for
         :raises LanguageNotSupportedError if support for the language is not provided
         :return: Metadata including version of the language configuration that was just installed
         as well as a secret-detection hook ID, if present.
         """
 
-        path_to_config_file = ".pre-commit-config.yaml"
-        build_result = self._build_pre_commit_config(languages, True)
+        path_to_pre_commit_file = Path(".pre-commit-config.yaml")
 
-        if not build_result.successful:
-            raise InstallFailedException(
-                f"Install failed for {languages}.\n Config: {build_result.config_data}"
+        # Raises a LanguageNotSupportedError if language doesn't resolve to a yaml file
+        language_config_result = self.language_config.get_language_config(language)
+
+        if language_config_result.linter_config.successful:
+            self._write_pre_commit_configs(
+                language, language_config_result.linter_config.linter_data
             )
 
-        with open(path_to_config_file, "w") as f:
-            f.write(yaml.dump(build_result.config_data))
+        with open(path_to_pre_commit_file, "w") as f:
+            f.write(language_config_result.config_data)
 
-        version = self._hash_config(yaml.dump(build_result.config_data))
+        # Start by identifying and installing the appropriate pre-commit template (if we have one)
+        self.pre_commit_hook.install(language)
+
+        # Add .secureli/ to the gitignore folder if needed
+        self.git_ignore.ignore_secureli_files()
 
         return LanguageMetadata(
-            version=version, security_hook_id=self.secret_detection_hook_id(languages)
+            version=language_config_result.version,
+            security_hook_id=self.secret_detection_hook_id(language),
         )
 
-    def secret_detection_hook_id(self, languages: list[str]) -> Optional[str]:
+    def secret_detection_hook_id(self, language: str) -> Optional[str]:
         """
         Checks the configuration of the provided language to determine if any configured
         hooks are usable for init-time secrets detection. These supported hooks are derived
@@ -134,9 +136,10 @@ class LanguageSupportService:
         :param language: The language to check support for
         :return: The hook ID to use for secrets analysis if supported, otherwise None.
         """
-        config = self._build_pre_commit_config(languages).config_data
-
-        secrets_detecting_repos = self.pre_commit_hook.get_secret_detecting_repos()
+        language_config = self.language_config.get_language_config(language)
+        config = yaml.safe_load(language_config.config_data)
+        secrets_detecting_repos_data = self.data_loader("secrets_detecting_repos.yaml")
+        secrets_detecting_repos = yaml.safe_load(secrets_detecting_repos_data)
 
         # Make sure the repos and configuration don't care about case sensitivity
         all_repos = config.get("repos", [])
@@ -168,152 +171,17 @@ class LanguageSupportService:
 
         return None
 
-    def update(self) -> ExecuteResult:
-        """
-        Installs the hooks defined in pre-commit-config.yml.
-        :return: ExecuteResult, indicating success or failure.
-        """
-        subprocess_args = ["pre-commit", "install-hooks", "--color", "always"]
-
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
-        output = (
-            completed_process.stdout.decode("utf8") if completed_process.stdout else ""
-        )
-        if completed_process.returncode != 0:
-            return ExecuteResult(successful=False, output=output)
-        else:
-            return ExecuteResult(successful=True, output=output)
-
-    def execute_hooks(
-        self, all_files: bool = False, hook_id: Optional[str] = None
-    ) -> ExecuteResult:
-        """
-        Execute the configured hooks against the repository, either against your staged changes
-        or all the files in the repo
-        :param all_files: True if we want to scan all files, default to false, which only
-        scans our staged changes we're about to commit
-        :param hook_id: A specific hook to run. If None, all hooks will be run
-        :return: ExecuteResult, indicating success or failure.
-        """
-        # always log colors so that we can print them out later, which does not happen by default
-        # when we capture the output (which we do so we can add it to our logs).
-        subprocess_args = [
-            "pre-commit",
-            "run",
-            "--color",
-            "always",
-        ]
-        if all_files:
-            subprocess_args.append("--all-files")
-
-        if hook_id:
-            subprocess_args.append(hook_id)
-
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
-        output = (
-            completed_process.stdout.decode("utf8") if completed_process.stdout else ""
-        )
-        if completed_process.returncode != 0:
-            return ExecuteResult(successful=False, output=output)
-        else:
-            return ExecuteResult(successful=True, output=output)
-
-    def autoupdate_hooks(
-        self,
-        bleeding_edge: bool = False,
-        freeze: bool = False,
-        repos: Optional[list] = None,
-    ) -> ExecuteResult:
-        """
-        Updates the precommit hooks but executing precommit's autoupdate command.  Additional info at
-        https://pre-commit.com/#pre-commit-autoupdate
-        :param bleeding edge: True if updating to the bleeding edge of the default branch instead of
-        the latest tagged version (which is the default behavior)
-        :param freeze: Set to True to store "frozen" hashes in rev instead of tag names.
-        :param repos: List of repos (url as a string) to update. This is used to target specific repos instead of all repos.
-        :return: ExecuteResult, indicating success or failure.
-        """
-        subprocess_args = [
-            "pre-commit",
-            "autoupdate",
-        ]
-        if bleeding_edge:
-            subprocess_args.append("--bleeding-edge")
-
-        if freeze:
-            subprocess_args.append("--freeze")
-
-        if repos:
-            repo_args = []
-
-            if isinstance(repos, str):
-                # If a string is passed in, converts to a list containing the string
-                repos = [repos]
-
-            for repo in repos:
-                if isinstance(repo, str):
-                    arg = "--repo {}".format(repo)
-                    repo_args.append(arg)
-                else:
-                    output = "Unable to update repo, string validation failed. Repo parameter should be a dictionary of strings."
-                    return ExecuteResult(successful=False, output=output)
-
-            subprocess_args.extend(repo_args)
-
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
-        output = (
-            completed_process.stdout.decode("utf8") if completed_process.stdout else ""
-        )
-        if completed_process.returncode != 0:
-            return ExecuteResult(successful=False, output=output)
-        else:
-            return ExecuteResult(successful=True, output=output)
-
-    def remove_unused_hooks(self) -> ExecuteResult:
-        """
-        Removes unused hook repos from the cache.  Pre-commit determines which flags are "unused" by comparing
-        the repos to the pre-commit-config.yaml file.  Any cached hook repos that are not in the config file
-        will be removed from the cache.
-        :return: ExecuteResult, indicating success or failure.
-        """
-        subprocess_args = ["pre-commit", "gc", "--color", "always"]
-
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
-        output = (
-            completed_process.stdout.decode("utf8") if completed_process.stdout else ""
-        )
-        if completed_process.returncode != 0:
-            return ExecuteResult(successful=False, output=output)
-        else:
-            return ExecuteResult(successful=True, output=output)
-
-    def get_current_config_hash(self) -> str:
-        """
-        Returns a hash of the current .pre-commit-config.yaml file.  This hash is generated in the
-        same way that we generate the version hash for the secureli config file so should be valid
-        for comparison.  Note this is the hash of the config file as it currently exists and not
-        the hash of the combined config.
-        :return: Returns a hash derived from the
-        """
-        config_data = yaml.dump(self._get_current_configuration())
-        config_hash = self._hash_config(config_data)
-
-        return config_hash
-
-    def validate_config(self, languages: list[str]) -> bool:
+    def validate_config(self, language: str) -> ValidateConfigResult:
         """
         Validates that the current configuration matches the expected configuration generated
         by secureli.
         :param language: The language to validate against
         :return: Returns a boolean indicating whether the configs match
         """
-        current_config = yaml.dump(self._get_current_configuration())
-
-        build_result = self._build_pre_commit_config(languages)
-        generated_config = yaml.dump(build_result.config_data)
-
+        current_config = yaml.dump(self.get_current_configuration())
+        generated_config = self.language_config.get_language_config(language=language)
         current_hash = self.get_current_config_hash()
-        expected_hash = self._hash_config(generated_config)
+        expected_hash = generated_config.version
         output = ""
 
         config_matches = current_hash == expected_hash
@@ -325,20 +193,32 @@ class LanguageSupportService:
             output += "\n"
             output += self._compare_repo_versions(
                 current_config=yaml.safe_load(current_config),
-                expected_config=yaml.safe_load(generated_config),
+                expected_config=yaml.safe_load(generated_config.config_data),
             )
 
         return ValidateConfigResult(successful=config_matches, output=output)
 
-    def get_serialized_config(self, languages: list[str]):
-        configs = []
+    def get_configuration(self, language: str) -> HookConfiguration:
+        """
+        Creates a basic, serializable configuration out of the combined specified language config
+        :param language: The language to load the configuration for
+        :return: A serializable Configuration model
+        """
+        config = yaml.safe_load(
+            self.language_config.get_language_config(language).config_data
+        )
 
-        for language in languages:
-            configs.append(self.pre_commit_hook.get_serialized_configuration(language))
+        def create_repo(raw_repo: dict) -> Repo:
+            return Repo(
+                repo=raw_repo.get("repo", "unknown"),
+                revision=raw_repo.get("rev", "unknown"),
+                hooks=[hook.get("id", "unknown") for hook in raw_repo.get("hooks", [])],
+            )
 
-        return configs
+        repos = [create_repo(raw_repo) for raw_repo in config.get("repos", [])]
+        return HookConfiguration(repos=repos)
 
-    def _get_current_configuration(self):
+    def get_current_configuration(self):
         """
         Returns the contents of the .pre-commit-config.yaml file.  Note that this should be used to
         see the current state and not be used for any desired state actions.
@@ -350,39 +230,31 @@ class LanguageSupportService:
             data = yaml.safe_load(f)
             return data
 
-    def _build_pre_commit_config(
-        self, languages: list[str], install=False
-    ) -> BuildConfigResult:
-        config_data = []
-        successful_languages = []
-
-        languages.append("base")
-
-        for language in languages:
-            result = self.pre_commit_hook.get_configuration(language, install)
-            if result.successful:
-                successful_languages.append(language)
-                for config in result.config_data["repos"]:
-                    config_data.append(config)
-
-        languages.remove("base")
-
-        return BuildConfigResult(
-            successful=True if len(config_data) > 0 else False,
-            languages_added=successful_languages,
-            config_data={"repos": config_data},
-        )
-
-    def _hash_config(self, config: str) -> str:
+    def get_current_config_hash(self) -> str:
         """
-        Creates an MD5 hash from a config string
-        :return: A hash string
+        Returns a hash of the current .pre-commit-config.yaml file.  This hash is generated in the
+        same way that we generate the version hash for the secureli config file so should be valid
+        for comparison.  Note this is the hash of the config file as it currently exists and not
+        the hash of the combined config.
+        :return: Returns a hash derived from the
         """
-        config_hash = hashlib.md5(
-            config.encode("utf8"), usedforsecurity=False
-        ).hexdigest()
+        config_data = yaml.dump(self.get_current_configuration())
+        config_hash = hash_config(config_data)
 
         return config_hash
+
+    def _get_list_of_repo_urls(self, repo_list: list[dict]) -> list[str]:
+        """
+        Parses a list containing repo dictionaries and returns a list of repo urls
+        :param repo_list: List of dictionaries containing repo configurations
+        :return: A list of repo urls.
+        """
+        urls = []
+
+        for repo in repo_list:
+            urls.append(repo["repo"])
+
+        return urls
 
     def _get_dict_with_repo_revs(self, repo_list: list[dict]) -> dict:
         """
@@ -395,11 +267,8 @@ class LanguageSupportService:
 
         for repo in repo_list:
             url = repo["repo"]
-            if "rev" in repo.keys():
-                rev = repo["rev"]
-                repos_dict[url] = rev
-            else:
-                repos_dict[url] = ""
+            rev = repo["rev"]
+            repos_dict[url] = rev
 
         return repos_dict
 
@@ -422,7 +291,7 @@ class LanguageSupportService:
         for repo in expected_repos_dict:
             expected_rev = expected_repos_dict.get(repo)
             current_rev = current_repos_dict.get(repo)
-            if expected_rev != current_rev and repo != "local":
+            if expected_rev != current_rev:
                 output += (
                     "Expected {} to be rev {} but it is configured to rev {}\n".format(
                         repo, expected_rev, current_rev
@@ -430,19 +299,6 @@ class LanguageSupportService:
                 )
 
         return output
-
-    def _get_list_of_repo_urls(self, repo_list: list[dict]) -> list[str]:
-        """
-        Parses a list containing repo dictionaries and returns a list of repo urls
-        :param repo_list: List of dictionaries containing repo configurations
-        :return: A list of repo urls.
-        """
-        urls = []
-
-        for repo in repo_list:
-            urls.append(repo["repo"])
-
-        return urls
 
     def _get_mismatched_repos(self, current_repos: list, expected_repos: list):
         """
@@ -529,3 +385,41 @@ class LanguageSupportService:
         )
 
         return output
+
+    def _write_pre_commit_configs(
+        self, language: str, linter_config: list[Any]
+    ) -> LanguageLinterWriteResult:
+        """
+        Install any config files for given language to support any pre-commit commands.
+        i.e. Javascript ESLint requires a .eslintrc file to sufficiently use plugins and allow
+        for further customization for repo's flavor of Javascript
+        :param language: repo language
+        :return: LanguageLinterWriteResult
+        """
+
+        num_configs_wrote = 0
+        num_configs_non_success = 0
+        non_success_warnings = list[str]()
+
+        # if successfully loaded any language specific configs
+        for config in linter_config:
+            try:
+                for key in config:
+                    config_name = f"{slugify(language)}.{key}.yaml"
+                    path_to_config_file = Path(f".secureli/{config_name}")
+
+                    with open(path_to_config_file, "w") as f:
+                        f.write(yaml.dump(config[key]))
+
+                    num_configs_wrote += 1
+            except Exception as e:
+                num_configs_non_success += 1
+                non_success_warnings.append(
+                    f"Unable to install config: {config_name}. {e}"
+                )
+
+        return LanguageLinterWriteResult(
+            num_successful=num_configs_wrote,
+            num_non_success=num_configs_non_success,
+            non_success_messages=non_success_warnings,
+        )

@@ -3,9 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from secureli.services.language_support import ExecuteResult
-
-# from secureli.abstractions.pre_commit import ExecuteResult
+from secureli.abstractions.pre_commit import ExecuteResult
 
 
 # Register generic mocks you'd like available for every test.
@@ -14,20 +12,10 @@ from secureli.services.language_support import ExecuteResult
 @pytest.fixture()
 def mock_pre_commit() -> MagicMock:
     mock_pre_commit = MagicMock()
-    # mock_pre_commit.execute_hooks.return_value = ExecuteResult(
-    #     successful=True, output=""
-    # )
-    return mock_pre_commit
-
-
-@pytest.fixture()
-def mock_language_support() -> MagicMock:
-    mock_language_support = MagicMock()
-    mock_language_support.execute_hooks.return_value = ExecuteResult(
+    mock_pre_commit.execute_hooks.return_value = ExecuteResult(
         successful=True, output=""
     )
-
-    return mock_language_support
+    return mock_pre_commit
 
 
 @pytest.fixture()
