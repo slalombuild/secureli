@@ -66,7 +66,7 @@ def test_that_logging_service_success_creates_logs_folder_if_not_exists(
     mock_language_support: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="RadLang", version_installed="abc123"
+        languages=["RadLang"], version_installed="abc123"
     )
     mock_language_support.get_configuration.return_value = HookConfiguration(repos=[])
     logging_service.success(LogAction.init)
@@ -81,7 +81,7 @@ def test_that_logging_service_failure_creates_logs_folder_if_not_exists(
     mock_secureli_config: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language=None, version_installed=None
+        languages=None, version_installed=None
     )
 
     logging_service.failure(LogAction.init, "Horrible Failure", None, None)
@@ -97,7 +97,7 @@ def test_that_logging_service_success_logs_none_for_hook_config_if_not_initializ
 ):
     # Uninitialized configuration
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language=None, version_installed=None
+        languages=None, version_installed=None
     )
 
     log_entry = logging_service.success(LogAction.build)
