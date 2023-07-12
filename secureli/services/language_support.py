@@ -67,13 +67,18 @@ class UnexpectedReposResult(pydantic.BaseModel):
     unexpected_repos: Optional[list[str]] = []
 
 
+class LinterConfig(pydantic.BaseModel):
+    language: str
+    linter_data: list[Any]
+
+
 class BuildConfigResult(pydantic.BaseModel):
     """Result about building config for all laguages"""
 
     successful: bool
     languages_added: list[str]
     config_data: dict
-    linter_data: list[Any]
+    linter_configs: list[LinterConfig]
     version: str
 
 
@@ -98,7 +103,7 @@ class LanguageSupportService:
     def version_for_language(self, languages: list[str]) -> str:
         """
         May eventually grow to become a combination of pre-commit hook and other elements
-        :param language: The language to determine the version of the current config
+        :param languages: List of languages to determine the version of the current config
         :raises LanguageNotSupportedError if support for the language is not provided
         :return: The version of the current config for the provided language available for install
         """
@@ -108,7 +113,7 @@ class LanguageSupportService:
     def apply_support(self, languages: list[str]) -> LanguageMetadata:
         """
         Applies Secure Build support for the provided language
-        :param language: The language to provide support for
+        :param languages: list of languages to provide support for
         :raises LanguageNotSupportedError if support for the language is not provided
         :return: Metadata including version of the language configuration that was just installed
         as well as a secret-detection hook ID, if present.
@@ -119,8 +124,8 @@ class LanguageSupportService:
         # Raises a LanguageNotSupportedError if language doesn't resolve to a yaml file
         language_config_result = self._build_pre_commit_config(languages)
 
-        if len(language_config_result.linter_data) > 0:
-            self._write_pre_commit_configs(language_config_result.linter_data)
+        if len(language_config_result.linter_configs) > 0:
+            self._write_pre_commit_configs(language_config_result.linter_configs)
 
         with open(path_to_pre_commit_file, "w") as f:
             f.write(yaml.dump(language_config_result.config_data))
@@ -141,7 +146,7 @@ class LanguageSupportService:
         Checks the configuration of the provided language to determine if any configured
         hooks are usable for init-time secrets detection. These supported hooks are derived
         from secrets_detecting_repos.yaml in the resources
-        :param language: The language to check support for
+        :param languages: list of languages to check support for
         :return: The hook ID to use for secrets analysis if supported, otherwise None.
         """
         language_config = self._build_pre_commit_config(languages)
@@ -183,7 +188,7 @@ class LanguageSupportService:
         """
         Validates that the current configuration matches the expected configuration generated
         by secureli.
-        :param language: The language to validate against
+        :param language: List of languages to validate against
         :return: Returns a boolean indicating whether the configs match
         """
         current_config = yaml.dump(self.get_current_configuration())
@@ -209,7 +214,7 @@ class LanguageSupportService:
     def get_configuration(self, languages: list[str]) -> HookConfiguration:
         """
         Creates a basic, serializable configuration out of the combined specified language config
-        :param language: The language to load the configuration for
+        :param languages: list of languages to get config for.
         :return: A serializable Configuration model
         """
         config = self._build_pre_commit_config(languages).config_data
@@ -250,9 +255,15 @@ class LanguageSupportService:
         return config_hash
 
     def _build_pre_commit_config(self, languages: list[str]) -> BuildConfigResult:
+        """
+        Builds the final .pre-commit-config.yaml from all supported repo languages. Also returns any and all
+        linter configuration data.
+        :param langauges: list of languages to get calculated configuration for.
+        :return: BuildConfigResult
+        """
         config_data = []
         successful_languages = []
-        linter_data = []
+        linter_configs: list[LinterConfig] = []
 
         languages.append("base")
 
@@ -260,8 +271,10 @@ class LanguageSupportService:
             result = self.language_config.get_language_config(language)
             if result.config_data:
                 successful_languages.append(language)
-                linter_data.append(
-                    {language: result.linter_config.linter_data}
+                linter_configs.append(
+                    LinterConfig(
+                        language=language, linter_data=result.linter_config.linter_data
+                    )
                 ) if result.linter_config.successful else None
                 data = yaml.safe_load(result.config_data)
                 for config in data["repos"]:
@@ -276,7 +289,7 @@ class LanguageSupportService:
             languages_added=successful_languages,
             config_data=config,
             version=version,
-            linter_data=linter_data,
+            linter_configs=linter_configs,
         )
 
     def _get_list_of_repo_urls(self, repo_list: list[dict]) -> list[str]:
@@ -423,7 +436,7 @@ class LanguageSupportService:
         return output
 
     def _write_pre_commit_configs(
-        self, linter_configs: list[Any]
+        self, all_linter_configs: list[LinterConfig]
     ) -> LanguageLinterWriteResult:
         """
         Install any config files for given language to support any pre-commit commands.
@@ -433,31 +446,32 @@ class LanguageSupportService:
         :return: LanguageLinterWriteResult
         """
 
-        num_configs_wrote = 0
+        num_configs_success = 0
         num_configs_non_success = 0
-        non_success_warnings = list[str]()
+        non_success_messages = list[str]()
 
-        # if successfully loaded any language specific configs
-        for language_linters in linter_configs:
-            for language in language_linters:
-                for config in language_linters[language]:
-                    for key in config:
-                        try:
-                            config_name = f"{slugify(language)}.{key}.yaml"
-                            path_to_config_file = Path(f".secureli/{config_name}")
+        # parse through languages for their linter config if any.
+        for language_linter_configs in all_linter_configs:
 
-                            with open(path_to_config_file, "w") as f:
-                                f.write(yaml.dump(config[key]))
+            # parse though each config for the given language.
+            for config in language_linter_configs.linter_data:
 
-                            num_configs_wrote += 1
-                        except Exception as e:
-                            num_configs_non_success += 1
-                            non_success_warnings.append(
-                                f"Unable to install config: {e}"
-                            )
+                config_name = list(config.keys())[0]
+                try:
+                    # generate relative file name and path.
+                    config_file_name = f"{slugify(language_linter_configs.language)}.{config_name}.yaml"
+                    path_to_config_file = Path(f".secureli/{config_file_name}")
+
+                    with open(path_to_config_file, "w") as f:
+                        f.write(yaml.dump(config[config_name]))
+
+                    num_configs_success += 1
+                except Exception as e:
+                    num_configs_non_success += 1
+                    non_success_messages.append(f"Unable to install config: {e}")
 
         return LanguageLinterWriteResult(
-            num_successful=num_configs_wrote,
+            num_successful=num_configs_success,
             num_non_success=num_configs_non_success,
-            non_success_messages=non_success_warnings,
+            non_success_messages=non_success_messages,
         )
