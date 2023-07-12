@@ -452,12 +452,10 @@ class LanguageSupportService:
 
         # parse through languages for their linter config if any.
         for language_linter_configs in all_linter_configs:
-
             # parse though each config for the given language.
             for config in language_linter_configs.linter_data:
-
-                config_name = list(config.keys())[0]
                 try:
+                    config_name = list(config.keys())[0]
                     # generate relative file name and path.
                     config_file_name = f"{slugify(language_linter_configs.language)}.{config_name}.yaml"
                     path_to_config_file = Path(f".secureli/{config_file_name}")
