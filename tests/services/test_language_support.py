@@ -125,7 +125,7 @@ def test_that_language_support_attempts_to_install_pre_commit_hooks(
 
     mock_data_loader.side_effect = mock_loader_side_effect
 
-    metadata = language_support_service.apply_support("RadLang")
+    metadata = language_support_service.apply_support(["RadLang"])
 
     mock_pre_commit_hook.install.assert_called_once()
     assert metadata.security_hook_id == "baddie-finder"
@@ -147,9 +147,9 @@ def test_that_language_support_calculates_version_for_language(
             """,
     )
 
-    version = language_support_service.version_for_language("RadLang")
+    version = language_support_service.version_for_language(["RadLang"])
 
-    mock_language_config_service.get_language_config.assert_called_once_with("RadLang")
+    mock_language_config_service.get_language_config.assert_called_with("base")
     assert version is not None
 
 
@@ -178,7 +178,7 @@ def test_that_language_support_identifies_a_security_hook_we_can_use_during_init
 
     mock_data_loader.side_effect = mock_loader_side_effect
 
-    hook_id = language_support_service.secret_detection_hook_id("Python")
+    hook_id = language_support_service.secret_detection_hook_id(["Python"])
 
     assert hook_id == "baddie-finder-hook"
 
@@ -208,7 +208,7 @@ def test_that_language_support_does_not_identify_a_security_hook_if_config_does_
 
     mock_data_loader.side_effect = mock_loader_side_effect
 
-    hook_id = language_support_service.secret_detection_hook_id("Python")
+    hook_id = language_support_service.secret_detection_hook_id(["Python"])
 
     assert hook_id is None
 
@@ -231,9 +231,8 @@ def test_that_language_support_calculates_a_serializable_hook_configuration(
         """,
     )
 
-    hook_configuration = language_support_service.get_configuration("RadLang")
-
-    assert len(hook_configuration.repos) == 1
+    hook_configuration = language_support_service.get_configuration(["RadLang"])
+    assert len(hook_configuration.repos) == 2
     assert hook_configuration.repos[0].revision == "1.0.25"
     assert len(hook_configuration.repos[0].hooks) == 2
     assert "hook-a" in hook_configuration.repos[0].hooks
@@ -264,7 +263,7 @@ def test_that_language_support_does_not_identify_a_security_hook_if_config_uses_
 
     mock_data_loader.side_effect = mock_loader_side_effect
 
-    hook_id = language_support_service.secret_detection_hook_id("Python")
+    hook_id = language_support_service.secret_detection_hook_id(["Python"])
 
     assert hook_id is None
 
@@ -306,7 +305,7 @@ def test_that_validate_config_returns_no_output_on_config_match(
         )
     )
 
-    validation_result = language_support_service.validate_config("Python")
+    validation_result = language_support_service.validate_config(["Python"])
 
     assert validation_result.successful
     assert validation_result.output == ""
@@ -323,7 +322,7 @@ def test_that_validate_config_detects_mismatched_configs(
         linter_config=LoadLinterConfigsResult(successful=False, linter_data=list()),
         config_data='{"exclude": "some-exclude-regex","repos":[{"hooks":[{"id":"some-test-hook"}],"repo":"xyz://some-test-repo-url","rev":"1.0.1"}]}',
     )
-    validation_result = language_support_service.validate_config("Python")
+    validation_result = language_support_service.validate_config(["Python"])
 
     assert not validation_result.successful
 
@@ -356,7 +355,7 @@ def test_that_validate_config_detects_mismatched_hook_versions(
         )
     )
 
-    validation_result = language_support_service.validate_config("Python")
+    validation_result = language_support_service.validate_config(["Python"])
     output_by_line = validation_result.output.splitlines()
 
     assert (
@@ -371,25 +370,28 @@ def test_that_validate_config_detects_extra_repos(
     mock_language_config_service: MagicMock,
     mock_open_config: MagicMock,
 ):
-    config_value = """
-    exclude: some-exclude-regex
-    repos:
-    - hooks:
-      - id: some-test-hook
-      repo: xyz://some-test-repo-url
-      rev: 1.0.0
-    """
+    def mock_side_effect(resource: str):
+        config_value = """
+        exclude: some-exclude-regex
+        repos:
+        - hooks:
+          - id: some-test-hook
+          repo: xyz://some-test-repo-url
+          rev: 1.0.0
+        """
+        if resource == "base":
+            config_value = """"""
 
-    mock_language_config_service.get_language_config.return_value = (
-        LanguagePreCommitResult(
+        return LanguagePreCommitResult(
             language="Python",
             version="abc123",
             linter_config=LoadLinterConfigsResult(successful=False, linter_data=list()),
             config_data=config_value,
         )
-    )
 
-    validation_result = language_support_service.validate_config("Python")
+    mock_language_config_service.get_language_config.side_effect = mock_side_effect
+
+    validation_result = language_support_service.validate_config(["Python"])
     output_by_line = validation_result.output.splitlines()
 
     assert output_by_line[-3] == "Found unexpected repos in .pre-commit-config.yaml:"
@@ -402,33 +404,38 @@ def test_that_validate_config_detects_missing_repos(
     mock_language_config_service: MagicMock,
     mock_open_config: MagicMock,
 ):
-    config_value = """
-    exclude: some-exclude-regex
-    repos:
-    - hooks:
-      - id: some-test-hook
-      repo: xyz://some-test-repo-url
-      rev: 1.0.0
-    - hooks:
-      - id: some-other-test-hook
-      repo: xyz://some-other-test-repo-url
-      rev: 1.0.0
-    - hooks:
-      - id: some-third-test-hook
-      repo: xyz://some-third-test-repo-url
-      rev: 1.0.0
-    """
+    def mock_side_effect(resource: str):
+        config_value = """
+        exclude: some-exclude-regex
+        repos:
+        - hooks:
+          - id: some-test-hook
+          repo: xyz://some-test-repo-url
+          rev: 1.0.0
+        - hooks:
+          - id: some-other-test-hook
+          repo: xyz://some-other-test-repo-url
+          rev: 1.0.0
+        """
+        if resource == "base":
+            config_value = """
+            repos:
+            - hooks:
+              - id: some-third-test-hook
+              repo: xyz://some-third-test-repo-url
+              rev: 1.0.0
+            """
 
-    mock_language_config_service.get_language_config.return_value = (
-        LanguagePreCommitResult(
+        return LanguagePreCommitResult(
             language="Python",
             version="abc123",
             linter_config=LoadLinterConfigsResult(successful=False, linter_data=list()),
             config_data=config_value,
         )
-    )
 
-    validation_result = language_support_service.validate_config("Python")
+    mock_language_config_service.get_language_config.side_effect = mock_side_effect
+
+    validation_result = language_support_service.validate_config(["Python"])
     output_by_line = validation_result.output.splitlines()
 
     assert (
@@ -469,7 +476,7 @@ def test_that_language_support_writes_linter_config_files(
 
     mock_data_loader.side_effect = mock_loader_side_effect
 
-    metadata = language_support_service.apply_support("RadLang")
+    metadata = language_support_service.apply_support(["RadLang"])
 
     mock_pre_commit_hook.install.assert_called_once()
     assert metadata.security_hook_id == "baddie-finder"
@@ -505,7 +512,7 @@ def test_that_language_support_handles_malformed_config_and_does_not_write(
 
     mock_data_loader.side_effect = mock_loader_side_effect
 
-    metadata = language_support_service.apply_support("RadLang")
+    metadata = language_support_service.apply_support(["RadLang"])
 
     mock_pre_commit_hook.install.assert_called_once()
     assert metadata.security_hook_id == "baddie-finder"

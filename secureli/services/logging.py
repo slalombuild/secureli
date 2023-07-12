@@ -52,7 +52,7 @@ class LogEntry(pydantic.BaseModel):
     username: str = git_user_email()
     machineid: str = platform.uname().node
     secureli_version: str = secureli_version()
-    primary_language: Optional[str]
+    languages: Optional[list[str]]
     status: LogStatus
     action: LogAction
     hook_config: Optional[HookConfiguration]
@@ -79,7 +79,7 @@ class LoggingService:
         """
         secureli_config = self.secureli_config.load()
         hook_config = (
-            self.language_support.get_configuration(secureli_config.languages[0])
+            self.language_support.get_configuration(secureli_config.languages)
             if secureli_config.languages
             else None
         )
@@ -87,9 +87,7 @@ class LoggingService:
             status=LogStatus.success,
             action=action,
             hook_config=hook_config,
-            primary_language=secureli_config.languages[0]
-            if secureli_config.languages
-            else None,
+            languages=secureli_config.languages if secureli_config.languages else None,
         )
         self._log(log_entry)
 
@@ -111,7 +109,7 @@ class LoggingService:
         hook_config = (
             None
             if not secureli_config.languages
-            else self.language_support.get_configuration(secureli_config.languages[0])
+            else self.language_support.get_configuration(secureli_config.languages)
         )
         log_entry = LogEntry(
             status=LogStatus.failure,
@@ -122,9 +120,7 @@ class LoggingService:
             total_failure_count=total_failure_count,
             failure_count_details=individual_failure_count,
             hook_config=hook_config,
-            primary_language=secureli_config.languages[0]
-            if secureli_config.languages
-            else None,
+            languages=secureli_config.languages if secureli_config.languages else None,
         )
         self._log(log_entry)
 

@@ -1,5 +1,21 @@
-exclude: ^(?:.+/)?\.idea(?P<ps_d>/).*$
 repos:
+- hooks:
+  - id: python-use-type-annotations
+  repo: https://github.com/pre-commit/pygrep-hooks
+  rev: v1.9.0
+- hooks:
+  - args:
+    - --exclude
+    - tests/
+    - --severity-level
+    - medium
+    id: bandit
+  repo: https://github.com/PyCQA/bandit
+  rev: 1.7.4
+- hooks:
+  - id: black
+  repo: https://github.com/psf/black
+  rev: 22.10.0
 - hooks:
   - id: check-added-large-files
   - id: check-ast
@@ -25,23 +41,6 @@ repos:
   repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.3.0
 - hooks:
-  - id: python-use-type-annotations
-  repo: https://github.com/pre-commit/pygrep-hooks
-  rev: v1.9.0
-- hooks:
   - id: detect-secrets
   repo: https://github.com/Yelp/detect-secrets
   rev: v1.4.0
-- hooks:
-  - args:
-    - --exclude
-    - tests/
-    - --severity-level
-    - medium
-    id: bandit
-  repo: https://github.com/PyCQA/bandit
-  rev: 1.7.4
-- hooks:
-  - id: black
-  repo: https://github.com/psf/black
-  rev: 22.10.0
