@@ -36,10 +36,15 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
+    - name: Get App Token
+      uses: tibdex/github-app-token@v1
+      id: app_token
+      with: 
+        app_id: 360953
+        private_key: ${{ secrets.ACTIONHELPER }}
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-        token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
     - name: Validate Branch name
       run: ./scripts/get-current-branch.sh
     - name: Set up Python 3.9
@@ -58,8 +63,9 @@ jobs:
         poetry run secureli build
     - name: Semantic Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      env:
+        GH_TOKEN: ${{ steps.app_token.outputs.token }}
       run: |
-        export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
         pip install python-semantic-release
         git config user.name github-actions
         git config user.email github-actions@github.com
@@ -67,8 +73,9 @@ jobs:
     # A NOOP run on feature branches
     - name: Verify Semantic Release
       if: github.ref != 'refs/heads/main'
+      env:
+        GH_TOKEN: ${{ steps.app_token.outputs.token }}
       run: |
-        export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
         pip install python-semantic-release
         git config user.name github-actions
         git config user.email github-actions@github.com
@@ -94,13 +101,18 @@ jobs:
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
 
-
   deploy:
     name: Upload Homebrew Formula
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [ build-linux, build-windows ]
     steps:
+    - name: Get App Token
+      uses: tibdex/github-app-token@v1
+      id: app_token
+      with: 
+        app_id: 360953
+        private_key: ${{ secrets.ACTIONSHELPER }}
     - uses: actions/checkout@v3
       with:
         ref: main
@@ -109,11 +121,11 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: slalombuild/homebrew-secureli
-        token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+        token: ${{ steps.app_token.outputs.token }}
         path: homebrew-secureli
         ref: main
         fetch-depth: 0
     - name: Homebrew Formula Generation
       env:
-        GH_TOKEN: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+        GH_TOKEN: ${{ steps.app_token.outputs.token }}
       run: ./scripts/secureli-deployment.sh
