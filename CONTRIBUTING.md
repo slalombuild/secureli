@@ -279,6 +279,7 @@ A special thanks to everyone that has contributed to seCureLI so far:
 - Dan Arnold
 - Nava Atluri
 - Max Aussendorf
+- Chris Ball
 - Sascha Bates
 - Elliot Benjamin
 - Joel Carpenter
@@ -286,6 +287,7 @@ A special thanks to everyone that has contributed to seCureLI so far:
 - Alex Diehl
 - Korey Earl
 - Martin Gallegos
+- Ryan Graue
 - Jordan Hill
 - Kira Hollerman
 - Myung Kim
