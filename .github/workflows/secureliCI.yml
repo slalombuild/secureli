@@ -17,15 +17,18 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
+
     - name: Set up Python 3.9
       id: setup-python
       uses: actions/setup-python@v4
       with:
         python-version: "3.9"
+
     - name: Set Up Project
       run: |
         pip install poetry
         poetry install
+
     - name: Run Tests
       run: |
         poetry run poe precommit
@@ -33,34 +36,41 @@ jobs:
         # poetry run poe coverage
         # poetry run secureli build
 
+
   build-linux:
     runs-on: ubuntu-latest
     steps:
     - name: Get App Token
       uses: tibdex/github-app-token@v1
       id: app_token
-      with: 
+      with:
         app_id: 360953
         private_key: ${{ secrets.ACTIONHELPER }}
+
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+
     - name: Validate Branch name
       run: ./scripts/get-current-branch.sh
+
     - name: Set up Python 3.9
       id: setup-python
       uses: actions/setup-python@v4
       with:
         python-version: "3.9"
+
     - name: Set Up Project
       run: |
         pip install poetry
         poetry install
+
     - name: Run Tests
       run: |
         poetry run poe precommit
         poetry run poe coverage
         poetry run secureli build
+
     - name: Semantic Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       env:
@@ -70,6 +80,7 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         semantic-release publish
+
     # A NOOP run on feature branches
     - name: Verify Semantic Release
       if: github.ref != 'refs/heads/main'
@@ -80,6 +91,7 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         semantic-release publish --noop
+
 
   secureli-publish:
     name: Upload release to PyPI
@@ -94,12 +106,15 @@ jobs:
       with:
         ref: main
         fetch-depth: 0
+
     - run: |
         pip install poetry
         poetry install
         poetry build
+
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
+
 
   deploy:
     name: Upload Homebrew Formula
@@ -110,13 +125,15 @@ jobs:
     - name: Get App Token
       uses: tibdex/github-app-token@v1
       id: app_token
-      with: 
+      with:
         app_id: 360953
         private_key: ${{ secrets.ACTIONSHELPER }}
+
     - uses: actions/checkout@v3
       with:
         ref: main
         fetch-depth: 0
+
     - name: Checkout Secureli Homebrew Repo
       uses: actions/checkout@v3
       with:
@@ -125,6 +142,7 @@ jobs:
         path: homebrew-secureli
         ref: main
         fetch-depth: 0
+
     - name: Homebrew Formula Generation
       env:
         GH_TOKEN: ${{ steps.app_token.outputs.token }}
