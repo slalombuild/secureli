@@ -42,3 +42,9 @@ def mock_language_support() -> MagicMock:
         version="abc123", security_hook_id="security-hook"
     )
     return mock_language_support
+
+
+@pytest.fixture()
+def mock_settings() -> MagicMock:
+    mock_settings = MagicMock()
+    return mock_settings

@@ -124,7 +124,7 @@ class PreCommitSettings(BaseSettings):
 
 class SecureliFile(BaseModel):
     """
-    Represents the contents of the .secureli file
+    Represents the contents of the .secureli.yaml file
     """
 
     repo_files: Optional[RepoFilesSettings]

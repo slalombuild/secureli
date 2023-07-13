@@ -146,6 +146,7 @@ class Container(containers.DeclarativeContainer):
         language_support=language_support_service,
         scanner=scanner_service,
         secureli_config=secureli_config_repository,
+        settings=settings_repository,
         updater=updater_service,
     )
 
@@ -171,7 +172,7 @@ class Container(containers.DeclarativeContainer):
         echo=echo,
         logging=logging_service,
         scanner=scanner_service,
-        settings_repository=settings_repository,
+        # settings_repository=settings_repository,
     )
 
     """Update Action, representing what happens when the update command is invoked"""

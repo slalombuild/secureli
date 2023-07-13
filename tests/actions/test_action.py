@@ -40,6 +40,7 @@ def action_deps(
         mock_language_support,
         mock_scanner,
         mock_secureli_config,
+        None,
         mock_updater,
     )
 
