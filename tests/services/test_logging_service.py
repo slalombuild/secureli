@@ -4,11 +4,9 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from secureli.abstractions.pre_commit import HookConfiguration
 from secureli.repositories.secureli_config import SecureliConfig
 from secureli.services.logging import LoggingService, LogAction
-
-test_folder_path = Path(".")
+from secureli.services.language_support import HookConfiguration
 
 
 @pytest.fixture()
@@ -44,11 +42,18 @@ def mock_open(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
+def mock_language_support() -> MagicMock:
+    mock_language_support = MagicMock()
+
+    return mock_language_support
+
+
+@pytest.fixture()
 def logging_service(
-    mock_pre_commit: MagicMock, mock_secureli_config: MagicMock
+    mock_language_support: MagicMock, mock_secureli_config: MagicMock
 ) -> LoggingService:
     return LoggingService(
-        pre_commit=mock_pre_commit,
+        language_support=mock_language_support,
         secureli_config=mock_secureli_config,
     )
 
@@ -58,13 +63,13 @@ def test_that_logging_service_success_creates_logs_folder_if_not_exists(
     mock_path: MagicMock,
     mock_open: MagicMock,
     mock_secureli_config: MagicMock,
-    mock_pre_commit: MagicMock,
+    mock_language_support: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language="RadLang", version_installed="abc123"
+        languages=["RadLang"], version_installed="abc123"
     )
-    mock_pre_commit.get_configuration.return_value = HookConfiguration(repos=[])
-    logging_service.success(test_folder_path, LogAction.init)
+    mock_language_support.get_configuration.return_value = HookConfiguration(repos=[])
+    logging_service.success(LogAction.init)
 
     mock_path.parent.mkdir.assert_called_once()
 
@@ -76,12 +81,10 @@ def test_that_logging_service_failure_creates_logs_folder_if_not_exists(
     mock_secureli_config: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language=None, version_installed=None
+        languages=None, version_installed=None
     )
 
-    logging_service.failure(
-        test_folder_path, LogAction.init, "Horrible Failure", None, None
-    )
+    logging_service.failure(LogAction.init, "Horrible Failure", None, None)
 
     mock_path.parent.mkdir.assert_called_once()
 
@@ -94,9 +97,9 @@ def test_that_logging_service_success_logs_none_for_hook_config_if_not_initializ
 ):
     # Uninitialized configuration
     mock_secureli_config.load.return_value = SecureliConfig(
-        overall_language=None, version_installed=None
+        languages=None, version_installed=None
     )
 
-    log_entry = logging_service.success(test_folder_path, LogAction.build)
+    log_entry = logging_service.success(LogAction.build)
 
     assert log_entry.hook_config is None

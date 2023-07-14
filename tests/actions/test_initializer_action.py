@@ -3,10 +3,10 @@ from unittest.mock import MagicMock, ANY
 
 import pytest
 
-from secureli.abstractions.pre_commit import LanguageNotSupportedError
 from secureli.actions.action import ActionDependencies
 from secureli.actions.initializer import InitializerAction
 from secureli.services.logging import LogAction
+from secureli.services.language_config import LanguageNotSupportedError
 
 test_folder_path = Path("does-not-matter")
 
@@ -31,7 +31,6 @@ def action_deps(
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
-    mock_pre_commit: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -40,7 +39,6 @@ def action_deps(
         mock_scanner,
         mock_secureli_config,
         mock_updater,
-        mock_pre_commit,
     )
 
 
@@ -65,9 +63,7 @@ def test_that_initialize_repo_does_not_load_config_when_resetting(
 
     mock_secureli_config.load.assert_not_called()
 
-    mock_logging_service.success.assert_called_once_with(
-        test_folder_path, LogAction.init
-    )
+    mock_logging_service.success.assert_called_once_with(LogAction.init)
 
 
 def test_that_initialize_repo_logs_failure_when_failing_to_verify(
@@ -80,6 +76,4 @@ def test_that_initialize_repo_logs_failure_when_failing_to_verify(
 
     initializer_action.initialize_repo(test_folder_path, True, True)
 
-    mock_logging_service.failure.assert_called_once_with(
-        test_folder_path, LogAction.init, ANY
-    )
+    mock_logging_service.failure.assert_called_once_with(LogAction.init, ANY)

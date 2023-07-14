@@ -19,10 +19,8 @@ class GitIgnoreService:
     footer = "# End Secureli-generated files"
     git_ignore_path = Path("./.gitignore")
 
-    def ignore_secureli_files(self, folder_path: Path):
+    def ignore_secureli_files(self):
         """Creates a .gitignore, appends to an existing one, or updates the configuration"""
-        self.git_ignore_path = Path(folder_path / self.git_ignore_path)
-
         if not self.git_ignore_path.exists():
             # your repo doesn't have a gitignore? That's a bold move.
             self._create_git_ignore()

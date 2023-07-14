@@ -7,7 +7,7 @@ from pytest_mock import MockerFixture
 @pytest.fixture()
 def mock_open_repo_config(mocker: MockerFixture) -> MagicMock:
     mock_open_repo_config = mocker.mock_open(
-        read_data="overall_language: RadLang\nversion_installed: 5"
+        read_data="languages: -RadLang\nversion_installed: 5"
     )
     mocker.patch("builtins.open", mock_open_repo_config)
     return mock_open_repo_config

@@ -19,6 +19,7 @@ from secureli.services.logging import LoggingService
 from secureli.services.scanner import ScannerService
 from secureli.services.updater import UpdaterService
 from secureli.services.secureli_ignore import SecureliIgnoreService
+from secureli.services.language_config import LanguageConfigService
 from secureli.settings import Settings
 
 
@@ -81,9 +82,6 @@ class Container(containers.DeclarativeContainer):
     pre_commit_abstraction = providers.Factory(
         PreCommitAbstraction,
         command_timeout_seconds=config.language_support.command_timeout_seconds,
-        data_loader=read_resource,
-        ignored_file_patterns=secureli_ignored_file_patterns,
-        pre_commit_settings=config.pre_commit,
     )
 
     # Services
@@ -96,11 +94,21 @@ class Container(containers.DeclarativeContainer):
     """
     git_ignore_service = providers.Factory(GitIgnoreService)
 
+    language_config_service = providers.Factory(
+        LanguageConfigService,
+        data_loader=read_resource,
+        pre_commit_settings=config.pre_commit,
+        command_timeout_seconds=config.language_support.command_timeout_seconds,
+        ignored_file_patterns=secureli_ignored_file_patterns,
+    )
+
     """Identifies the configuration version for the language and installs it"""
     language_support_service = providers.Factory(
         LanguageSupportService,
         pre_commit_hook=pre_commit_abstraction,
         git_ignore=git_ignore_service,
+        language_config=language_config_service,
+        data_loader=read_resource,
     )
 
     """Analyzes a given repo to try to identify the most common language"""
@@ -113,7 +121,7 @@ class Container(containers.DeclarativeContainer):
     """Logs branch-level secureli log entries to the disk"""
     logging_service = providers.Factory(
         LoggingService,
-        pre_commit=pre_commit_abstraction,
+        language_support=language_support_service,
         secureli_config=secureli_config_repository,
     )
 
@@ -139,7 +147,6 @@ class Container(containers.DeclarativeContainer):
         scanner=scanner_service,
         secureli_config=secureli_config_repository,
         updater=updater_service,
-        pre_commit=pre_commit_abstraction,
     )
 
     """The Build Action, used to render the build_data using the echo"""
