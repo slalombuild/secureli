@@ -66,7 +66,7 @@ class ScanAction(Action):
         if verify_result.outcome in self.halting_outcomes:
             return
 
-        scan_result = self.scanner.scan_repo(scan_mode, specific_test)
+        scan_result = self.scanner.scan_repo(folder_path, scan_mode, specific_test)
 
         details = scan_result.output or "Unknown output during scan"
         self.echo.print(details)
@@ -85,6 +85,7 @@ class ScanAction(Action):
 
         if not scan_result.successful:
             log_data = self.logging.failure(
+                folder_path,
                 LogAction.scan,
                 scan_result_failures_json_string,
                 failure_count,
@@ -94,7 +95,7 @@ class ScanAction(Action):
             post_log(log_data.json(exclude_none=True))
         else:
             self.echo.print("Scan executed successfully and detected no issues!")
-            log_data = self.logging.success(LogAction.scan)
+            log_data = self.logging.success(folder_path, LogAction.scan)
 
             post_log(log_data.json(exclude_none=True))
 

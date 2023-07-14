@@ -1,4 +1,5 @@
 from typing import Optional
+from pathlib import Path
 
 import pydantic
 
@@ -30,6 +31,7 @@ class UpdaterService:
 
     def update_hooks(
         self,
+        folder_path: Path,
         bleeding_edge: bool = False,
         freeze: bool = False,
         repos: Optional[list] = None,
@@ -43,31 +45,35 @@ class UpdaterService:
         :param repos: Dectionary of repos to update. This is used to target specific repos instead of all repos.
         :return: ExecuteResult, indicating success or failure.
         """
-        update_result = self.pre_commit.autoupdate_hooks(bleeding_edge, freeze, repos)
+        update_result = self.pre_commit.autoupdate_hooks(
+            folder_path, bleeding_edge, freeze, repos
+        )
         output = update_result.output
 
         if update_result.successful and not output:
             output = "No changes necessary.\n"
 
         if update_result.successful and update_result.output:
-            prune_result = self.pre_commit.remove_unused_hooks()
+            prune_result = self.pre_commit.remove_unused_hooks(folder_path)
             output = output + "\nRemoving unused environments:\n" + prune_result.output
 
         return UpdateResult(successful=update_result.successful, output=output)
 
-    def update(self):
+    def update(self, folder_path: Path):
         """
         Updates secureli with the latest local configuration.
         :return: ExecuteResult, indicating success or failure.
         """
-        secureli_config = self.config.load()
+        secureli_config = self.config.load(folder_path)
         output = "Updating .pre-commit-config.yaml...\n"
-        install_result = self.pre_commit.install(language=secureli_config.languages[0])
+        install_result = self.pre_commit.install(
+            folder_path, language=secureli_config.languages[0]
+        )
         if not install_result.successful:
             output += "Failed to update .pre-commit-config.yaml prior to hook install\n"
             return UpdateResult(successful=install_result.successful, output=output)
 
-        hook_install_result = self.pre_commit.update()
+        hook_install_result = self.pre_commit.update(folder_path)
         output += hook_install_result.output
 
         if (
@@ -77,7 +83,7 @@ class UpdaterService:
             output += "No changes necessary.\n"
 
         if hook_install_result.successful and hook_install_result.output:
-            prune_result = self.pre_commit.remove_unused_hooks()
+            prune_result = self.pre_commit.remove_unused_hooks(folder_path)
             output += "\nRemoving unused environments:\n" + prune_result.output
 
         return UpdateResult(successful=hook_install_result.successful, output=output)

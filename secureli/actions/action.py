@@ -85,15 +85,22 @@ class Action(ABC):
         :param always_yes: Assume "Yes" to all prompts
         """
 
-        if self.action_deps.secureli_config.verify() == VerifyConfigOutcome.OUT_OF_DATE:
-            update_config = self._update_secureli_config_only(always_yes)
+        if (
+            self.action_deps.secureli_config.verify(folder_path)
+            == VerifyConfigOutcome.OUT_OF_DATE
+        ):
+            update_config = self._update_secureli_config_only(folder_path, always_yes)
             if update_config.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
                 self.action_deps.echo.error(f"SeCureLI could not be verified.")
                 return VerifyResult(
                     outcome=update_config.outcome,
                 )
 
-        config = SecureliConfig() if reset else self.action_deps.secureli_config.load()
+        config = (
+            SecureliConfig()
+            if reset
+            else self.action_deps.secureli_config.load(folder_path)
+        )
 
         if not config.languages or not config.version_installed:
             return self._install_secureli(folder_path, always_yes)
@@ -109,14 +116,14 @@ class Action(ABC):
             # Validates the current .pre-commit-config.yaml against the generated config
             config_validation_result = (
                 self.action_deps.language_support.validate_config(
-                    languages=config.languages
+                    folder_path, languages=config.languages
                 )
             )
 
             # If config mismatch between available version and current version prompt for upgrade
             if not config_validation_result.successful:
                 self.action_deps.echo.print(config_validation_result.output)
-                return self._update_secureli(always_yes)
+                return self._update_secureli(folder_path, always_yes)
 
             self.action_deps.echo.print(
                 f"SeCureLI is installed and up-to-date (languages = {config.languages})"
@@ -127,7 +134,11 @@ class Action(ABC):
             )
 
     def _upgrade_secureli(
-        self, config: SecureliConfig, available_version: str, always_yes: bool
+        self,
+        folder_path: Path,
+        config: SecureliConfig,
+        available_version: str,
+        always_yes: bool,
     ) -> VerifyResult:
         """
         Installs SeCureLI into the given folder path and returns the new configuration
@@ -151,11 +162,13 @@ class Action(ABC):
             )
 
         try:
-            metadata = self.action_deps.language_support.apply_support(config.languages)
+            metadata = self.action_deps.language_support.apply_support(
+                folder_path, config.languages
+            )
 
             # Update config with new version installed and save it
             config.version_installed = metadata.version
-            self.action_deps.secureli_config.save(config)
+            self.action_deps.secureli_config.save(folder_path, config)
             self.action_deps.echo.print("SeCureLI has been upgraded successfully")
             return VerifyResult(
                 outcome=VerifyOutcome.UPGRADE_SUCCEEDED,
@@ -209,7 +222,9 @@ class Action(ABC):
             languages = list(analyze_result.language_proportions.keys())
             self.action_deps.echo.print(f"Overall Detected Languages: {languages}")
 
-            metadata = self.action_deps.language_support.apply_support(languages)
+            metadata = self.action_deps.language_support.apply_support(
+                folder_path, languages
+            )
 
         except (ValueError, LanguageNotSupportedError, InstallFailedError) as e:
             self.action_deps.echo.error(
@@ -223,14 +238,14 @@ class Action(ABC):
             languages=languages,
             version_installed=metadata.version,
         )
-        self.action_deps.secureli_config.save(config)
+        self.action_deps.secureli_config.save(folder_path, config)
 
         if secret_test_id := metadata.security_hook_id:
             self.action_deps.echo.print(
                 f"{config.languages} supports secrets detection; running {secret_test_id}."
             )
             self.action_deps.scanner.scan_repo(
-                ScanMode.ALL_FILES, specific_test=secret_test_id
+                folder_path, ScanMode.ALL_FILES, specific_test=secret_test_id
             )
         else:
             self.action_deps.echo.warning(
@@ -247,7 +262,7 @@ class Action(ABC):
             analyze_result=analyze_result,
         )
 
-    def _update_secureli(self, always_yes: bool):
+    def _update_secureli(self, folder_path: Path, always_yes: bool):
         """
         Prompts the user to update to the latest secureli install.
         :param always_yes: Assume "Yes" to all prompts
@@ -264,7 +279,7 @@ class Action(ABC):
             self.action_deps.echo.print("\nUpdate declined.\n")
             return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)
 
-        update_result = self.action_deps.updater.update()
+        update_result = self.action_deps.updater.update(folder_path)
         details = update_result.output
         self.action_deps.echo.print(details)
 
@@ -273,7 +288,9 @@ class Action(ABC):
         else:
             return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
 
-    def _update_secureli_config_only(self, always_yes: bool) -> VerifyResult:
+    def _update_secureli_config_only(
+        self, folder_path: Path, always_yes: bool
+    ) -> VerifyResult:
         self.action_deps.echo.print("SeCureLI is using an out-of-date config.")
         response = always_yes or self.action_deps.echo.confirm(
             "Update config only now?",
@@ -286,8 +303,8 @@ class Action(ABC):
             )
 
         try:
-            updated_config = self.action_deps.secureli_config.update()
-            self.action_deps.secureli_config.save(updated_config)
+            updated_config = self.action_deps.secureli_config.update(folder_path)
+            self.action_deps.secureli_config.save(folder_path, updated_config)
 
             return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
         except:

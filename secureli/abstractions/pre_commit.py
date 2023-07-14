@@ -1,4 +1,5 @@
 import subprocess
+from pathlib import Path
 
 from typing import Optional
 
@@ -52,7 +53,7 @@ class PreCommitAbstraction:
     ):
         self.command_timeout_seconds = command_timeout_seconds
 
-    def install(self, language: str) -> InstallResult:
+    def install(self, folder_path: Path, language: str) -> InstallResult:
         """
         Identifies the template we hold for the specified language, writes it, installs it, and cleans up
         :param language: The language to identify a template for
@@ -60,7 +61,7 @@ class PreCommitAbstraction:
         :raises InstallFailedError if the template was found, but an error occurred installing it
         """
 
-        completed_process = subprocess.run(["pre-commit", "install"])
+        completed_process = subprocess.run(["pre-commit", "install"], cwd=folder_path)
         if completed_process.returncode != 0:
             raise InstallFailedError(
                 f"Installing the pre-commit script for {language} failed"
@@ -74,7 +75,7 @@ class PreCommitAbstraction:
         )
 
     def execute_hooks(
-        self, all_files: bool = False, hook_id: Optional[str] = None
+        self, folder_path: Path, all_files: bool = False, hook_id: Optional[str] = None
     ) -> ExecuteResult:
         """
         Execute the configured hooks against the repository, either against your staged changes
@@ -98,7 +99,9 @@ class PreCommitAbstraction:
         if hook_id:
             subprocess_args.append(hook_id)
 
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
+        completed_process = subprocess.run(
+            subprocess_args, stdout=subprocess.PIPE, cwd=folder_path
+        )
         output = (
             completed_process.stdout.decode("utf8") if completed_process.stdout else ""
         )
@@ -109,6 +112,7 @@ class PreCommitAbstraction:
 
     def autoupdate_hooks(
         self,
+        folder_path: Path,
         bleeding_edge: bool = False,
         freeze: bool = False,
         repos: Optional[list] = None,
@@ -149,7 +153,9 @@ class PreCommitAbstraction:
 
             subprocess_args.extend(repo_args)
 
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
+        completed_process = subprocess.run(
+            subprocess_args, stdout=subprocess.PIPE, cwd=folder_path
+        )
         output = (
             completed_process.stdout.decode("utf8") if completed_process.stdout else ""
         )
@@ -158,14 +164,16 @@ class PreCommitAbstraction:
         else:
             return ExecuteResult(successful=True, output=output)
 
-    def update(self) -> ExecuteResult:
+    def update(self, folder_path: Path) -> ExecuteResult:
         """
         Installs the hooks defined in pre-commit-config.yml.
         :return: ExecuteResult, indicating success or failure.
         """
         subprocess_args = ["pre-commit", "install-hooks", "--color", "always"]
 
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
+        completed_process = subprocess.run(
+            subprocess_args, stdout=subprocess.PIPE, cwd=folder_path
+        )
         output = (
             completed_process.stdout.decode("utf8") if completed_process.stdout else ""
         )
@@ -174,7 +182,7 @@ class PreCommitAbstraction:
         else:
             return ExecuteResult(successful=True, output=output)
 
-    def remove_unused_hooks(self) -> ExecuteResult:
+    def remove_unused_hooks(self, folder_path: Path) -> ExecuteResult:
         """
         Removes unused hook repos from the cache.  Pre-commit determines which flags are "unused" by comparing
         the repos to the pre-commit-config.yaml file.  Any cached hook repos that are not in the config file
@@ -183,7 +191,9 @@ class PreCommitAbstraction:
         """
         subprocess_args = ["pre-commit", "gc", "--color", "always"]
 
-        completed_process = subprocess.run(subprocess_args, stdout=subprocess.PIPE)
+        completed_process = subprocess.run(
+            subprocess_args, stdout=subprocess.PIPE, cwd=folder_path
+        )
         output = (
             completed_process.stdout.decode("utf8") if completed_process.stdout else ""
         )

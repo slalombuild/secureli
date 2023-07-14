@@ -110,7 +110,9 @@ class LanguageSupportService:
         # For now, just a passthrough to pre-commit hook abstraction
         return self._build_pre_commit_config(languages).version
 
-    def apply_support(self, languages: list[str]) -> LanguageMetadata:
+    def apply_support(
+        self, folder_path: Path, languages: list[str]
+    ) -> LanguageMetadata:
         """
         Applies Secure Build support for the provided language
         :param languages: list of languages to provide support for
@@ -119,13 +121,15 @@ class LanguageSupportService:
         as well as a secret-detection hook ID, if present.
         """
 
-        path_to_pre_commit_file = Path(".pre-commit-config.yaml")
+        path_to_pre_commit_file = Path(folder_path / ".pre-commit-config.yaml")
 
         # Raises a LanguageNotSupportedError if language doesn't resolve to a yaml file
         language_config_result = self._build_pre_commit_config(languages)
 
         if len(language_config_result.linter_configs) > 0:
-            self._write_pre_commit_configs(language_config_result.linter_configs)
+            self._write_pre_commit_configs(
+                folder_path, language_config_result.linter_configs
+            )
 
         with open(path_to_pre_commit_file, "w") as f:
             f.write(yaml.dump(language_config_result.config_data))
@@ -184,16 +188,18 @@ class LanguageSupportService:
 
         return None
 
-    def validate_config(self, languages: list[str]) -> ValidateConfigResult:
+    def validate_config(
+        self, folder_path: Path, languages: list[str]
+    ) -> ValidateConfigResult:
         """
         Validates that the current configuration matches the expected configuration generated
         by secureli.
         :param language: List of languages to validate against
         :return: Returns a boolean indicating whether the configs match
         """
-        current_config = yaml.dump(self.get_current_configuration())
+        current_config = yaml.dump(self.get_current_configuration(folder_path))
         generated_config = self._build_pre_commit_config(languages)
-        current_hash = self.get_current_config_hash()
+        current_hash = self.get_current_config_hash(folder_path)
         expected_hash = generated_config.version
         output = ""
 
@@ -229,19 +235,19 @@ class LanguageSupportService:
         repos = [create_repo(raw_repo) for raw_repo in config.get("repos", [])]
         return HookConfiguration(repos=repos)
 
-    def get_current_configuration(self):
+    def get_current_configuration(self, folder_path: Path):
         """
         Returns the contents of the .pre-commit-config.yaml file.  Note that this should be used to
         see the current state and not be used for any desired state actions.
         :return: Dictionary containing the contents of the .pre-commit-config.yaml file
         """
-        path_to_pre_commit_file = Path(".pre-commit-config.yaml")
+        path_to_pre_commit_file = Path(folder_path / ".pre-commit-config.yaml")
 
         with open(path_to_pre_commit_file, "r") as f:
             data = yaml.safe_load(f)
             return data
 
-    def get_current_config_hash(self) -> str:
+    def get_current_config_hash(self, folder_path: Path) -> str:
         """
         Returns a hash of the current .pre-commit-config.yaml file.  This hash is generated in the
         same way that we generate the version hash for the secureli config file so should be valid
@@ -249,7 +255,7 @@ class LanguageSupportService:
         the hash of the combined config.
         :return: Returns a hash derived from the
         """
-        config_data = yaml.dump(self.get_current_configuration())
+        config_data = yaml.dump(self.get_current_configuration(folder_path))
         config_hash = hash_config(config_data)
 
         return config_hash
@@ -436,7 +442,7 @@ class LanguageSupportService:
         return output
 
     def _write_pre_commit_configs(
-        self, all_linter_configs: list[LinterConfig]
+        self, folder_path: Path, all_linter_configs: list[LinterConfig]
     ) -> LanguageLinterWriteResult:
         """
         Install any config files for given language to support any pre-commit commands.
@@ -458,7 +464,9 @@ class LanguageSupportService:
                     config_name = list(config.keys())[0]
                     # generate relative file name and path.
                     config_file_name = f"{slugify(language_linter_configs.language)}.{config_name}.yaml"
-                    path_to_config_file = Path(f".secureli/{config_file_name}")
+                    path_to_config_file = Path(
+                        f"{folder_path}/.secureli/{config_file_name}"
+                    )
 
                     with open(path_to_config_file, "w") as f:
                         f.write(yaml.dump(config[config_name]))

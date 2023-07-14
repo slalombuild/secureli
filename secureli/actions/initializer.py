@@ -25,6 +25,6 @@ class InitializerAction(Action):
         """
         verify_result = self.verify_install(folder_path, reset, always_yes)
         if verify_result.outcome in ScanAction.halting_outcomes:
-            self.logging.failure(LogAction.init, verify_result.outcome)
+            self.logging.failure(folder_path, LogAction.init, verify_result.outcome)
         else:
-            self.logging.success(LogAction.init)
+            self.logging.success(folder_path, LogAction.init)
