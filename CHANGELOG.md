@@ -2,6 +2,24 @@
 
 <!--next-version-placeholder-->
 
+## v0.7.1 (2023-07-13)
+
+
+
+## v0.7.0 (2023-07-12)
+
+### Feature
+
+* Multi language support ([#182](https://github.com/slalombuild/secureli/issues/182)) ([`666fb44`](https://github.com/slalombuild/secureli/commit/666fb4432bf92703bd6bd7caa12c90e7cc273cfd))
+
+## v0.6.10 (2023-07-10)
+
+
+
+## v0.6.9 (2023-07-10)
+
+
+
 ## v0.6.8 (2023-07-10)
 
 

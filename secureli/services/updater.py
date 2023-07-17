@@ -62,9 +62,7 @@ class UpdaterService:
         """
         secureli_config = self.config.load()
         output = "Updating .pre-commit-config.yaml...\n"
-        install_result = self.pre_commit.install(
-            language=secureli_config.overall_language
-        )
+        install_result = self.pre_commit.install(language=secureli_config.languages[0])
         if not install_result.successful:
             output += "Failed to update .pre-commit-config.yaml prior to hook install\n"
             return UpdateResult(successful=install_result.successful, output=output)
