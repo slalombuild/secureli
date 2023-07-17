@@ -20,4 +20,5 @@ else
     git add ./Formula/secureli.rb
     git commit -m "Creating pull request with latest Secureli formula for version ${secureliVersion}"
     git push origin main --repo https://github.com/slalombuild/homebrew-secureli.git
+    gh release create v${secureliVersion}
 fi
