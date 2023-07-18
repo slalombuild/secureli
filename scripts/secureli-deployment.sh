@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -exo pipefail
 
-pip install requests jinja2 poetry python-semantic-release # TODO: Look into Dockerizing these tools so we're not pulling them down each pipeile run
+pip install requests jinja2 poetry python-semantic-release==7.34.6 # TODO: Look into Dockerizing these tools so we're not pulling them down each pipeile run
 export secureliVersion=$(semantic-release print-version --current)
 cd homebrew-secureli
 if git rev-parse "v${secureliVersion}" >/dev/null 2>&1; then
