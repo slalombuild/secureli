@@ -48,7 +48,7 @@ coverage = ">=6.5,<8.0"
 black = ">=22.10,<24.0"
 identify = "^2.5.7"
 poethepoet = ">=0.16.4,<0.22.0"
-python-semantic-release = "^7.33.1"
+python-semantic-release = ">=7.33.1,<9.0.0"
 
 [build-system]
 requires = ["poetry-core"]
