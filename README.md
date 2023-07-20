@@ -76,7 +76,7 @@ All you need to do is run:
 % secureli init
 ```
 
-Running secureli init will allow secureli to detect the languages in your repo, install pre-commit, install all the appropriate pre-commit hooks for your local repo, and run a scan for secrets in your local repo. 
+Running secureli init will allow secureli to detect the languages in your repo, install pre-commit, install all the appropriate pre-commit hooks for your local repo, and run a scan for secrets in your local repo.
 
 # Upgrade
 
