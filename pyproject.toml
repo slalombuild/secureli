@@ -22,7 +22,7 @@ secureli_init = "secureli init -y"
 install = "poetry install"
 lint = "black --check ."
 precommit = "pre-commit run -a"
-test = ["init", "lint", "coverage_run", "coverage_html"]
+test = ["init", "lint", "coverage_run", "coverage_report"]
 e2e = "bats tests/end-to-end/test.bats"
 
 [tool.poetry.dependencies]
