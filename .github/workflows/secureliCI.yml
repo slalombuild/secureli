@@ -66,6 +66,7 @@ jobs:
       env:
         GH_TOKEN: ${{ steps.app_token.outputs.token }}
       run: |
+        set -x
         pip install python-semantic-release
         git config user.name github-actions
         git config user.email github-actions@github.com
@@ -77,6 +78,7 @@ jobs:
       env:
         GH_TOKEN: ${{ steps.app_token.outputs.token }}
       run: |
+        set -x
         pip install python-semantic-release
         git config user.name github-actions
         git config user.email github-actions@github.com
