@@ -3,7 +3,7 @@
 # These jobs are specifically designed to test the codebase
 # and ensure that basic contributing from both mac and windows will work
 # Once both windows and mac builds are successful, the next steps will
-# - version the code, pushing the version back to the repo
+# - using semantic-version will version the code, pushing the version back to the repo
 # - push a package to pypi
 # - push a formula to the homebrew repo
 
@@ -69,7 +69,8 @@ jobs:
         pip install python-semantic-release
         git config user.name github-actions
         git config user.email github-actions@github.com
-        semantic-release publish --verbose
+        semantic-release -vv publish
+
     # A NOOP run on feature branches
     - name: Verify Semantic Release
       if: github.ref != 'refs/heads/main'
@@ -79,7 +80,7 @@ jobs:
         pip install python-semantic-release
         git config user.name github-actions
         git config user.email github-actions@github.com
-        semantic-release publish --noop --verbose
+        semantic-release publish -vv --noop
 
   secureli-publish:
     name: Upload release to PyPI
