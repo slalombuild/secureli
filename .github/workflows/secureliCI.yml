@@ -70,6 +70,7 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         semantic-release -vv publish
+
     # A NOOP run on feature branches
     - name: Verify Semantic Release
       if: github.ref != 'refs/heads/main'
