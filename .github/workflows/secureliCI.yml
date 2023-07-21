@@ -69,7 +69,7 @@ jobs:
         pip install python-semantic-release
         git config user.name github-actions
         git config user.email github-actions@github.com
-        semantic-release publish
+        semantic-release publish --verbose
     # A NOOP run on feature branches
     - name: Verify Semantic Release
       if: github.ref != 'refs/heads/main'
@@ -79,7 +79,7 @@ jobs:
         pip install python-semantic-release
         git config user.name github-actions
         git config user.email github-actions@github.com
-        semantic-release publish --noop
+        semantic-release publish --noop --verbose
 
   secureli-publish:
     name: Upload release to PyPI
