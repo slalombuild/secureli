@@ -83,6 +83,23 @@ jobs:
     #     git config user.email github-actions@github.com
     #     semantic-release publish -vv --noop
 
+  secureli-release-noop:
+    needs: [ build-linux, build-windows ]
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency: release
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          # github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+      - name: Python Semantic Release
+        uses: relekang/python-semantic-release@master
+        with:
+          root_options: -vv noop
+          # github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+
+
   secureli-release:
     needs: [ build-linux, build-windows ]
     if: github.ref == 'refs/heads/main'
