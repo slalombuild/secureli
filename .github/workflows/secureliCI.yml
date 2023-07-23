@@ -84,7 +84,7 @@ jobs:
     #     semantic-release publish -vv --noop
 
   secureli-release:
-    needs: [ build-linux build-windows ]
+    needs: [ build-linux, build-windows ]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     concurrency: release
