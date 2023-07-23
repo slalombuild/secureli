@@ -64,5 +64,5 @@ upload_to_repository = false
 prerelease = true
 parser_angular_default_level_bump = "patch"
 patch_tags = "fix,perf,docs,chore,chore(release)"
-build_command = "poetry build"
+# build_command = "poetry build"
 commit_message = "chore(release): Tag v{version} [skip ci]"
