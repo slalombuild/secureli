@@ -11,6 +11,8 @@ updates:
       interval: daily
     commit-message:
       prefix: "chore: pip"
+    ignore:
+      - dependency-name: "pydantic"
   - package-ecosystem: github-actions
     directory: /
     schedule:
