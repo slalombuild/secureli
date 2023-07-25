@@ -122,6 +122,7 @@ jobs:
         if: steps.release.outputs.released == 'true'
         with:
           github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+          tag: ${{ steps.release.outputs.tag }}
 
   secureli-publish:
     name: Upload release to PyPI
