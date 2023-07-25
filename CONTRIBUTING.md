@@ -284,6 +284,7 @@ A special thanks to everyone that has contributed to seCureLI so far:
 - Elliot Benjamin
 - Joel Carpenter
 - Raul Centeno
+- Sucha Chantaprasopsuk
 - Alex Diehl
 - Korey Earl
 - Martin Gallegos
