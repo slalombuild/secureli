@@ -110,8 +110,16 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+
       - name: Python Semantic Release
-        uses: relekang/python-semantic-release@master
+        id: release
+        uses: python-semantic-release/python-semantic-release@v8.0.0
+        with:
+          github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+
+      - name: Publish package distributions to GitHub Releases
+        uses: python-semantic-release/upload-to-gh-release@main
+        if: steps.release.outputs.released == 'true'
         with:
           github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
 
