@@ -97,13 +97,15 @@ class LoggingService:
         self,
         action: LogAction,
         details: str,
-        total_failure_count: Optional[int],
-        individual_failure_count: Optional[object],
+        total_failure_count: Optional[int] = None,
+        individual_failure_count: Optional[object] = None,
     ) -> LogEntry:
         """
         Capture a failure against an action, with details
         :param action: The action that failed
         :param details: Details about the failure
+        :param total_failure_count: The total failure count
+        :param individual_failure_count: The individual failure count
         """
         secureli_config = self.secureli_config.load()
         hook_config = (
