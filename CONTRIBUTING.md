@@ -22,13 +22,11 @@ SeCureLI has Slalom-maintained templates for security management of the followin
 - Java
 - Python
 - Terraform
-- TypeScript
-
-## Planned Languages
-
-SeCureLI is currently in alpha, with support for additional languages planned, including:
-
 - JavaScript
+- TypeScript
+- C#
+- Swift
+- Golang
 
 ## Python 3.9.9
 
