@@ -36,13 +36,13 @@ class ScanAction(Action):
         echo: EchoAbstraction,
         logging: LoggingService,
         scanner: ScannerService,
-        settings_repository: SecureliRepository,
+        # settings_repository: SecureliRepository,
     ):
         super().__init__(action_deps)
         self.scanner = scanner
         self.echo = echo
         self.logging = logging
-        self.settings = settings_repository
+        # self.settings = settings_repository
 
     def scan_repo(
         self,
@@ -108,7 +108,7 @@ class ScanAction(Action):
         :param failures: List of Failure objects representing linter failures
         :param always_yes: Assume "Yes" to all prompts
         """
-        settings = self.settings.load()
+        settings = self.action_deps.settings.load()
 
         ignore_fail_prompt = "Failures detected during scan.\n"
         ignore_fail_prompt += "Add an ignore rule?"
@@ -139,7 +139,7 @@ class ScanAction(Action):
                         failure=failure, always_yes=always_yes, settings_file=settings
                     )
 
-            self.settings.save(settings=settings)
+            self.action_deps.settings.save(settings=settings)
 
     def _add_ignore_for_failure(
         self,

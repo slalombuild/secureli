@@ -28,6 +28,7 @@ def action_deps(
     mock_language_support: MagicMock,
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
+    mock_settings: MagicMock,
     mock_updater: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
@@ -36,6 +37,7 @@ def action_deps(
         mock_language_support,
         mock_scanner,
         mock_secureli_config,
+        mock_settings,
         mock_updater,
     )
 

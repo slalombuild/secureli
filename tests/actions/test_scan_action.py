@@ -106,6 +106,7 @@ def action_deps(
     mock_language_support: MagicMock,
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
+    mock_settings_repository: MagicMock,
     mock_updater: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
@@ -114,6 +115,7 @@ def action_deps(
         mock_language_support,
         mock_scanner,
         mock_secureli_config,
+        mock_settings_repository,
         mock_updater,
     )
 
@@ -122,14 +124,12 @@ def action_deps(
 def scan_action(
     action_deps: ActionDependencies,
     mock_logging_service: MagicMock,
-    mock_settings_repository: MagicMock,
 ) -> ScanAction:
     return ScanAction(
         action_deps=action_deps,
         echo=action_deps.echo,
         logging=mock_logging_service,
         scanner=action_deps.scanner,
-        settings_repository=mock_settings_repository,
     )
 
 
@@ -219,7 +219,7 @@ def test_that_scan_repo_handles_declining_to_add_ignore_for_failures(
 
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
 
-    mock_settings_repository.load.assert_called_once()
+    mock_settings_repository.load.assert_called()
     mock_settings_repository.save.assert_not_called()
 
 

@@ -14,6 +14,7 @@ from secureli.repositories.secureli_config import (
     SecureliConfigRepository,
     VerifyConfigOutcome,
 )
+from secureli.repositories.settings import SecureliRepository
 from secureli.services.language_analyzer import LanguageAnalyzerService, AnalyzeResult
 from secureli.services.language_support import LanguageSupportService
 from secureli.services.scanner import ScannerService, ScanMode
@@ -59,6 +60,7 @@ class ActionDependencies:
         language_support: LanguageSupportService,
         scanner: ScannerService,
         secureli_config: SecureliConfigRepository,
+        settings: SecureliRepository,
         updater: UpdaterService,
     ):
         self.echo = echo
@@ -66,6 +68,7 @@ class ActionDependencies:
         self.language_support = language_support
         self.scanner = scanner
         self.secureli_config = secureli_config
+        self.settings = settings
         self.updater = updater
 
 
