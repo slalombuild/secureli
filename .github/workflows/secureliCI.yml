@@ -117,12 +117,15 @@ jobs:
         with:
           github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
 
-      - name: Publish package distributions to GitHub Releases
-        uses: python-semantic-release/upload-to-gh-release@main
-        if: steps.release.outputs.released == 'true'
-        with:
-          github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
-          tag: ${{ steps.release.outputs.tag }}
+#      - name: Publish package distributions to GitHub Releases
+#        uses: python-semantic-release/upload-to-gh-release@main
+#        if: steps.release.outputs.released == 'true'
+#        with:
+#          github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+#          tag: ${{ steps.release.outputs.tag }}
+
+      - name: Upload assets to GitHub Releases
+        run:  GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }} gh release upload ${{ steps.release.outputs.tag }} ./dist/secureli*
 
   secureli-publish:
     name: Upload release to PyPI
