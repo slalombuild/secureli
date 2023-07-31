@@ -1,3 +1,5 @@
+import unittest.mock as um
+from pathlib import Path
 from subprocess import CompletedProcess
 from unittest.mock import MagicMock
 
@@ -263,3 +265,20 @@ def test_that_pre_commit_remove_unused_hooks_properly_handles_failed_executions(
     execute_result = pre_commit.remove_unused_hooks()
 
     assert not execute_result.successful
+
+
+def test_that_pre_commit_install_creates_pre_commit_hook_for_secureli(
+    pre_commit: PreCommitAbstraction,
+):
+    with (
+        um.patch("builtins.open", um.mock_open()) as mock_open,
+        um.patch.object(Path, "exists") as mock_exists,
+        um.patch.object(Path, "chmod") as mock_chmod,
+        um.patch.object(Path, "stat"),
+    ):
+        mock_exists.return_value = True
+
+        pre_commit.install()
+
+        mock_open.assert_called_once()
+        mock_chmod.assert_called_once()

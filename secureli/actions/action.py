@@ -1,4 +1,3 @@
-import stat
 from abc import ABC
 from enum import Enum
 from pathlib import Path
@@ -9,6 +8,7 @@ import pydantic
 from secureli.abstractions.echo import EchoAbstraction, Color
 from secureli.abstractions.pre_commit import (
     InstallFailedError,
+    PreCommitAbstraction,
 )
 from secureli.repositories.secureli_config import (
     SecureliConfig,
@@ -229,15 +229,8 @@ class Action(ABC):
         )
         self.action_deps.secureli_config.save(config)
 
-        # Write pre-commit with invocation of `secureli scan`
-        pre_commit_hook = ".git/hooks/pre-commit"
-        with open(pre_commit_hook, "w") as f:
-            f.write("#!/bin/sh\n")
-            f.write("secureli scan\n")
-
-        # Make pre-commit executable
-        f = Path(pre_commit_hook)
-        f.chmod(f.stat().st_mode | stat.S_IEXEC)
+        # Create seCureLI pre-commit hook with invocation of `secureli scan`
+        self.action_deps.updater.pre_commit.install()
 
         if secret_test_id := metadata.security_hook_id:
             self.action_deps.echo.print(
