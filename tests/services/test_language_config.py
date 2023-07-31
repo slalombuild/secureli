@@ -142,6 +142,28 @@ def test_that_language_config_service_overrides_arguments_in_a_security_hook(
     assert "orig_arg" not in result.config_data
 
 
+def test_that_language_config_service_does_nothing_when_pre_commit_settings_is_empty(
+    language_config_service: LanguageConfigService,
+    mock_data_loader: MagicMock,
+):
+    def mock_loader_side_effect(resource):
+        # Language config file
+        return """
+            repos:
+            -   repo: http://sample-repo.com/baddie-finder
+                hooks:
+                -    id: baddie-finder-hook
+                     args:
+                        - orig_arg
+        """
+
+    mock_data_loader.side_effect = mock_loader_side_effect
+
+    result = language_config_service.get_language_config("Python")
+
+    assert "orig_arg" in result.config_data
+
+
 def test_that_language_config_service_overrides_arguments_do_not_apply_to_a_different_hook_id(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,

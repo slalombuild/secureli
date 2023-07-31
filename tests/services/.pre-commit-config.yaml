@@ -1,0 +1,7 @@
+repos:
+- hooks:
+  - id: baddie-finder
+  repo: http://sample-repo.com/baddie-finder
+- hooks:
+  - id: baddie-finder
+  repo: http://sample-repo.com/baddie-finder

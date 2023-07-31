@@ -1,4 +1,6 @@
+import stat
 import subprocess
+from pathlib import Path
 
 from typing import Optional
 
@@ -51,6 +53,21 @@ class PreCommitAbstraction:
         command_timeout_seconds: int,
     ):
         self.command_timeout_seconds = command_timeout_seconds
+
+    def install(self):
+        """
+        Creates the pre-commit hook file in the .git directory so that `secureli scan` is run on each commit
+        """
+
+        # Write pre-commit with invocation of `secureli scan`
+        pre_commit_hook = ".git/hooks/pre-commit"
+        with open(pre_commit_hook, "w") as f:
+            f.write("#!/bin/sh\n")
+            f.write("secureli scan\n")
+
+        # Make pre-commit executable
+        f = Path(pre_commit_hook)
+        f.chmod(f.stat().st_mode | stat.S_IEXEC)
 
     def execute_hooks(
         self, all_files: bool = False, hook_id: Optional[str] = None
