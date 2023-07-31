@@ -52,27 +52,6 @@ class PreCommitAbstraction:
     ):
         self.command_timeout_seconds = command_timeout_seconds
 
-    # def install(self, language: str) -> InstallResult:
-    #     """
-    #     Identifies the template we hold for the specified language, writes it, installs it, and cleans up
-    #     :param language: The language to identify a template for
-    #     :raises LanguageNotSupportedError if a pre-commit template cannot be found for the specified language
-    #     :raises InstallFailedError if the template was found, but an error occurred installing it
-    #     """
-    #
-    #     completed_process = subprocess.run(["pre-commit", "install"])
-    #     if completed_process.returncode != 0:
-    #         raise InstallFailedError(
-    #             f"Installing the pre-commit script for {language} failed"
-    #         )
-    #
-    #     # install_configs_result = self._install_pre_commit_configs(language)
-    #
-    #     return InstallResult(
-    #         successful=True,
-    #         # version_installed=language_config.version,
-    #     )
-
     def execute_hooks(
         self, all_files: bool = False, hook_id: Optional[str] = None
     ) -> ExecuteResult:
@@ -116,7 +95,7 @@ class PreCommitAbstraction:
         """
         Updates the precommit hooks but executing precommit's autoupdate command.  Additional info at
         https://pre-commit.com/#pre-commit-autoupdate
-        :param bleeding edge: True if updating to the bleeding edge of the default branch instead of
+        :param bleeding_edge: True if updating to the bleeding edge of the default branch instead of
         the latest tagged version (which is the default behavior)
         :param freeze: Set to True to store "frozen" hashes in rev instead of tag names.
         :param repos: List of repos (url as a string) to update. This is used to target specific repos instead of all repos.

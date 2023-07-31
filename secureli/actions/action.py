@@ -230,12 +230,13 @@ class Action(ABC):
         self.action_deps.secureli_config.save(config)
 
         # Write pre-commit with invocation of `secureli scan`
-        with open(".git/hooks/pre-commit", "w") as f:
+        pre_commit_hook = ".git/hooks/pre-commit"
+        with open(pre_commit_hook, "w") as f:
             f.write("#!/bin/sh\n")
             f.write("secureli scan\n")
 
         # Make pre-commit executable
-        f = Path(".git/hooks/pre-commit")
+        f = Path(pre_commit_hook)
         f.chmod(f.stat().st_mode | stat.S_IEXEC)
 
         if secret_test_id := metadata.security_hook_id:
