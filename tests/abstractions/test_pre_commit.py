@@ -80,23 +80,23 @@ def pre_commit(
     )
 
 
-def test_that_pre_commit_templates_are_loaded_for_supported_languages(
-    pre_commit: PreCommitAbstraction,
-    mock_subprocess: MagicMock,
-):
-    pre_commit.install("Python")
+# def test_that_pre_commit_templates_are_loaded_for_supported_languages(
+#     pre_commit: PreCommitAbstraction,
+#     mock_subprocess: MagicMock,
+# ):
+#     pre_commit.install("Python")
+#
+#     mock_subprocess.run.assert_called_with(["pre-commit", "install"])
 
-    mock_subprocess.run.assert_called_with(["pre-commit", "install"])
 
-
-def test_that_pre_commit_treats_failing_process_as_install_failed_error(
-    pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    mock_subprocess: MagicMock,
-):
-    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    with pytest.raises(InstallFailedError):
-        pre_commit.install("Python")
+# def test_that_pre_commit_treats_failing_process_as_install_failed_error(
+#     pre_commit: PreCommitAbstraction,
+#     mock_data_loader: MagicMock,
+#     mock_subprocess: MagicMock,
+# ):
+#     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
+#     with pytest.raises(InstallFailedError):
+#         pre_commit.install("Python")
 
 
 def test_that_pre_commit_executes_hooks_successfully(

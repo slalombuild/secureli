@@ -52,26 +52,26 @@ class PreCommitAbstraction:
     ):
         self.command_timeout_seconds = command_timeout_seconds
 
-    def install(self, language: str) -> InstallResult:
-        """
-        Identifies the template we hold for the specified language, writes it, installs it, and cleans up
-        :param language: The language to identify a template for
-        :raises LanguageNotSupportedError if a pre-commit template cannot be found for the specified language
-        :raises InstallFailedError if the template was found, but an error occurred installing it
-        """
-
-        completed_process = subprocess.run(["pre-commit", "install"])
-        if completed_process.returncode != 0:
-            raise InstallFailedError(
-                f"Installing the pre-commit script for {language} failed"
-            )
-
-        # install_configs_result = self._install_pre_commit_configs(language)
-
-        return InstallResult(
-            successful=True,
-            # version_installed=language_config.version,
-        )
+    # def install(self, language: str) -> InstallResult:
+    #     """
+    #     Identifies the template we hold for the specified language, writes it, installs it, and cleans up
+    #     :param language: The language to identify a template for
+    #     :raises LanguageNotSupportedError if a pre-commit template cannot be found for the specified language
+    #     :raises InstallFailedError if the template was found, but an error occurred installing it
+    #     """
+    #
+    #     completed_process = subprocess.run(["pre-commit", "install"])
+    #     if completed_process.returncode != 0:
+    #         raise InstallFailedError(
+    #             f"Installing the pre-commit script for {language} failed"
+    #         )
+    #
+    #     # install_configs_result = self._install_pre_commit_configs(language)
+    #
+    #     return InstallResult(
+    #         successful=True,
+    #         # version_installed=language_config.version,
+    #     )
 
     def execute_hooks(
         self, all_files: bool = False, hook_id: Optional[str] = None

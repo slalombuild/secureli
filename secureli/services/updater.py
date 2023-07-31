@@ -60,12 +60,12 @@ class UpdaterService:
         Updates secureli with the latest local configuration.
         :return: ExecuteResult, indicating success or failure.
         """
-        secureli_config = self.config.load()
+        # secureli_config = self.config.load()
         output = "Updating .pre-commit-config.yaml...\n"
-        install_result = self.pre_commit.install(language=secureli_config.languages[0])
-        if not install_result.successful:
-            output += "Failed to update .pre-commit-config.yaml prior to hook install\n"
-            return UpdateResult(successful=install_result.successful, output=output)
+        # install_result = self.pre_commit.install(language=secureli_config.languages[0])
+        # if not install_result.successful:
+        #     output += "Failed to update .pre-commit-config.yaml prior to hook install\n"
+        #     return UpdateResult(successful=install_result.successful, output=output)
 
         hook_install_result = self.pre_commit.update()
         output += hook_install_result.output
