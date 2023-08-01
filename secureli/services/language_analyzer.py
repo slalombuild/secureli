@@ -28,7 +28,7 @@ class AnalyzeResult(pydantic.BaseModel):
 
 class LanguageAnalyzerService:
     """
-    Analyzes a repository's visible files to determine which language SeCureLI is targeting.
+    Analyzes a repository's visible files to determine which language seCureLI is targeting.
     """
 
     def __init__(

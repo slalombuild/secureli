@@ -63,7 +63,7 @@ def test_that_initialize_repo_raises_value_error_without_any_supported_languages
     action.verify_install(test_folder_path, reset=True, always_yes=True)
 
     mock_echo.error.assert_called_with(
-        "SeCureLI could not be installed due to an error: No supported languages found in current repository"
+        "seCureLI could not be installed due to an error: No supported languages found in current repository"
     )
 
 
@@ -83,7 +83,7 @@ def test_that_initialize_repo_install_flow_selects_both_languages(
     action.verify_install(test_folder_path, reset=True, always_yes=True)
 
     mock_echo.print.assert_called_with(
-        "SeCureLI has been installed successfully (languages = ['RadLang', 'CoolLang'])"
+        "seCureLI has been installed successfully (languages = ['RadLang', 'CoolLang'])"
     )
 
 
@@ -193,7 +193,7 @@ def test_that_initialize_repo_selects_previously_selected_language(
     action.verify_install(test_folder_path, reset=False, always_yes=True)
 
     mock_echo.print.assert_called_once_with(
-        "SeCureLI is installed and up-to-date (languages = ['PreviousLang'])"
+        "seCureLI is installed and up-to-date (languages = ['PreviousLang'])"
     )
 
 
@@ -227,7 +227,7 @@ def test_that_initialize_repo_prompts_to_upgrade_config_if_old_schema(
 
     action.verify_install(test_folder_path, reset=False, always_yes=False)
 
-    mock_echo.error.assert_called_with("SeCureLI could not be verified.")
+    mock_echo.error.assert_called_with("seCureLI could not be verified.")
 
 
 def test_that_initialize_repo_updates_repo_config_if_old_schema(
@@ -266,7 +266,7 @@ def test_that_initialize_repo_auto_upgrades_when_out_of_sync(
 
     action.verify_install(test_folder_path, reset=False, always_yes=True)
 
-    mock_echo.print.assert_called_with("SeCureLI has been upgraded successfully")
+    mock_echo.print.assert_called_with("seCureLI has been upgraded successfully")
 
 
 def test_that_initialize_repo_reports_errors_when_upgrade_fails(
@@ -283,7 +283,7 @@ def test_that_initialize_repo_reports_errors_when_upgrade_fails(
 
     action.verify_install(test_folder_path, reset=False, always_yes=True)
 
-    mock_echo.error.assert_called_with("SeCureLI could not be upgraded due to an error")
+    mock_echo.error.assert_called_with("seCureLI could not be upgraded due to an error")
 
 
 def test_that_initialize_repo_reports_errors_when_schema_upgdate_fails(
@@ -298,7 +298,7 @@ def test_that_initialize_repo_reports_errors_when_schema_upgdate_fails(
 
     action.verify_install(test_folder_path, reset=False, always_yes=True)
 
-    mock_echo.error.assert_called_with("SeCureLI could not be verified.")
+    mock_echo.error.assert_called_with("seCureLI could not be verified.")
 
 
 def test_that_initialize_repo_is_aborted_by_the_user_if_the_process_is_canceled(
