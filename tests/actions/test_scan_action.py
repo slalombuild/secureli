@@ -407,7 +407,7 @@ def test_that_scan_repo_handles_missing_repo_while_adding_ignore_rule(
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
 
     mock_echo.print.assert_any_call(
-        "Unable to add an ignore for some-hook-id, SeCureLI was unable to identify the repo it belongs to."
+        "Unable to add an ignore for some-hook-id, seCureLI was unable to identify the repo it belongs to."
     )
 
 

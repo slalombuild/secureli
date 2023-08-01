@@ -61,7 +61,7 @@ default_ignored_extensions = [
 
 class RepoFilesSettings(BaseSettings):
     """
-    Settings that adjust how SeCureLI evaluates the consuming repository.
+    Settings that adjust how seCureLI evaluates the consuming repository.
     """
 
     max_file_size: int = Field(default=100000)
@@ -78,7 +78,7 @@ class EchoLevel(str, Enum):
 
 class EchoSettings(BaseSettings):
     """
-    Settings that affect how SeCureLI provides information to the user.
+    Settings that affect how seCureLI provides information to the user.
     """
 
     level: EchoLevel = Field(default=EchoLevel.error)
@@ -86,7 +86,7 @@ class EchoSettings(BaseSettings):
 
 class LanguageSupportSettings(BaseSettings):
     """
-    Settings that affect how SeCureLI performs language analysis and support.
+    Settings that affect how seCureLI performs language analysis and support.
     """
 
     command_timeout_seconds: int = Field(default=300)
@@ -115,7 +115,7 @@ class PreCommitRepo(BaseSettings):
 
 class PreCommitSettings(BaseSettings):
     """
-    Various adjustments that affect how SeCureLI configures the pre-commit system.
+    Various adjustments that affect how seCureLI configures the pre-commit system.
     """
 
     repos: list[PreCommitRepo] = Field(default=[])
