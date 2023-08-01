@@ -8,6 +8,7 @@ from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOu
 from secureli.services.language_analyzer import AnalyzeResult, SkippedFile
 from secureli.actions.action import Action, ActionDependencies, VerifyOutcome
 from secureli.services.language_support import LanguageMetadata, ValidateConfigResult
+from secureli.services.scanner import ScanResult, Failure
 from secureli.services.updater import UpdateResult
 
 test_folder_path = Path("does-not-matter")
@@ -102,6 +103,19 @@ def test_that_initialize_repo_install_flow_performs_security_analysis(
     action.verify_install(test_folder_path, reset=True, always_yes=True)
 
     mock_scanner.scan_repo.assert_called_once()
+
+
+def test_that_initialize_repo_install_flow_displays_security_analysis_results(
+    action: Action, action_deps: MagicMock, mock_scanner: MagicMock
+):
+    mock_scanner.scan_repo.return_value = ScanResult(
+        successful=False,
+        output="Detect secrets...Failed",
+        failures=[Failure(repo="repo", id="id", file="file")],
+    )
+    action.verify_install(test_folder_path, reset=True, always_yes=True)
+
+    action_deps.echo.print.assert_any_call("Detect secrets...Failed")
 
 
 def test_that_initialize_repo_install_flow_skips_security_analysis_if_unavailable(

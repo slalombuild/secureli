@@ -232,9 +232,13 @@ class Action(ABC):
             self.action_deps.echo.print(
                 f"{config.languages} supports secrets detection; running {secret_test_id}."
             )
-            self.action_deps.scanner.scan_repo(
+
+            scan_result = self.action_deps.scanner.scan_repo(
                 ScanMode.ALL_FILES, specific_test=secret_test_id
             )
+
+            self.action_deps.echo.print(f"{scan_result.output}")
+
         else:
             self.action_deps.echo.warning(
                 f"{config.languages} does not support secrets detection, skipping"
