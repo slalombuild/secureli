@@ -104,6 +104,8 @@ jobs:
     permissions:
       id-token: write
       contents: write
+    outputs:
+      uploaded: ${{ steps.upload.outputs.uploaded }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -117,16 +119,20 @@ jobs:
           github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
 
       - name: Upload assets to GitHub Releases
+        id: upload
         run: |
           if test -n "$(find . -maxdepth 1 -name './dist/secureli*' -print -quit)"
           then
             export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
             gh release upload ${{ steps.release.outputs.tag }} ./dist/secureli*
+            echo "uploaded=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "uploaded=false" >> "$GITHUB_OUTPUT"
           fi
 
   secureli-publish:
     name: Upload release to PyPI
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && needs.secureli-release.outputs.uploaded
     runs-on: ubuntu-latest
     needs: secureli-release
     permissions:
@@ -144,11 +150,11 @@ jobs:
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        skip_existing: true
+        skip-existing: true
 
   deploy:
     name: Upload Homebrew Formula
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && needs.secureli-release.outputs.uploaded
     runs-on: ubuntu-latest
     needs: secureli-release
     steps:
