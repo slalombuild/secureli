@@ -27,7 +27,7 @@ class VerifyConfigOutcome(str, Enum):
 
 
 class SecureliConfigRepository:
-    """Save and retrieve the SeCureLI configuration"""
+    """Save and retrieve the seCureLI configuration"""
 
     def save(self, secureli_config: SecureliConfig):
         """
@@ -41,7 +41,7 @@ class SecureliConfigRepository:
 
     def load(self) -> SecureliConfig:
         """
-        Load the SeCureLI config from the expected configuration file path or return a new
+        Load the seCureLI config from the expected configuration file path or return a new
         configuration object, capable of being modified and saved via the `save` method
         """
         secureli_folder_path = self._initialize_secureli_directory()

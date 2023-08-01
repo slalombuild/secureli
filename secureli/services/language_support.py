@@ -200,9 +200,9 @@ class LanguageSupportService:
         config_matches = current_hash == expected_hash
 
         if not config_matches:
-            output += "SeCureLI has detected that the .pre-commit-config.yaml file does not match the expected configuration.\n"
+            output += "seCureLI has detected that the .pre-commit-config.yaml file does not match the expected configuration.\n"
             output += "This often occurs when the .pre-commit-config.yaml file has been modified directly.\n"
-            output += "All changes to SeCureLI's configuration should be performed through the .secureli.yaml file.\n"
+            output += "All changes to seCureLI's configuration should be performed through the .secureli.yaml file.\n"
             output += "\n"
             output += self._compare_repo_versions(
                 current_config=yaml.safe_load(current_config),

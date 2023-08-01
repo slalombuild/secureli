@@ -56,7 +56,7 @@ class ScanOuput(pydantic.BaseModel):
 
 class ScannerService:
     """
-    Scans the repo according to the repo's SeCureLI config
+    Scans the repo according to the repo's seCureLI config
     """
 
     def __init__(self, pre_commit: PreCommitAbstraction):
@@ -66,7 +66,7 @@ class ScannerService:
         self, scan_mode: ScanMode, specific_test: Optional[str] = None
     ) -> ScanResult:
         """
-        Scans the repo according to the repo's SeCureLI config
+        Scans the repo according to the repo's seCureLI config
         :param scan_mode: Whether to scan the staged files (i.e., the files about to be
         committed) or the entire repository
         :param specific_test: If specified, limits the pre-commit execution to a single hook.

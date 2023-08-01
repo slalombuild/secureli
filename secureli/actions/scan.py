@@ -53,7 +53,7 @@ class ScanAction(Action):
     ):
         """
         Scans the given directory, or offers to go through initialization if that has not
-        been completed yet. Also detects if we're out of date with SeCureLI's config
+        been completed yet. Also detects if we're out of date with seCureLI's config
         for the language and offers to upgrade (though continues on if the user says no)
         :param folder_path: The folder path to initialize the repo for
         :param scan_mode: How we should scan the files in the repo (i.e. staged only or all)
@@ -116,7 +116,7 @@ class ScanAction(Action):
         # Ask if the user wants to ignore a failure
         if always_yes:
             always_yes_warning = "Hook failures were detected but the scan was initiated with the 'yes' flag.\n"
-            always_yes_warning += "SeCureLI cannot automatically add ignore rules with the 'yes' flag enabled.\n"
+            always_yes_warning += "seCureLI cannot automatically add ignore rules with the 'yes' flag enabled.\n"
             always_yes_warning += "Re-run your scan without the 'yes' flag to add an ignore rule for one of the\n"
             always_yes_warning += "detected failures."
 
@@ -195,7 +195,7 @@ class ScanAction(Action):
         """
         id = failure.id
         self.echo.print(
-            "Unable to add an ignore for {}, SeCureLI was unable to identify the repo it belongs to.".format(
+            "Unable to add an ignore for {}, seCureLI was unable to identify the repo it belongs to.".format(
                 failure.id
             )
         )
