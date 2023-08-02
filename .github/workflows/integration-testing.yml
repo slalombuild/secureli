@@ -14,7 +14,7 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
-    - name: Install Secureli
+    - name: Install seCureLI
       run: |
         pip3 --version #any pip havers?
         pip3 install secureli
@@ -41,7 +41,7 @@ jobs:
         rm -rf '/usr/local/bin/python3-config'
         rm -rf '/usr/local/bin/python3.11'
         rm -rf '/usr/local/bin/python3.11-config'
-    - name: Set up Secureli
+    - name: Set up seCureLI
       run: |
         brew tap slalombuild/secureli
         HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install secureli
@@ -50,7 +50,7 @@ jobs:
       with:
         repository: pypa/pip
         path: pip
-    - name: Init Secureli
+    - name: Init seCureLI
       run: cd pip && secureli init --yes && secureli scan
   test-pypi-osx:
     runs-on: macos-latest

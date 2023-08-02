@@ -4,7 +4,7 @@ To install, navigate to a git repository and run [bold cyan]secureli init[/].
 
 
 
-SeCureLI currently supports the following languages:
+seCureLI currently supports the following languages:
 
 {% for language in supported_languages %}
     - [bold magenta]{{ language }}[/]

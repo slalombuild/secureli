@@ -1,6 +1,6 @@
-# Contributing to Secureli - text change
+# Contributing to seCurelI - text change
 
-Thank you for making Secureli better! We look forward to your contribution.
+Thank you for making seCureLI better! We look forward to your contribution.
 
 ## Pull Requests
 
@@ -17,7 +17,7 @@ Valid prefixes are defined in the [angular documentation](https://github.com/ang
 
 ## Supported Languages
 
-SeCureLI has Slalom-maintained templates for security management of the following languages.
+seCureLI has Slalom-maintained templates for security management of the following languages.
 
 - Java
 - Python
@@ -83,7 +83,7 @@ As of June 9, 2023, this repo is being built on and tested against Ubuntu Jammy 
   - Restart your terminal
 
 
-- Clone the secureli repo
+- Clone the seCureLI repo
   - `git clone https://github.com/slalombuild/secureli.git`
   - `cd secureli`
 
@@ -118,7 +118,7 @@ As of June 9, 2023, this repo is being built on and tested against Ubuntu Jammy 
 - Open the new repo with PyCharm
   - `charm .` (assuming you set up the Command-line Launcher above 👆)
   - Say “OK” when prompted to create a poetry environment using pyproject.toml
-- From the terminal, either in PyCharm or in the OS Terminal, type `secureli` and press Enter. You should see SeCureLI’s documentation appear, with a list of supported commands.
+- From the terminal, either in PyCharm or in the OS Terminal, type `secureli` and press Enter. You should see seCureLI’s documentation appear, with a list of supported commands.
 
 ## Create your first Run/Debug Configuration
 
@@ -141,14 +141,14 @@ As of June 9, 2023, this repo is being built on and tested against Ubuntu Jammy 
 
 ```jsx
 /secureli-LF8LGRWE-py3.9/bin/python secureli/main.py init
-SeCureLI has not been setup yet. Initialize SeCureLI now? [Y/n]:
+seCureLI has not been setup yet. Initialize seCureLI now? [Y/n]:
 ```
 
-This is a working prompt. If this is your first time running this, answer “Y” (or just press enter) and you’ll install SeCureLI for SeCureLI! It should detect the python repo and setup your pre-commit hooks. Your output should look like this:
+This is a working prompt. If this is your first time running this, answer “Y” (or just press enter) and you’ll install seCureLI for seCureLI! It should detect the python repo and setup your pre-commit hooks. Your output should look like this:
 
 ```commandline
 % secureli/main.py init
-SeCureLI has not been setup yet. Initialize SeCureLI now? [Y/n]: Y
+seCureLI has not been setup yet. Initialize seCureLI now? [Y/n]: Y
 Detected the following languages:
 - Python: 93%
 - YAML: 7%
@@ -185,11 +185,11 @@ the seCureLI Docker images you will need to inject your organizations self-signe
 at build time. To do this, simply place the root certificate (*.crt format) into the `ca-certificates` directory of this
 repository.  Everything in the ca-certificates directory will be picked up and trusted by the images built.
 
-# SeCureLI Architecture
+# seCureLI Architecture
 
-![SeCureLI’s architecture, including actions, services, APIs and repositories. Oh, my!](images/secureli-architecture.png)
+![seCureLI’s architecture, including actions, services, APIs and repositories. Oh, my!](images/secureli-architecture.png)
 
-SeCureLI’s architecture, including actions, services, APIs and repositories. Oh, my!
+seCureLI’s architecture, including actions, services, APIs and repositories. Oh, my!
 
 ## Main
 
@@ -205,7 +205,7 @@ Unit tests of the Container ensure that the various providers are validated and 
 
 ## Actions
 
-Actions orchestrate other services and respond to user interactions with SeCureLI. One CLI command is handled by a single Action, and a single action only handles one command. They are one for one.
+Actions orchestrate other services and respond to user interactions with seCureLI. One CLI command is handled by a single Action, and a single action only handles one command. They are one for one.
 
 Unit tests of Actions are done with mock services and abstractions.
 

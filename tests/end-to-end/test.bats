@@ -5,8 +5,8 @@ setup() {
 
 @test "can run secureli init" {
     run python secureli/main.py init -ry
-    assert_output --partial 'SeCureLI has not been setup yet.'
-    assert_output --partial 'SeCureLI has been installed successfully (language = Python)'
+    assert_output --partial 'seCureLI has not been setup yet.'
+    assert_output --partial 'seCureLI has been installed successfully (language = Python)'
 }
 
 @test "can run secureli scan" {

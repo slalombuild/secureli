@@ -60,7 +60,7 @@ class Container(containers.DeclarativeContainer):
     )
 
     """
-    Loads and saves the SeCureLI output configuration, which stores the outcomes of
+    Loads and saves the seCureLI output configuration, which stores the outcomes of
     running init and other derived data.
     """
     secureli_config_repository = providers.Factory(SecureliConfigRepository)

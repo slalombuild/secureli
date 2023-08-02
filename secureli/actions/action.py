@@ -73,7 +73,7 @@ class ActionDependencies:
 
 
 class Action(ABC):
-    """The base Action class for any action that can analyze, install and update SeCureLI's configuration."""
+    """The base Action class for any action that can analyze, install and update seCureLI's configuration."""
 
     def __init__(self, action_deps: ActionDependencies):
         self.action_deps = action_deps
@@ -82,7 +82,7 @@ class Action(ABC):
         self, folder_path: Path, reset: bool, always_yes: bool
     ) -> VerifyResult:
         """
-        Installs, upgrades or verifies the current SeCureLI installation
+        Installs, upgrades or verifies the current seCureLI installation
         :param folder_path: The folder path to initialize the repo for
         :param reset: If true, disregard existing configuration and start fresh
         :param always_yes: Assume "Yes" to all prompts
@@ -91,7 +91,7 @@ class Action(ABC):
         if self.action_deps.secureli_config.verify() == VerifyConfigOutcome.OUT_OF_DATE:
             update_config = self._update_secureli_config_only(always_yes)
             if update_config.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
-                self.action_deps.echo.error(f"SeCureLI could not be verified.")
+                self.action_deps.echo.error(f"seCureLI could not be verified.")
                 return VerifyResult(
                     outcome=update_config.outcome,
                 )
@@ -122,7 +122,7 @@ class Action(ABC):
                 return self._update_secureli(always_yes)
 
             self.action_deps.echo.print(
-                f"SeCureLI is installed and up-to-date (languages = {config.languages})"
+                f"seCureLI is installed and up-to-date (languages = {config.languages})"
             )
             return VerifyResult(
                 outcome=VerifyOutcome.UP_TO_DATE,
@@ -133,8 +133,8 @@ class Action(ABC):
         self, config: SecureliConfig, available_version: str, always_yes: bool
     ) -> VerifyResult:
         """
-        Installs SeCureLI into the given folder path and returns the new configuration
-        :param config: The existing configuration for SeCureLI
+        Installs seCureLI into the given folder path and returns the new configuration
+        :param config: The existing configuration for seCureLI
         :param available_version: The new version we're upgrading to
         :param always_yes: Assume "Yes" to all prompts
         :return: The new SecureliConfig after upgrade or None if upgrading did not complete
@@ -159,14 +159,14 @@ class Action(ABC):
             # Update config with new version installed and save it
             config.version_installed = metadata.version
             self.action_deps.secureli_config.save(config)
-            self.action_deps.echo.print("SeCureLI has been upgraded successfully")
+            self.action_deps.echo.print("seCureLI has been upgraded successfully")
             return VerifyResult(
                 outcome=VerifyOutcome.UPGRADE_SUCCEEDED,
                 config=config,
             )
         except InstallFailedError:
             self.action_deps.echo.error(
-                "SeCureLI could not be upgraded due to an error"
+                "seCureLI could not be upgraded due to an error"
             )
             return VerifyResult(
                 outcome=VerifyOutcome.UPGRADE_FAILED,
@@ -175,14 +175,14 @@ class Action(ABC):
 
     def _install_secureli(self, folder_path: Path, always_yes: bool) -> VerifyResult:
         """
-        Installs SeCureLI into the given folder path and returns the new configuration
+        Installs seCureLI into the given folder path and returns the new configuration
         :param folder_path: The folder path to initialize the repo for
         :param always_yes: Assume "Yes" to all prompts
         :return: The new SecureliConfig after install or None if installation did not complete
         """
-        self.action_deps.echo.print("SeCureLI has not been setup yet.")
+        self.action_deps.echo.print("seCureLI has not been setup yet.")
         response = always_yes or self.action_deps.echo.confirm(
-            "Initialize SeCureLI now?",
+            "Initialize seCureLI now?",
             default_response=True,
         )
         if not response:
@@ -216,7 +216,7 @@ class Action(ABC):
 
         except (ValueError, LanguageNotSupportedError, InstallFailedError) as e:
             self.action_deps.echo.error(
-                f"SeCureLI could not be installed due to an error: {str(e)}"
+                f"seCureLI could not be installed due to an error: {str(e)}"
             )
             return VerifyResult(
                 outcome=VerifyOutcome.INSTALL_FAILED,
@@ -245,7 +245,7 @@ class Action(ABC):
             )
 
         self.action_deps.echo.print(
-            f"SeCureLI has been installed successfully (languages = {config.languages})"
+            f"seCureLI has been installed successfully (languages = {config.languages})"
         )
 
         return VerifyResult(
@@ -281,7 +281,7 @@ class Action(ABC):
             return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
 
     def _update_secureli_config_only(self, always_yes: bool) -> VerifyResult:
-        self.action_deps.echo.print("SeCureLI is using an out-of-date config.")
+        self.action_deps.echo.print("seCureLI is using an out-of-date config.")
         response = always_yes or self.action_deps.echo.confirm(
             "Update config only now?",
             default_response=True,

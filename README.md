@@ -1,17 +1,17 @@
-[![SeCureLI Logo](https://repository-images.githubusercontent.com/606206029/aa43fa10-689b-4f8a-a6dc-2e9ed06d9e2d)](https://github.com/slalombuild/secureli)
+[![seCureLI Logo](https://repository-images.githubusercontent.com/606206029/aa43fa10-689b-4f8a-a6dc-2e9ed06d9e2d)](https://github.com/slalombuild/secureli)
 
-<h1 align="center">SeCureLI</h1>
+<h1 align="center">seCureLI</h1>
 <strong>The Builder's Security CLI</strong>
 
-SeCureLI is a tool that enables you to experience the delight of building products by helping you get ideas from your head into working software as frictionlessly as possible, in a reliable, secure, scalable, and observable way.
+seCureLI is a tool that enables you to experience the delight of building products by helping you get ideas from your head into working software as frictionlessly as possible, in a reliable, secure, scalable, and observable way.
 
-SeCureLI:
+seCureLI:
 
 - scans your local repo for secrets before you commit code to a remote repository
 - installs linters based on the code of your project to support security and coding best practices
 - configures all the hooks needed so you don’t have to
 
-SeCureLI isn’t a magic tool that makes things secure because you have it. It enables a lot of other tools that you could set up individually and helps you as a builder write better code.
+seCureLI isn’t a magic tool that makes things secure because you have it. It enables a lot of other tools that you could set up individually and helps you as a builder write better code.
 
 Looking to contribute? Read our [CONTRIBUTING.md](https://github.com/slalombuild/secureli/blob/main/CONTRIBUTING.md)
 
@@ -76,7 +76,7 @@ All you need to do is run:
 % secureli init
 ```
 
-Running secureli init will allow secureli to detect the languages in your repo, install pre-commit, install all the appropriate pre-commit hooks for your local repo, and run a scan for secrets in your local repo.
+Running `secureli init` will allow seCureLI to detect the languages in your repo, install pre-commit, install all the appropriate pre-commit hooks for your local repo, and run a scan for secrets in your local repo.
 
 # Upgrade
 
@@ -104,18 +104,18 @@ secureli update --latest
 
 # Configuration
 
-SeCureLI is configurable via a .secureli.yaml file present in the root of your local repository.
+seCureLI is configurable via a .secureli.yaml file present in the root of your local repository.
 
 ## .secureli.yaml
 
 ### top level
 
 | Key                | Description                                                                                                                      |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| `repo_files`       | Affects how SeCureLI will interpret the repository, both for language analysis and as it executes various linters.               |
-| `echo`             | Adjusts how SeCureLI will print information to the user.                                                                         |
-| `language_support` | Affects SeCureLI's language analysis and support phase.                                                                          |
-| `pre_commit`       | Enables various overrides and options for SeCureLI's configuration and usage of pre-commit, the underlying code analysis system. |
+| ------------------ |----------------------------------------------------------------------------------------------------------------------------------|
+| `repo_files`       | Affects how seCureLI will interpret the repository, both for language analysis and as it executes various linters.               |
+| `echo`             | Adjusts how seCureLI will print information to the user.                                                                         |
+| `language_support` | Affects seCureLI's language analysis and support phase.                                                                          |
+| `pre_commit`       | Enables various overrides and options for seCureLI's configuration and usage of pre-commit, the underlying code analysis system. |
 
 ### repo_files
 
@@ -157,7 +157,7 @@ SeCureLI is configurable via a .secureli.yaml file present in the root of your l
 
 ## Using Observability Platform to Show Secret Detection Statistics
 
-SeCureLI can send secret detection events to an observability platform, such as New Relic.  Other platforms may also work, but have not been tested.
+seCureLI can send secret detection events to an observability platform, such as New Relic.  Other platforms may also work, but have not been tested.
 Should you need seCureLI to work with other platforms, please create a new issue in github, or contribute to the open source project.
 
 ### Steps for New Relic

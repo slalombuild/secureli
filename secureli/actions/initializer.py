@@ -6,7 +6,7 @@ from secureli.services.logging import LoggingService, LogAction
 
 
 class InitializerAction(Action):
-    """The action for the SeCureLI `init` command, orchestrating services and outputs results"""
+    """The action for the seCureLI `init` command, orchestrating services and outputs results"""
 
     def __init__(
         self,
@@ -18,7 +18,7 @@ class InitializerAction(Action):
 
     def initialize_repo(self, folder_path: Path, reset: bool, always_yes: bool):
         """
-        Initializes SeCureLI for the specified folder path
+        Initializes seCureLI for the specified folder path
         :param folder_path: The folder path to initialize the repo for
         :param reset: If true, disregard existing configuration and start fresh
         :param always_yes: Assume "Yes" to all prompts
