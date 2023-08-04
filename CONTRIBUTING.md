@@ -1,4 +1,4 @@
-# Contributing to seCurelI - text change
+# Contributing to seCureLI
 
 Thank you for making seCureLI better! We look forward to your contribution.
 
