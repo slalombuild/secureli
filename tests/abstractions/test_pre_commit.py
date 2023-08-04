@@ -1,13 +1,13 @@
+import unittest.mock as um
+from pathlib import Path
 from subprocess import CompletedProcess
 from unittest.mock import MagicMock
 
 import pytest
-import yaml
 from pytest_mock import MockerFixture
 
 from secureli.abstractions.pre_commit import (
     PreCommitAbstraction,
-    InstallFailedError,
 )
 from secureli.repositories.settings import (
     PreCommitSettings,
@@ -78,25 +78,6 @@ def pre_commit(
     return PreCommitAbstraction(
         command_timeout_seconds=300,
     )
-
-
-def test_that_pre_commit_templates_are_loaded_for_supported_languages(
-    pre_commit: PreCommitAbstraction,
-    mock_subprocess: MagicMock,
-):
-    pre_commit.install("Python")
-
-    mock_subprocess.run.assert_called_with(["pre-commit", "install"])
-
-
-def test_that_pre_commit_treats_failing_process_as_install_failed_error(
-    pre_commit: PreCommitAbstraction,
-    mock_data_loader: MagicMock,
-    mock_subprocess: MagicMock,
-):
-    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    with pytest.raises(InstallFailedError):
-        pre_commit.install("Python")
 
 
 def test_that_pre_commit_executes_hooks_successfully(
@@ -225,7 +206,6 @@ def test_that_pre_commit_autoupdate_hooks_ignores_repos_when_repos_is_a_dict(
     mock_subprocess: MagicMock,
 ):
     test_repos = {}
-    test_repos_string = "string"
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
     execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
 
@@ -285,3 +265,20 @@ def test_that_pre_commit_remove_unused_hooks_properly_handles_failed_executions(
     execute_result = pre_commit.remove_unused_hooks()
 
     assert not execute_result.successful
+
+
+def test_that_pre_commit_install_creates_pre_commit_hook_for_secureli(
+    pre_commit: PreCommitAbstraction,
+):
+    with (
+        um.patch("builtins.open", um.mock_open()) as mock_open,
+        um.patch.object(Path, "exists") as mock_exists,
+        um.patch.object(Path, "chmod") as mock_chmod,
+        um.patch.object(Path, "stat"),
+    ):
+        mock_exists.return_value = True
+
+        pre_commit.install()
+
+        mock_open.assert_called_once()
+        mock_chmod.assert_called_once()

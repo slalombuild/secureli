@@ -130,9 +130,6 @@ class LanguageSupportService:
         with open(path_to_pre_commit_file, "w") as f:
             f.write(yaml.dump(language_config_result.config_data))
 
-        # Start by identifying and installing the appropriate pre-commit template (if we have one)
-        self.pre_commit_hook.install(languages)
-
         # Add .secureli/ to the gitignore folder if needed
         self.git_ignore.ignore_secureli_files()
 

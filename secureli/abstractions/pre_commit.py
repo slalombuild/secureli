@@ -1,4 +1,6 @@
+import stat
 import subprocess
+from pathlib import Path
 
 from typing import Optional
 
@@ -52,26 +54,20 @@ class PreCommitAbstraction:
     ):
         self.command_timeout_seconds = command_timeout_seconds
 
-    def install(self, language: str) -> InstallResult:
+    def install(self):
         """
-        Identifies the template we hold for the specified language, writes it, installs it, and cleans up
-        :param language: The language to identify a template for
-        :raises LanguageNotSupportedError if a pre-commit template cannot be found for the specified language
-        :raises InstallFailedError if the template was found, but an error occurred installing it
+        Creates the pre-commit hook file in the .git directory so that `secureli scan` is run on each commit
         """
 
-        completed_process = subprocess.run(["pre-commit", "install"])
-        if completed_process.returncode != 0:
-            raise InstallFailedError(
-                f"Installing the pre-commit script for {language} failed"
-            )
+        # Write pre-commit with invocation of `secureli scan`
+        pre_commit_hook = ".git/hooks/pre-commit"
+        with open(pre_commit_hook, "w") as f:
+            f.write("#!/bin/sh\n")
+            f.write("secureli scan\n")
 
-        # install_configs_result = self._install_pre_commit_configs(language)
-
-        return InstallResult(
-            successful=True,
-            # version_installed=language_config.version,
-        )
+        # Make pre-commit executable
+        f = Path(pre_commit_hook)
+        f.chmod(f.stat().st_mode | stat.S_IEXEC)
 
     def execute_hooks(
         self, all_files: bool = False, hook_id: Optional[str] = None
@@ -116,7 +112,7 @@ class PreCommitAbstraction:
         """
         Updates the precommit hooks but executing precommit's autoupdate command.  Additional info at
         https://pre-commit.com/#pre-commit-autoupdate
-        :param bleeding edge: True if updating to the bleeding edge of the default branch instead of
+        :param bleeding_edge: True if updating to the bleeding edge of the default branch instead of
         the latest tagged version (which is the default behavior)
         :param freeze: Set to True to store "frozen" hashes in rev instead of tag names.
         :param repos: List of repos (url as a string) to update. This is used to target specific repos instead of all repos.
