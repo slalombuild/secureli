@@ -102,10 +102,14 @@ jobs:
       - name: Upload assets to GitHub Releases
         id: upload
         run: |
-          if [[ -n "$(find . -maxdepth 1 -name 'secureli*' -print -quit)" ]]; then
-            export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
-            gh release upload ${{ steps.release.outputs.tag }} ./dist/secureli*
-            echo "uploaded=true" >> "$GITHUB_OUTPUT"
+          if [[ -d dist ]]; then
+            if [[ -n "$(find ./dist -name 'secureli*' -print -quit)" ]]; then
+              export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
+              gh release upload ${{ steps.release.outputs.tag }} ./dist/secureli*
+              echo "uploaded=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "uploaded=false" >> "$GITHUB_OUTPUT"
+            fi
           else
             echo "uploaded=false" >> "$GITHUB_OUTPUT"
           fi
