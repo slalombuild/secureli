@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from _pytest.python_api import raises
 from pytest_mock import MockerFixture
 
 from secureli.abstractions.pre_commit import (
@@ -247,3 +248,49 @@ def test_that_language_support_writes_linter_config_files(
     metadata = language_support_service.apply_support(["RadLang"])
 
     assert metadata.security_hook_id == "baddie-finder"
+
+
+def test_that_language_support_throws_exception_when_language_config_file_cannot_be_opened(
+    language_support_service: LanguageSupportService,
+    mock_language_config_service: MagicMock,
+    mock_open: MagicMock,
+):
+    mock_language_config_service.get_language_config.return_value = LanguagePreCommitResult(
+        language="Python",
+        version="abc123",
+        linter_config=LoadLinterConfigsResult(
+            successful=True,
+            linter_data=[{"key": {"example"}}],
+        ),
+        config_data="""
+                repos:
+                -   repo: http://sample-repo.com/baddie-finder
+                    hooks:
+                    -    id: baddie-finder
+                """,
+    )
+
+    mock_open.side_effect = IOError
+
+    with raises(IOError):
+        language_support_service.apply_support(["RadLang"])
+
+
+def test_that_language_support_handles_invalid_language_config(
+    language_support_service: LanguageSupportService,
+    mock_language_config_service: MagicMock,
+):
+    mock_language_config_service.get_language_config.return_value = (
+        LanguagePreCommitResult(
+            language="Python",
+            version="abc123",
+            linter_config=LoadLinterConfigsResult(
+                successful=True,
+                linter_data=[{"key": {"example"}}],
+            ),
+            config_data="",
+        )
+    )
+
+    metadata = language_support_service.apply_support(["RadLang"])
+    assert metadata.security_hook_id is None

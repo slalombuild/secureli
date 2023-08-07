@@ -272,7 +272,7 @@ def test_that_update_secureli_handles_declined_update(
     mock_echo.confirm.return_value = False
     update_result = action._update_secureli(always_yes=False)
 
-    assert update_result.outcome == "update-canceled"
+    assert update_result.outcome == VerifyOutcome.UPDATE_CANCELED
 
 
 def test_that_update_secureli_handles_failed_update(
@@ -280,8 +280,20 @@ def test_that_update_secureli_handles_failed_update(
     mock_updater: MagicMock,
 ):
     mock_updater.update.return_value = UpdateResult(
-        successful=False, outcome="update failed"
+        successful=False, outcome=VerifyOutcome.UPDATE_FAILED
     )
     update_result = action._update_secureli(always_yes=False)
 
-    assert update_result.outcome == "update-failed"
+    assert update_result.outcome == VerifyOutcome.UPDATE_FAILED
+
+
+def test_that_update_secureli_handles_successful_update(
+    action: Action,
+    mock_updater: MagicMock,
+):
+    mock_updater.update.return_value = UpdateResult(
+        successful=True, outcome=VerifyOutcome.UPDATE_SUCCEEDED
+    )
+    update_result = action._update_secureli(always_yes=False)
+
+    assert update_result.outcome == VerifyOutcome.UPDATE_SUCCEEDED
