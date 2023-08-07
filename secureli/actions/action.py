@@ -8,7 +8,6 @@ import pydantic
 from secureli.abstractions.echo import EchoAbstraction, Color
 from secureli.abstractions.pre_commit import (
     InstallFailedError,
-    PreCommitAbstraction,
 )
 from secureli.repositories.secureli_config import (
     SecureliConfig,
@@ -17,10 +16,10 @@ from secureli.repositories.secureli_config import (
 )
 from secureli.repositories.settings import SecureliRepository
 from secureli.services.language_analyzer import LanguageAnalyzerService, AnalyzeResult
+from secureli.services.language_config import LanguageNotSupportedError
 from secureli.services.language_support import LanguageSupportService
 from secureli.services.scanner import ScannerService, ScanMode
 from secureli.services.updater import UpdaterService
-from secureli.services.language_config import LanguageNotSupportedError
 
 
 class VerifyOutcome(str, Enum):
@@ -102,75 +101,11 @@ class Action(ABC):
         if not config.languages or not config.version_installed:
             return self._install_secureli(folder_path, always_yes)
         else:
-            available_version = self.action_deps.language_support.version_for_language(
-                config.languages
-            )
-
-            # Check for a new version and prompt for upgrade if available
-            if available_version != config.version_installed:
-                return self._upgrade_secureli(config, available_version, always_yes)
-
-            # Validates the current .pre-commit-config.yaml against the generated config
-            config_validation_result = (
-                self.action_deps.language_support.validate_config(
-                    languages=config.languages
-                )
-            )
-
-            # If config mismatch between available version and current version prompt for upgrade
-            if not config_validation_result.successful:
-                self.action_deps.echo.print(config_validation_result.output)
-                return self._update_secureli(always_yes)
-
             self.action_deps.echo.print(
                 f"seCureLI is installed and up-to-date (languages = {config.languages})"
             )
             return VerifyResult(
                 outcome=VerifyOutcome.UP_TO_DATE,
-                config=config,
-            )
-
-    def _upgrade_secureli(
-        self, config: SecureliConfig, available_version: str, always_yes: bool
-    ) -> VerifyResult:
-        """
-        Installs seCureLI into the given folder path and returns the new configuration
-        :param config: The existing configuration for seCureLI
-        :param available_version: The new version we're upgrading to
-        :param always_yes: Assume "Yes" to all prompts
-        :return: The new SecureliConfig after upgrade or None if upgrading did not complete
-        """
-        self.action_deps.echo.print(
-            f"The config version installed is {config.version_installed}, but the latest is {available_version}"
-        )
-        response = always_yes or self.action_deps.echo.confirm(
-            "Upgrade now?",
-            default_response=True,
-        )
-        if not response:
-            self.action_deps.echo.warning("User canceled upgrade process")
-            return VerifyResult(
-                outcome=VerifyOutcome.UPGRADE_CANCELED,
-                config=config,
-            )
-
-        try:
-            metadata = self.action_deps.language_support.apply_support(config.languages)
-
-            # Update config with new version installed and save it
-            config.version_installed = metadata.version
-            self.action_deps.secureli_config.save(config)
-            self.action_deps.echo.print("seCureLI has been upgraded successfully")
-            return VerifyResult(
-                outcome=VerifyOutcome.UPGRADE_SUCCEEDED,
-                config=config,
-            )
-        except InstallFailedError:
-            self.action_deps.echo.error(
-                "seCureLI could not be upgraded due to an error"
-            )
-            return VerifyResult(
-                outcome=VerifyOutcome.UPGRADE_FAILED,
                 config=config,
             )
 
