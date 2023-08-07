@@ -97,7 +97,6 @@ class Container(containers.DeclarativeContainer):
     language_config_service = providers.Factory(
         LanguageConfigService,
         data_loader=read_resource,
-        pre_commit_settings=config.pre_commit,
         command_timeout_seconds=config.language_support.command_timeout_seconds,
         ignored_file_patterns=secureli_ignored_file_patterns,
     )

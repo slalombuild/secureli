@@ -9,29 +9,6 @@ from pytest_mock import MockerFixture
 from secureli.abstractions.pre_commit import (
     PreCommitAbstraction,
 )
-from secureli.repositories.settings import (
-    PreCommitSettings,
-    PreCommitRepo,
-    PreCommitHook,
-)
-
-
-@pytest.fixture()
-def settings_dict() -> dict:
-    return PreCommitSettings(
-        repos=[
-            PreCommitRepo(
-                url="http://example-repo.com/",
-                hooks=[
-                    PreCommitHook(
-                        id="hook-id",
-                        arguments=None,
-                        additional_args=None,
-                    )
-                ],
-            )
-        ]
-    ).dict()
 
 
 @pytest.fixture()

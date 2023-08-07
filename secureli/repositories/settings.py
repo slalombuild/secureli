@@ -1,10 +1,9 @@
-from pathlib import Path
-from typing import Optional, Literal
 from enum import Enum
+from pathlib import Path
+from typing import Optional
+
 import yaml
-
 from pydantic import BaseModel, BaseSettings, Field
-
 
 default_ignored_extensions = [
     # Images
@@ -130,7 +129,6 @@ class SecureliFile(BaseModel):
     repo_files: Optional[RepoFilesSettings]
     echo: Optional[EchoSettings]
     language_support: Optional[LanguageSupportSettings] = Field(default=None)
-    pre_commit: Optional[PreCommitSettings] = Field(default=None)
 
 
 class SecureliRepository:
