@@ -6,10 +6,7 @@ from typing import Optional
 import pydantic
 
 from secureli.abstractions.echo import EchoAbstraction, Color
-from secureli.abstractions.pre_commit import (
-    InstallFailedError,
-    PreCommitAbstraction,
-)
+from secureli.abstractions.pre_commit import InstallFailedError
 from secureli.repositories.secureli_config import (
     SecureliConfig,
     SecureliConfigRepository,
@@ -230,7 +227,7 @@ class Action(ABC):
         self.action_deps.secureli_config.save(config)
 
         # Create seCureLI pre-commit hook with invocation of `secureli scan`
-        self.action_deps.updater.pre_commit.install()
+        self.action_deps.updater.pre_commit.install(folder_path)
 
         if secret_test_id := metadata.security_hook_id:
             self.action_deps.echo.print(
@@ -238,7 +235,7 @@ class Action(ABC):
             )
 
             scan_result = self.action_deps.scanner.scan_repo(
-                ScanMode.ALL_FILES, specific_test=secret_test_id
+                folder_path, ScanMode.ALL_FILES, specific_test=secret_test_id
             )
 
             self.action_deps.echo.print(f"{scan_result.output}")

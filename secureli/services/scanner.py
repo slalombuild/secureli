@@ -63,7 +63,10 @@ class ScannerService:
         self.pre_commit = pre_commit
 
     def scan_repo(
-        self, scan_mode: ScanMode, specific_test: Optional[str] = None
+        self,
+        folder_path: Path,
+        scan_mode: ScanMode,
+        specific_test: Optional[str] = None,
     ) -> ScanResult:
         """
         Scans the repo according to the repo's seCureLI config
@@ -74,7 +77,9 @@ class ScannerService:
         :return: A ScanResult object containing whether we succeeded and any error
         """
         all_files = True if scan_mode == ScanMode.ALL_FILES else False
-        execute_result = self.pre_commit.execute_hooks(all_files, hook_id=specific_test)
+        execute_result = self.pre_commit.execute_hooks(
+            folder_path, all_files, hook_id=specific_test
+        )
         parsed_output = self._parse_scan_ouput(output=execute_result.output)
 
         return ScanResult(
