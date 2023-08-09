@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Optional
-
+from typing_extensions import Annotated
 import typer
 from typer import Option
 
@@ -48,12 +48,15 @@ def init(
         "-y",
         help="Say 'yes' to every prompt automatically without input",
     ),
-    directory: Optional[str] = Option(
-        ".",
-        "--directory",
-        "-d",
-        help="Run secureli against a specific directory",
-    ),
+    directory: Annotated[
+        Optional[Path],
+        Option(
+            ".",
+            "--directory",
+            "-d",
+            help="Run secureli against a specific directory",
+        ),
+    ] = ".",
 ):
     """
     Detect languages and initialize pre-commit hooks and linters for the project
@@ -81,12 +84,15 @@ def scan(
         "-t",
         help="Limit the scan to a specific hook ID from your pre-commit config",
     ),
-    directory: Optional[str] = Option(
-        ".",
-        "--directory",
-        "-d",
-        help="Run secureli against a specific directory",
-    ),
+    directory: Annotated[
+        Optional[Path],
+        Option(
+            ".",
+            "--directory",
+            "-d",
+            help="Run secureli against a specific directory",
+        ),
+    ] = ".",
 ):
     """
     Performs an explicit check of the repository to detect security issues without remote logging.
@@ -110,12 +116,15 @@ def update(
         "-l",
         help="Update the installed pre-commit hooks to their latest versions",
     ),
-    directory: Optional[str] = Option(
-        ".",
-        "--directory",
-        "-d",
-        help="Run secureli against a specific directory",
-    ),
+    directory: Annotated[
+        Optional[Path],
+        Option(
+            ".",
+            "--directory",
+            "-d",
+            help="Run secureli against a specific directory",
+        ),
+    ] = ".",
 ):
     """
     Update linters, configuration, and all else needed to maintain a secure repository.
