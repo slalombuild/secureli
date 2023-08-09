@@ -55,7 +55,6 @@ def init(
         help="Run secureli against a specific directory",
     ),
 ):
-
     """
     Detect languages and initialize pre-commit hooks and linters for the project
     """
