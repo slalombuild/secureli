@@ -15,6 +15,8 @@ from secureli.repositories.settings import (
     PreCommitHook,
 )
 
+test_folder_path = Path("does-not-matter")
+
 
 @pytest.fixture()
 def settings_dict() -> dict:
@@ -85,7 +87,7 @@ def test_that_pre_commit_executes_hooks_successfully(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.execute_hooks()
+    execute_result = pre_commit.execute_hooks(test_folder_path)
 
     assert execute_result.successful
     assert "--all-files" not in mock_subprocess.run.call_args_list[0].args[0]
@@ -96,7 +98,7 @@ def test_that_pre_commit_executes_hooks_successfully_including_all_files(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.execute_hooks(all_files=True)
+    execute_result = pre_commit.execute_hooks(test_folder_path, all_files=True)
 
     assert execute_result.successful
     assert "--all-files" in mock_subprocess.run.call_args_list[0].args[0]
@@ -107,7 +109,7 @@ def test_that_pre_commit_executes_hooks_and_reports_failures(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    execute_result = pre_commit.execute_hooks()
+    execute_result = pre_commit.execute_hooks(test_folder_path)
 
     assert not execute_result.successful
 
@@ -117,7 +119,7 @@ def test_that_pre_commit_executes_a_single_hook_if_specified(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    pre_commit.execute_hooks(hook_id="detect-secrets")
+    pre_commit.execute_hooks(test_folder_path, hook_id="detect-secrets")
 
     assert mock_subprocess.run.call_args_list[0].args[0][-1] == "detect-secrets"
 
@@ -128,7 +130,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks()
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path)
 
     assert execute_result.successful
 
@@ -138,7 +140,7 @@ def test_that_pre_commit_autoupdate_hooks_properly_handles_failed_executions(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    execute_result = pre_commit.autoupdate_hooks()
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path)
 
     assert not execute_result.successful
 
@@ -148,7 +150,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_bleeding_ed
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(bleeding_edge=True)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, bleeding_edge=True)
 
     assert execute_result.successful
     assert "--bleeding-edge" in mock_subprocess.run.call_args_list[0].args[0]
@@ -159,7 +161,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_freeze(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(freeze=True)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, freeze=True)
 
     assert execute_result.successful
     assert "--freeze" in mock_subprocess.run.call_args_list[0].args[0]
@@ -171,7 +173,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_repos(
 ):
     test_repos = ["some-repo-url"]
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
 
     assert execute_result.successful
     assert "--repo some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
@@ -183,7 +185,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_multiple_re
 ):
     test_repos = ["some-repo-url", "some-other-repo-url"]
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
 
     assert execute_result.successful
     assert "--repo some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
@@ -196,7 +198,7 @@ def test_that_pre_commit_autoupdate_hooks_fails_with_repos_containing_non_string
 ):
     test_repos = [{"something": "something-else"}]
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
 
     assert not execute_result.successful
 
@@ -207,7 +209,7 @@ def test_that_pre_commit_autoupdate_hooks_ignores_repos_when_repos_is_a_dict(
 ):
     test_repos = {}
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
 
     assert execute_result.successful
     assert "--repo {}" not in mock_subprocess.run.call_args_list[0].args[0]
@@ -219,7 +221,7 @@ def test_that_pre_commit_autoupdate_hooks_converts_repos_when_repos_is_a_string(
 ):
     test_repos = "string"
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(repos=test_repos)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
 
     assert execute_result.successful
     assert "--repo string" in mock_subprocess.run.call_args_list[0].args[0]
@@ -231,7 +233,7 @@ def test_that_pre_commit_update_executes_successfully(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.update()
+    execute_result = pre_commit.update(test_folder_path)
 
     assert execute_result.successful
 
@@ -241,7 +243,7 @@ def test_that_pre_commit_update_properly_handles_failed_executions(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    execute_result = pre_commit.update()
+    execute_result = pre_commit.update(test_folder_path)
 
     assert not execute_result.successful
 
@@ -252,7 +254,7 @@ def test_that_pre_commit_remove_unused_hookss_executes_successfully(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.remove_unused_hooks()
+    execute_result = pre_commit.remove_unused_hooks(test_folder_path)
 
     assert execute_result.successful
 
@@ -262,7 +264,7 @@ def test_that_pre_commit_remove_unused_hooks_properly_handles_failed_executions(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    execute_result = pre_commit.remove_unused_hooks()
+    execute_result = pre_commit.remove_unused_hooks(test_folder_path)
 
     assert not execute_result.successful
 
@@ -278,7 +280,7 @@ def test_that_pre_commit_install_creates_pre_commit_hook_for_secureli(
     ):
         mock_exists.return_value = True
 
-        pre_commit.install()
+        pre_commit.install(test_folder_path)
 
         mock_open.assert_called_once()
         mock_chmod.assert_called_once()
