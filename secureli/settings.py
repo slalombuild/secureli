@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import pydantic
 import yaml
@@ -8,7 +8,6 @@ from secureli.repositories.settings import (
     RepoFilesSettings,
     EchoSettings,
     LanguageSupportSettings,
-    PreCommitSettings,
 )
 
 
@@ -41,7 +40,6 @@ class Settings(pydantic.BaseSettings):
     repo_files: RepoFilesSettings = RepoFilesSettings()
     echo: EchoSettings = EchoSettings()
     language_support: LanguageSupportSettings = LanguageSupportSettings()
-    pre_commit: PreCommitSettings = PreCommitSettings()
 
     class Config:
         env_file_encoding = "utf-8"

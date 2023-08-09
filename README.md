@@ -40,13 +40,13 @@ pip install secureli
 
 Once installed you can see the latest documentation for seCureLI by entering the following on a command prompt:
 
-```python
+```bash
 % secureli --help
 ```
 
 You will see a list of commands and descriptions of each. You can also pull up documentation for each command with the same pattern. For example:
 
-```python
+```bash
 % secureli init --help
 
  Usage: secureli init [OPTIONS]
@@ -62,7 +62,7 @@ You will see a list of commands and descriptions of each. You can also pull up d
 
 When invoking these commands, you can combine the short versions into a single flag. For example, the following commands are equivalent:
 
-```python
+```bash
 % secureli init --reset --yes
 % secureli init -ry
 ```
@@ -72,7 +72,7 @@ After seCureLI is installed, you can use it to configure your local git reposito
 
 All you need to do is run:
 
-```commandline
+```bash
 % secureli init
 ```
 
@@ -110,17 +110,16 @@ seCureLI is configurable via a .secureli.yaml file present in the root of your l
 
 ### top level
 
-| Key                | Description                                                                                                                      |
-| ------------------ |----------------------------------------------------------------------------------------------------------------------------------|
-| `repo_files`       | Affects how seCureLI will interpret the repository, both for language analysis and as it executes various linters.               |
-| `echo`             | Adjusts how seCureLI will print information to the user.                                                                         |
-| `language_support` | Affects seCureLI's language analysis and support phase.                                                                          |
-| `pre_commit`       | Enables various overrides and options for seCureLI's configuration and usage of pre-commit, the underlying code analysis system. |
+| Key                | Description                                                                                                        |
+|--------------------|--------------------------------------------------------------------------------------------------------------------|
+| `repo_files`       | Affects how seCureLI will interpret the repository, both for language analysis and as it executes various linters. |
+| `echo`             | Adjusts how seCureLI will print information to the user.                                                           |
+| `language_support` | Affects seCureLI's language analysis and support phase.                                                            |
 
 ### repo_files
 
 | Key                       | Description                                                                                                                                                                                                                                                             |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|---------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `max_file_size`           | A number in bytes. Files over this size will not be considered during language analysis, for speed purposes. Default: 100000                                                                                                                                            |
 | `ignored_file_extensions` | Which file extensions not to consider during language analysis.                                                                                                                                                                                                         |
 | `exclude_file_patterns`   | Which file patterns to ignore during language analysis and code analysis execution. Use a typical file pattern you might find in a .gitignore file, such as `*.py` or `tests/`. Certain patterns you will have to wrap in double-quotes for the entry to be valid YAML. |
@@ -128,32 +127,9 @@ seCureLI is configurable via a .secureli.yaml file present in the root of your l
 ### echo
 
 | Key     | Description                                                                                                                                        |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+|---------|----------------------------------------------------------------------------------------------------------------------------------------------------|
 | `level` | The log level to display to the user. Defaults to ERROR, which includes `error` and `print` messages, without including warnings or info messages. |
 
-### pre_commit
-
-| Key                | Description                                                                                                                                                                                                                               |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `repos`            | A set of template-based Pre-Commit Repos to configure with overrides, identified by URL. These override repo-configurations stored in the template, and attempting to modify a repo not configured into the template will have no effect. |
-| `suppressed_repos` | A set of template-based Pre-Commit Repo URLs to completely remove from the final configuration. These remove repo configurations stored in the template, removing a repo not stored in the template will be ignored.                      |
-
-### pre_commit.repos
-
-| Key                   | Description                                                                                                                                            |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `url`                 | The identifying URL of the repo being leveraged by pre-commit, within which one or more hooks can be leveraged.                                        |
-| `hooks`               | A set of hooks associated with the specified repository to override. See the next section for what we can configure there.                             |
-| `suppressed_hook_ids` | A set of hook IDs to remove from the repository as configured within the template. Hook IDs not present in the template configuration will be ignored. |
-
-### pre_commit.repos.hooks
-
-| Key                     | Description                                                                                                                                                                                                                                                                  |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                    | The identifying string of the pre-commit hook to override.                                                                                                                                                                                                                   |
-| `arguments`             | A set of arguments to provide to the pre-commit hook identified by `id`. These arguments overwrite any existing arguments.                                                                                                                                                   |
-| `additional_args`       | A set of arguments to provide to the pre-commit hook identified by `id`. These arguments are appended after an existing arguments.                                                                                                                                           |
-| `exclude_file_patterns` | A set of file patterns to provide to pre-commit to ignore for the purposes of this hook. Use a typical file pattern you might find in a .gitignore file, such as `*.py` or `tests/`. Certain patterns you will have to wrap in double-quotes for the entry to be valid YAML. |
 
 ## Using Observability Platform to Show Secret Detection Statistics
 
@@ -168,7 +144,7 @@ Should you need seCureLI to work with other platforms, please create a new issue
 - Once the above setup is complete, everytime seCureLI triggered, it should send a usage log to New Relic
 - In New Relic, you can create a dashboard of metric to see the number of times secret was caught using query such as
 
-```commandline
+```pre
 FROM Log Select sum(failure_count_details.detect_secrets) as 'Caught Secret Count'
 ```
 

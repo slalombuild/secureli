@@ -4,7 +4,6 @@ from secureli.services.secureli_ignore import SecureliIgnoreService
 from secureli.settings import (
     Settings,
     RepoFilesSettings,
-    PreCommitSettings,
     LanguageSupportSettings,
     EchoSettings,
 )
@@ -26,22 +25,15 @@ def language_support() -> LanguageSupportSettings:
 
 
 @pytest.fixture()
-def pre_commit() -> PreCommitSettings:
-    return PreCommitSettings()
-
-
-@pytest.fixture()
 def settings(
     repo_files: RepoFilesSettings,
     echo: EchoSettings,
     language_support: LanguageSupportSettings,
-    pre_commit: PreCommitSettings,
 ) -> Settings:
     return Settings(
         repo_files=repo_files,
         echo=echo,
         language_support=language_support,
-        pre_commit=pre_commit,
     )
 
 
