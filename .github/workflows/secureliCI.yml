@@ -88,23 +88,30 @@ jobs:
     outputs:
       uploaded: ${{ steps.upload.outputs.uploaded }}
     steps:
+      - name: Get App Token
+        uses: tibdex/github-app-token@v1
+        id: app_token
+        with:
+          app_id: 360953
+          private_key: ${{ secrets.ACTIONHELPER }}
+
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+          token: ${{ steps.app_token.outputs.token }}
 
       - name: Python Semantic Release
         id: release
         uses: python-semantic-release/python-semantic-release@v8.0.4
         with:
-          github_token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+          github_token: ${{ steps.app_token.outputs.token }}
 
       - name: Upload assets to GitHub Releases
         id: upload
         run: |
           if [[ -d dist ]]; then
             if [[ -n "$(find ./dist -name 'secureli*' -print -quit)" ]]; then
-              export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
+              export GH_TOKEN=${{ steps.app_token.outputs.token }}
               gh release upload ${{ steps.release.outputs.tag }} ./dist/secureli*
               echo "uploaded=true" >> "$GITHUB_OUTPUT"
             else
