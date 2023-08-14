@@ -44,9 +44,11 @@ jobs:
         private_key: ${{ secrets.ACTIONHELPER }}
 
     - name: Verify App Token
+      env:
+        APP_TOKEN: ${{ steps.app_token.outputs.token }}
       run: |
-        if "${{ steps.app_token.outputs.token }}" != ""; then
-          echo "${{ steps.app_token.outputs.token }}"
+        if "${APP_TOKEN}" != ""; then
+          echo "${APP_TOKEN}"
         else
           echo "TOKEN NOT SET"
         fi
