@@ -42,18 +42,6 @@ jobs:
       with:
         app_id: 360953
         private_key: ${{ secrets.ACTIONHELPER }}
-
-    - name: Verify App Token
-      env:
-        APP_TOKEN: ${{ steps.app_token.outputs.token }}
-      run: |
-        echo "${APP_TOKEN}"
-
-        for ((i=0;i<${#APP_TOKEN};i++)); do
-          char=${APP_TOKEN:i:1}
-          echo $char
-        done
-
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
