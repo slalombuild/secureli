@@ -80,7 +80,9 @@ class ScannerService:
         execute_result = self.pre_commit.execute_hooks(
             folder_path, all_files, hook_id=specific_test
         )
-        parsed_output = self._parse_scan_ouput(output=execute_result.output)
+        parsed_output = self._parse_scan_ouput(
+            folder_path, output=execute_result.output
+        )
 
         return ScanResult(
             successful=execute_result.successful,
@@ -88,7 +90,7 @@ class ScannerService:
             failures=parsed_output.failures,
         )
 
-    def _parse_scan_ouput(self, output: str = "") -> ScanOuput:
+    def _parse_scan_ouput(self, folder_path: Path, output: str = "") -> ScanOuput:
         """
         Parses the output from a scan and returns a list of Failure objects representing any
         hook rule failures during a scan.
@@ -97,7 +99,7 @@ class ScannerService:
         """
         failures = []
         failure_indexes = []
-        config_data = self._get_config()
+        config_data = self._get_config(folder_path)
 
         # Split the output up by each line and record the index of each failure
         output_by_line = output.split("\n")
@@ -191,12 +193,12 @@ class ScannerService:
 
         return OutputParseErrors.REPO_NOT_FOUND
 
-    def _get_config(self):
+    def _get_config(self, folder_path: Path):
         """
         Gets the contents of the .pre-commit-config file and returns it as a dict
         :return: Dict containing the contents of the .pre-commit-config.yaml file
         """
-        path_to_config = Path(".pre-commit-config.yaml")
+        path_to_config = folder_path / ".pre-commit-config.yaml"
         with open(path_to_config, "r") as f:
             data = yaml.safe_load(f)
             return data

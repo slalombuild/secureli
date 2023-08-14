@@ -156,11 +156,12 @@ class SecureliRepository:
         with open(self.secureli_file_path, "w") as f:
             yaml.dump(settings_dict, f)
 
-    def load(self) -> SecureliFile:
+    def load(self, folder_path: Path) -> SecureliFile:
         """
         Reads the contents of the .secureli.yaml file and returns it
         :return: SecureliFile containing the contents of the settings file
         """
+        self.secureli_file_path = folder_path / ".secureli.yaml"
         if not self.secureli_file_path.exists():
             return SecureliFile()
 

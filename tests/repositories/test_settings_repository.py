@@ -70,7 +70,7 @@ def test_that_settings_file_loads_settings_when_present(
     existent_path: MagicMock,
     settings_repository: SecureliRepository,
 ):
-    secureli_file = settings_repository.load()
+    secureli_file = settings_repository.load(existent_path)
 
     assert secureli_file.echo.level == EchoLevel.error
 
@@ -79,7 +79,7 @@ def test_that_settings_file_created_when_not_present(
     non_existent_path: MagicMock,
     settings_repository: SecureliRepository,
 ):
-    secureli_file = settings_repository.load()
+    secureli_file = settings_repository.load(non_existent_path)
 
     assert secureli_file is not None
 

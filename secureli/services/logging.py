@@ -7,6 +7,7 @@ from uuid import uuid4
 
 import pydantic
 
+import secureli.repositories.secureli_config as SecureliConfig
 from secureli.services.language_support import LanguageSupportService, HookConfiguration
 from secureli.repositories.secureli_config import SecureliConfigRepository
 from secureli.utilities.git_meta import current_branch_name, git_user_email, origin_url
@@ -130,7 +131,7 @@ class LoggingService:
 
     def _log(self, log_entry: LogEntry):
         """Commit a log entry to the branch log file"""
-        log_folder_path = Path(f".secureli/logs")
+        log_folder_path = Path(SecureliConfig.FOLDER_PATH / ".secureli/logs")
         path_to_log = log_folder_path / f"{current_branch_name()}"
 
         # Do not simply mkdir the log folder path, in case the branch name contains

@@ -6,7 +6,7 @@ from secureli.abstractions.pre_commit import ExecuteResult
 from secureli.services.scanner import ScannerService, ScanMode, OutputParseErrors
 from pytest_mock import MockerFixture
 
-test_folder_path = Path("does-not-matter")
+test_folder_path = Path(".")
 
 
 @pytest.fixture()

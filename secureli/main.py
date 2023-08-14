@@ -10,6 +10,7 @@ from secureli.container import Container
 from secureli.abstractions.echo import Color
 from secureli.resources import read_resource
 from secureli.settings import Settings
+import secureli.repositories.secureli_config as SecureliConfig
 
 # Create SetupAction outside of DI, as it's not yet available.
 setup_action = SetupAction(epilog_template_data=read_resource("epilog.md"))
@@ -61,6 +62,7 @@ def init(
     """
     Detect languages and initialize pre-commit hooks and linters for the project
     """
+    SecureliConfig.FOLDER_PATH = Path(directory)
     container.initializer_action().initialize_repo(Path(directory), reset, yes)
 
 
@@ -97,6 +99,7 @@ def scan(
     """
     Performs an explicit check of the repository to detect security issues without remote logging.
     """
+    SecureliConfig.FOLDER_PATH = Path(directory)
     container.scan_action().scan_repo(Path(directory), mode, yes, specific_test)
 
 
@@ -129,6 +132,7 @@ def update(
     """
     Update linters, configuration, and all else needed to maintain a secure repository.
     """
+    SecureliConfig.FOLDER_PATH = Path(directory)
     container.update_action().update_hooks(Path(directory), latest)
 
 
