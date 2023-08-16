@@ -64,19 +64,6 @@ jobs:
           poetry run poe precommit
           poetry run poe coverage
           poetry run secureli build
-        
-      - name: Get App Token
-        uses: tibdex/github-app-token@v1
-        id: app_token
-        with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
-
-      - env:
-          SECRET: ${{ steps.app_token.outputs.token }}
-        run: |
-          abbr_secret=${SECRET:0:10}
-          echo $abbr_secret
 
 
   secureli-release-noop:
