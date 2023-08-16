@@ -25,6 +25,7 @@ jobs:
     name: GH Release
     needs: [ build-test ]
     runs-on: ubuntu-latest
+    environment: publish
     concurrency: release
     permissions:
       id-token: write
@@ -36,8 +37,8 @@ jobs:
         uses: tibdex/github-app-token@v1
         id: app_token
         with:
-          app_id: 360953
-          private_key: ${{ secrets.ACTIONHELPER }}
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - uses: actions/checkout@v3
         with:
@@ -100,6 +101,7 @@ jobs:
     name: Upload Homebrew Formula
     if: needs.secureli-release.outputs.uploaded == 'true'
     runs-on: ubuntu-latest
+    environment: publish
     needs: secureli-release
     steps:
       - name: Display Inputs
@@ -109,8 +111,8 @@ jobs:
         uses: tibdex/github-app-token@v1
         id: app_token
         with:
-          app_id: 360953
-          private_key: ${{ secrets.ACTIONHELPER }}
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - uses: actions/checkout@v3
         with:
