@@ -58,7 +58,6 @@ jobs:
         poetry install
     - name: Run Tests
       run: |
-        export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
         poetry run poe precommit
         poetry run poe coverage
         poetry run secureli build
