@@ -18,7 +18,7 @@ on:
 jobs:
   build-test:
     name: Build & Test
-    uses: ./build_and_test.yml
+    uses: ./.github/workflows/build_and_test.yml
 
 
   secureli-release:
