@@ -3,8 +3,11 @@ name: PR Title Lint
 
 on:
   pull_request:
-    branches: [main]
-    types: [opened, edited, reopened, synchronize]
+    branches: [ main ]
+    types:
+      - opened
+      - edited
+      - reopened
 
 jobs:
   check_pr_title:
