@@ -58,7 +58,7 @@ jobs:
         poetry install
     - name: Run Tests
       run: |
-        export GH_TOKEN=${{ secrets.ADMIN_TOKEN_SASCHA }}
+        export GH_TOKEN=${{ steps.app_token.outputs.token }}
         poetry run poe precommit
         poetry run poe coverage
         poetry run secureli build
@@ -169,11 +169,11 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: slalombuild/homebrew-secureli
-        token: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+        token: ${{ steps.app_token.outputs.token }}
         path: homebrew-secureli
         ref: main
         fetch-depth: 0
     - name: Homebrew Formula Generation
       env:
-        GH_TOKEN: ${{ secrets.ADMIN_TOKEN_SASCHA }}
+        GH_TOKEN: ${{ steps.app_token.outputs.token }}
       run: ./scripts/secureli-deployment.sh
