@@ -5,6 +5,8 @@ import yaml
 
 from pydantic import BaseModel
 
+FOLDER_PATH = Path(".")
+
 
 class SecureliConfig(BaseModel):
     languages: Optional[list[str]]
@@ -46,6 +48,7 @@ class SecureliConfigRepository:
         """
         secureli_folder_path = self._initialize_secureli_directory()
         secureli_config_path = secureli_folder_path / "repo-config.yaml"
+
         if not secureli_config_path.exists():
             return SecureliConfig()
 
@@ -101,6 +104,7 @@ class SecureliConfigRepository:
         Creates the .secureli folder within the current directory if needed.
         :return: The folder path of the .secureli folder that either exists or was just created.
         """
-        secureli_folder_path = Path(".") / ".secureli"
+
+        secureli_folder_path = Path(FOLDER_PATH) / ".secureli"
         secureli_folder_path.mkdir(parents=True, exist_ok=True)
         return secureli_folder_path

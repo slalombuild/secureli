@@ -27,6 +27,7 @@ class RepoFilesRepository:
         :return: The visible files within the specified repo as a list of Path objects
         """
         git_path = folder_path / ".git"
+
         if not git_path.exists() or not git_path.is_dir():
             raise ValueError("The current folder is not a Git repository!")
 
