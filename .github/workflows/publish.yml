@@ -87,6 +87,12 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Set up Python 3.9
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
       - run: |
           pip install poetry
           poetry install
