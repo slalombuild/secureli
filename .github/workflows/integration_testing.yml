@@ -4,7 +4,7 @@
 name: Integration Testing
 
 on:
-  push
+  workflow_call:
 
 jobs:
   test-windows:

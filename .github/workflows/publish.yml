@@ -138,3 +138,8 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app_token.outputs.token }}
         run: ./scripts/secureli-deployment.sh
+
+
+  integration-testing:
+    name: Integration Testing
+    uses: ./.github/workflows/integration-testing.yml
