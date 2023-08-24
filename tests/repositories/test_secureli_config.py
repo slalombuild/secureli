@@ -1,8 +1,9 @@
+from pathlib import Path
 from unittest.mock import MagicMock
-
 import pytest
 from pytest_mock import MockerFixture
 
+import secureli.repositories.secureli_config as SecureliConfigAll
 from secureli.repositories.secureli_config import (
     SecureliConfigRepository,
     SecureliConfig,

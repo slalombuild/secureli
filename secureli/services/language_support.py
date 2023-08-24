@@ -4,6 +4,7 @@ from typing import Callable, Optional, Any
 import pydantic
 import yaml
 
+import secureli.repositories.secureli_config as SecureliConfig
 from secureli.abstractions.pre_commit import PreCommitAbstraction
 from secureli.resources.slugify import slugify
 from secureli.services.git_ignore import GitIgnoreService
@@ -109,8 +110,7 @@ class LanguageSupportService:
         as well as a secret-detection hook ID, if present.
         """
 
-        path_to_pre_commit_file = Path(".pre-commit-config.yaml")
-
+        path_to_pre_commit_file = SecureliConfig.FOLDER_PATH / ".pre-commit-config.yaml"
         # Raises a LanguageNotSupportedError if language doesn't resolve to a yaml file
         language_config_result = self._build_pre_commit_config(languages)
 
@@ -250,11 +250,11 @@ class LanguageSupportService:
                     config_name = list(config.keys())[0]
                     # generate relative file name and path.
                     config_file_name = f"{slugify(language_linter_configs.language)}.{config_name}.yaml"
-                    path_to_config_file = Path(f".secureli/{config_file_name}")
-
+                    path_to_config_file = (
+                        SecureliConfig.FOLDER_PATH / ".secureli/{config_file_name}"
+                    )
                     with open(path_to_config_file, "w") as f:
                         f.write(yaml.dump(config[config_name]))
-
                     num_configs_success += 1
                 except Exception as e:
                     num_configs_non_success += 1

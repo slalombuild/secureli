@@ -70,6 +70,7 @@ jobs:
       - name: Display Output
         run: echo uploaded=${{ steps.upload.outputs.uploaded }}
 
+
   secureli-publish:
     name: PyPI Publish
     if: needs.secureli-release.outputs.uploaded == 'true'
@@ -87,6 +88,12 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Set up Python 3.9
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
       - run: |
           pip install poetry
           poetry install
@@ -96,6 +103,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           skip-existing: true
+
 
   deploy:
     name: Upload Homebrew Formula
@@ -132,3 +140,13 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app_token.outputs.token }}
         run: ./scripts/secureli-deployment.sh
+
+
+  integration-testing:
+    name: Integration Testing
+    needs: [ build-test, secureli-release, secureli-publish, deploy ]
+    if: |
+      always() && 
+      (needs.secureli-publish.result == 'success' || needs.secureli-publish.result == 'skipped') &&
+      (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
+    uses: ./.github/workflows/integration_testing.yml
