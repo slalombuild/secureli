@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pathspec
+import secureli.repositories.secureli_config as SecureliConfig
 
 
 class BadIgnoreBlockError(Exception):
@@ -17,18 +18,19 @@ class GitIgnoreService:
     header = "# Secureli-generated files (do not modify):"
     ignore_entries = [".secureli"]
     footer = "# End Secureli-generated files"
-    git_ignore_path = Path("./.gitignore")
 
     def ignore_secureli_files(self):
         """Creates a .gitignore, appends to an existing one, or updates the configuration"""
-        if not self.git_ignore_path.exists():
+        git_ignore_path = SecureliConfig.FOLDER_PATH / "./.gitignore"
+        if not git_ignore_path.exists():
             # your repo doesn't have a gitignore? That's a bold move.
             self._create_git_ignore()
         else:
             self._update_git_ignore()
 
     def ignored_file_patterns(self) -> list[str]:
-        if not self.git_ignore_path.exists():
+        git_ignore_path = Path(SecureliConfig.FOLDER_PATH / "./.gitignore")
+        if not git_ignore_path.exists():
             return []
 
         """Reads the lines from the .gitignore file"""
@@ -87,10 +89,12 @@ class GitIgnoreService:
 
     def _write_file_contents(self, contents: str):
         """Update the .gitignore file with the provided contents"""
-        with open(self.git_ignore_path, "w") as f:
+        git_ignore_path = SecureliConfig.FOLDER_PATH / "./.gitignore"
+        with open(git_ignore_path, "w") as f:
             f.write(contents)
 
     def _read_file_contents(self) -> str:
         """Read the .gitignore file"""
-        with open(self.git_ignore_path, "r") as f:
+        git_ignore_path = SecureliConfig.FOLDER_PATH / "./.gitignore"
+        with open(git_ignore_path, "r") as f:
             return f.read()
