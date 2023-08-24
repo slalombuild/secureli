@@ -33,11 +33,12 @@ seCureLI has Slalom-maintained templates for security management of the followin
 This repo was started against Python 3.9.9, which released 11/15/2021. Security support will last until 10/05/2025. Newer versions should be fine, older versions will likely not work.
 
 ## Setup macOS
+
 As of June 9, 2023, this repo is being built on and tested against macOS 13.4 Ventura.
 
 _Note about the C Compiler: Certain dependencies are implemented as C extensions. Under certain circumstances, you may need to compile the package from sources on your machine. You’ll need a C compiler and Python header files, such as Xcode and Xcode’s command line tools for the Mac, if this is the case. Generally you’ll be guided through this process as you attempt to resolve dependencies (see `poetry install` below)._
 
-___Do no setup for this requirement__ unless prompted to do so, and then follow the instructions given._
+**\_Do no setup for this requirement** unless prompted to do so, and then follow the instructions given.\_
 
 - Install Homebrew if needed: https://brew.sh
 - Install python `brew install python`
@@ -58,6 +59,7 @@ ___Do no setup for this requirement__ unless prompted to do so, and then follow 
 - Jump to [Setup (all Operating Systems)](#Setup-all-Operating-Systems)
 
 ## Setup Windows™
+
 Windows™ contributing setup will be coming soon.
 
 ## Setup Linux
@@ -73,7 +75,9 @@ As of June 9, 2023, this repo is being built on and tested against Ubuntu Jammy 
 - Install [Docker & Docker buildx](https://docs.docker.com/engine/install/)
 
 # Setup (all Operating Systems)
+
 - Install BATS (Bash Automated Testing System)
+
   - `cd $HOME`
   - `git clone https://github.com/bats-core/bats-core.git`
   - `sudo ./bats-core/install.sh /usr/local`
@@ -82,33 +86,32 @@ As of June 9, 2023, this repo is being built on and tested against Ubuntu Jammy 
   - Add `export BATS_LIBS_ROOT="/usr/local/lib"` to your shell's configuration file (e.x. ~/.bashrc)
   - Restart your terminal
 
-
 - Clone the seCureLI repo
+
   - `git clone https://github.com/slalombuild/secureli.git`
   - `cd secureli`
 
-
 - Activate a virtual environment using Poetry
+
   - `poetry shell`
   - This will activate a new virtual environment, and PyCharm should automatically pick this up.
   - To leave this virtual environment, use `exit`, not `deactivate`
 
-
 - Install your dependencies with Poetry
+
   - `poetry install`
 
-
 - Run the tests and calculate code coverage
+
   - `poe test`
   - Open the `htmlcov/index.html` file to view your coverage report
-
 
 - Try it out!
   - With the virtual environment still activated, and having installed all dependencies (i.e. `poetry shell && poetry install`), run `secureli` and check out the Usage instructions
   - After the first run, you can run end-to-end BATS tests with `poe e2e`
 
-
 # PyCharm
+
 - Install [PyCharm Community Edition](https://www.jetbrains.com/pycharm/download/#section=mac)
   - Launch PyCharm and create a new sample project
   - Use the Tools menu and select `Create Command-line Launcher...`
@@ -179,11 +182,12 @@ Already installed for Python language and up to date
 - Test each of these configurations and see that the expected “not yet implemented” message is shown
 
 # Building seCureLI Docker Containers behind a corporate proxy
+
 If you receive SSL/TLS untrusted certificate errors when building the Docker images,
 chances are your organization's digital security team is using a proxy to monitor your encrypted internet usage. To build
 the seCureLI Docker images you will need to inject your organizations self-signed root CA certificate into the images
-at build time. To do this, simply place the root certificate (*.crt format) into the `ca-certificates` directory of this
-repository.  Everything in the ca-certificates directory will be picked up and trusted by the images built.
+at build time. To do this, simply place the root certificate (\*.crt format) into the `ca-certificates` directory of this
+repository. Everything in the ca-certificates directory will be picked up and trusted by the images built.
 
 # seCureLI Architecture
 
@@ -272,7 +276,9 @@ Current Dockerfiles
   - Checks out the public pip repo, inits secureli into the repo and runs a scan
 
 # Contributors
+
 A special thanks to everyone that has contributed to seCureLI so far:
+
 - Jon Allegre
 - Dan Arnold
 - Nava Atluri
@@ -291,6 +297,7 @@ A special thanks to everyone that has contributed to seCureLI so far:
 - Kira Hollerman
 - Myung Kim
 - Tristan Leonard
+- Adina Micula
 - Gabe Negron
 - Hartono Ramli
 - Jeff Schumacher
