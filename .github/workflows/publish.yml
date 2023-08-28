@@ -47,7 +47,7 @@ jobs:
 
       - name: Python Semantic Release
         id: release
-        uses: python-semantic-release/python-semantic-release@v8.0.7
+        uses: python-semantic-release/python-semantic-release@v8.0.8
         with:
           github_token: ${{ steps.app_token.outputs.token }}
 
