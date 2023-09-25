@@ -40,7 +40,7 @@ jobs:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ steps.app_token.outputs.token }}
@@ -83,7 +83,7 @@ jobs:
         run: echo uploaded=${{ needs.secureli-release.outputs.uploaded }}
 
       - name: Checkout seCureLI Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
@@ -122,13 +122,13 @@ jobs:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
 
       - name: Checkout seCureLI Homebrew Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: slalombuild/homebrew-secureli
           token: ${{ steps.app_token.outputs.token }}
