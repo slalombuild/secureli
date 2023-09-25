@@ -34,7 +34,7 @@ jobs:
       uploaded: ${{ steps.upload.outputs.uploaded }}
     steps:
       - name: Get App Token
-        uses: tibdex/github-app-token@v1
+        uses: tibdex/github-app-token@v2
         id: app_token
         with:
           app_id: ${{ secrets.APP_ID }}
@@ -47,7 +47,7 @@ jobs:
 
       - name: Python Semantic Release
         id: release
-        uses: python-semantic-release/python-semantic-release@v8.0.7
+        uses: python-semantic-release/python-semantic-release@v8.1.1
         with:
           github_token: ${{ steps.app_token.outputs.token }}
 
@@ -116,7 +116,7 @@ jobs:
         run: echo uploaded=${{ needs.secureli-release.outputs.uploaded }}
 
       - name: Get App Token
-        uses: tibdex/github-app-token@v1
+        uses: tibdex/github-app-token@v2
         id: app_token
         with:
           app_id: ${{ secrets.APP_ID }}
