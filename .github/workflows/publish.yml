@@ -34,7 +34,7 @@ jobs:
       uploaded: ${{ steps.upload.outputs.uploaded }}
     steps:
       - name: Get App Token
-        uses: tibdex/github-app-token@v1
+        uses: tibdex/github-app-token@v2
         id: app_token
         with:
           app_id: ${{ secrets.APP_ID }}
@@ -116,7 +116,7 @@ jobs:
         run: echo uploaded=${{ needs.secureli-release.outputs.uploaded }}
 
       - name: Get App Token
-        uses: tibdex/github-app-token@v1
+        uses: tibdex/github-app-token@v2
         id: app_token
         with:
           app_id: ${{ secrets.APP_ID }}
