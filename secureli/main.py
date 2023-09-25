@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Optional
-
+from typing_extensions import Annotated
 import typer
 from typer import Option
 
@@ -10,6 +10,7 @@ from secureli.container import Container
 from secureli.abstractions.echo import Color
 from secureli.resources import read_resource
 from secureli.settings import Settings
+import secureli.repositories.secureli_config as SecureliConfig
 
 # Create SetupAction outside of DI, as it's not yet available.
 setup_action = SetupAction(epilog_template_data=read_resource("epilog.md"))
@@ -48,11 +49,21 @@ def init(
         "-y",
         help="Say 'yes' to every prompt automatically without input",
     ),
+    directory: Annotated[
+        Optional[Path],
+        Option(
+            ".",
+            "--directory",
+            "-d",
+            help="Run secureli against a specific directory",
+        ),
+    ] = ".",
 ):
     """
     Detect languages and initialize pre-commit hooks and linters for the project
     """
-    container.initializer_action().initialize_repo(Path("."), reset, yes)
+    SecureliConfig.FOLDER_PATH = Path(directory)
+    container.initializer_action().initialize_repo(Path(directory), reset, yes)
 
 
 @app.command()
@@ -75,11 +86,21 @@ def scan(
         "-t",
         help="Limit the scan to a specific hook ID from your pre-commit config",
     ),
+    directory: Annotated[
+        Optional[Path],
+        Option(
+            ".",
+            "--directory",
+            "-d",
+            help="Run secureli against a specific directory",
+        ),
+    ] = ".",
 ):
     """
     Performs an explicit check of the repository to detect security issues without remote logging.
     """
-    container.scan_action().scan_repo(Path("."), mode, yes, specific_test)
+    SecureliConfig.FOLDER_PATH = Path(directory)
+    container.scan_action().scan_repo(Path(directory), mode, yes, specific_test)
 
 
 @app.command(hidden=True)
@@ -97,12 +118,22 @@ def update(
         "--latest",
         "-l",
         help="Update the installed pre-commit hooks to their latest versions",
-    )
+    ),
+    directory: Annotated[
+        Optional[Path],
+        Option(
+            ".",
+            "--directory",
+            "-d",
+            help="Run secureli against a specific directory",
+        ),
+    ] = ".",
 ):
     """
     Update linters, configuration, and all else needed to maintain a secure repository.
     """
-    container.update_action().update_hooks(latest)
+    SecureliConfig.FOLDER_PATH = Path(directory)
+    container.update_action().update_hooks(Path(directory), latest)
 
 
 if __name__ == "__main__":

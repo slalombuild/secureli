@@ -25,7 +25,7 @@ class InitializerAction(Action):
         """
 
         # Will create a blank .secureli.yaml file if it does not exist
-        settings = self.action_deps.settings.load()
+        settings = self.action_deps.settings.load(folder_path)
 
         # Why are we saving settings? CLI should not be modifying them....just reading
         # With a templated example .secureli.yaml file, we won't be able to save

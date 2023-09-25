@@ -291,6 +291,7 @@ A special thanks to everyone that has contributed to seCureLI so far:
 - Kira Hollerman
 - Myung Kim
 - Tristan Leonard
+- Adina Micula
 - Gabe Negron
 - Hartono Ramli
 - Jeff Schumacher

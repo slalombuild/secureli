@@ -1,5 +1,5 @@
 from typing import Optional
-
+from pathlib import Path
 from secureli.abstractions.echo import EchoAbstraction
 from secureli.services.logging import LoggingService, LogAction
 from secureli.services.updater import UpdaterService
@@ -19,16 +19,17 @@ class UpdateAction(Action):
         self.logging = logging
         self.updater = updater
 
-    def update_hooks(self, latest: Optional[bool] = False):
+    def update_hooks(self, folder_path: Path, latest: Optional[bool] = False):
         """
         Installs the hooks defined in pre-commit-config.yml.
         :param latest: Indicates whether you want to update to the latest versions
         of the installed hooks.
+        :param folder_path: Indicates the git folder against which you run secureli
         :return: ExecuteResult, indicating success or failure.
         """
         if latest:
             self.echo.print("Updating hooks to the latest version...")
-            update_result = self.updater.update_hooks()
+            update_result = self.updater.update_hooks(folder_path)
             details = (
                 update_result.output
                 or "Unknown output while updating hooks to latest version"
@@ -42,7 +43,7 @@ class UpdateAction(Action):
                 self.logging.success(LogAction.update)
         else:
             self.echo.print("Beginning update...")
-            install_result = self.updater.update()
+            install_result = self.updater.update(folder_path)
             details = install_result.output or "Unknown output during hook installation"
             self.echo.print(details)
             if not install_result.successful:

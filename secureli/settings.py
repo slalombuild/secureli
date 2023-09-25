@@ -4,6 +4,7 @@ from typing import Any
 import pydantic
 import yaml
 
+import secureli.repositories.secureli_config as SecureliConfig
 from secureli.repositories.settings import (
     RepoFilesSettings,
     EchoSettings,
@@ -19,7 +20,7 @@ def secureli_yaml_settings(
     """
 
     encoding = settings.__config__.env_file_encoding
-    path_to_settings = Path(".secureli.yaml")
+    path_to_settings = Path(SecureliConfig.FOLDER_PATH / ".secureli.yaml")
     if not path_to_settings.exists():
         return {}
     with open(
