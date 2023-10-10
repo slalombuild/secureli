@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -78,6 +79,7 @@ class ScanAction(Action):
             )
 
             post_log(log_data.json(exclude_none=True))
+            sys.exit("Issues Found...Aborting")
         else:
             self.echo.print("Scan executed successfully and detected no issues!")
             log_data = self.logging.success(LogAction.scan)
