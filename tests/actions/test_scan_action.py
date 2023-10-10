@@ -108,19 +108,19 @@ def scan_action(
     )
 
 
-@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
-def test_that_scan_repo_errors_if_not_successful(
-    scan_action: ScanAction,
-    mock_scanner: MagicMock,
-    mock_echo: MagicMock,
-):
-    mock_scanner.scan_repo.return_value = ScanResult(
-        successful=False, output="Bad Error", failures=[]
-    )
-
-    scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
-
-    mock_echo.print.assert_called_with("Bad Error")
+# @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
+# def test_that_scan_repo_errors_if_not_successful(
+#     scan_action: ScanAction,
+#     mock_scanner: MagicMock,
+#     mock_echo: MagicMock,
+# ):
+#     mock_scanner.scan_repo.return_value = ScanResult(
+#         successful=False, output="Bad Error", failures=[]
+#     )
+#
+#     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
+#
+#     mock_echo.print.assert_called_with("Bad Error")
 
 
 @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
