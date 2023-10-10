@@ -26,7 +26,7 @@ test = ["init", "lint", "coverage_run", "coverage_report"]
 e2e = "bats tests/end-to-end/test.bats"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
 typer = {version = ">=0.6.1,<0.10.0", extras = ["all"]}
 pygments = "^2.13.0"
 dependency-injector = {version = "^4.40.0", extras = ["yaml"]}
