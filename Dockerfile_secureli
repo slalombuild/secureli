@@ -1,7 +1,7 @@
 # A basic dockerfile for mimicking/testing ci commands
 # docker build -t secureli . or poe docker-build
 
-FROM python:3.9
+FROM python:3.11
 WORKDIR /app
 COPY . /app
 RUN cp /app/ca-certificates/*.crt /usr/local/share/ca-certificates | true && update-ca-certificates
