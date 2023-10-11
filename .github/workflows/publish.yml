@@ -45,28 +45,10 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.app_token.outputs.token }}
 
-      - name: Set up Python 3.11
-        id:setup-python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
-
-      - name: Install dependencies
-        id: 
-        run: |
-          python3.11 -m pip install poetry --upgrade pip
-          poetry config virtualenvs.create false
-          poetry install
-
-      # Can't use: python-semantic-release/python-semantic-release@v8.1.1
-      # it's running Python 3.10, and Secureli requires >=3.11
       - name: Python Semantic Release
         id: release
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "action@github.com"
-          semantic-release publish -D commit_author="github-actions <action@github.com>"
-        env:
+        uses: python-semantic-release/python-semantic-release@v8.1.1
+        with:
           github_token: ${{ steps.app_token.outputs.token }}
 
       - name: Upload assets to GitHub Releases
@@ -106,11 +88,11 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.9
         id: setup-python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.9"
 
       - run: |
           pip install poetry
