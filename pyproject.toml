@@ -26,7 +26,7 @@ test = ["init", "lint", "coverage_run", "coverage_report"]
 e2e = "bats tests/end-to-end/test.bats"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
 typer = {version = ">=0.6.1,<0.10.0", extras = ["all"]}
 pygments = "^2.13.0"
 dependency-injector = {version = "^4.40.0", extras = ["yaml"]}
@@ -47,7 +47,7 @@ pytest-mock = "^3.10.0"
 coverage = ">=6.5,<8.0"
 black = ">=22.10,<24.0"
 identify = "^2.5.7"
-poethepoet = ">=0.16.4,<0.24.0"
+poethepoet = ">=0.16.4,<0.25.0"
 python-semantic-release = ">=8.0.0"
 
 [build-system]

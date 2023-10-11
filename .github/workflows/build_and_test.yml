@@ -18,11 +18,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.9
+      - name: Set up Python 3.11
         id: setup-python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: "3.11"
 
       - name: Set Up Project
         run: |
@@ -48,11 +48,11 @@ jobs:
       - name: Validate Branch name
         run: ./scripts/get-current-branch.sh
 
-      - name: Set up Python 3.9
+      - name: Set up Python 3.11
         id: setup-python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: "3.11"
 
       - name: Set Up Project
         run: |
