@@ -11,6 +11,7 @@ from secureli.abstractions.echo import Color
 from secureli.resources import read_resource
 from secureli.settings import Settings
 import secureli.repositories.secureli_config as SecureliConfig
+from secureli.utilities.secureli_meta import secureli_version
 
 # Create SetupAction outside of DI, as it's not yet available.
 setup_action = SetupAction(epilog_template_data=read_resource("epilog.md"))
@@ -22,8 +23,19 @@ container = Container()
 container.config.from_pydantic(Settings())
 
 
+def version_callback(value: bool):
+    if value:
+        typer.echo(secureli_version())
+        raise typer.Exit()
+
+
 @app.callback()
-def setup():
+def setup(
+    version: Annotated[
+        Optional[bool],
+        Option("--version", "-v", callback=version_callback, is_eager=True),
+    ] = None,
+):
     """
     seCureLI:
     Secure Project Manager :sparkles:

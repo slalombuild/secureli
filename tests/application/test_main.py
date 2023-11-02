@@ -1,10 +1,12 @@
 from unittest.mock import MagicMock
+from typer.testing import CliRunner
 
 import pytest
 from pytest_mock import MockerFixture
 
 import secureli.container
 import secureli.main
+from secureli.utilities.secureli_meta import secureli_version
 
 
 @pytest.fixture()
@@ -42,3 +44,16 @@ def test_that_update_is_tbd(mock_container: MagicMock):
     secureli.main.update()
 
     mock_container.update_action.assert_called_once()
+
+
+@pytest.mark.parametrize("test_input", ["-v", "--version"])
+def test_that_app_implements_version_option(
+    test_input: str, request: pytest.FixtureRequest
+):
+    result = CliRunner().invoke(secureli.main.app, [test_input])
+    mock_container = request.getfixturevalue("mock_container")
+
+    assert result.exit_code is 0
+    assert secureli_version() in result.stdout
+    mock_container.init_resources.assert_not_called()
+    mock_container.wire.assert_not_called()
