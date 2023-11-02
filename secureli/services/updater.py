@@ -54,7 +54,7 @@ class UpdaterService:
             output = "No changes necessary.\n"
 
         if update_result.successful and update_result.output:
-            prune_result = self.pre_commit.remove_unused_hooks()
+            prune_result = self.pre_commit.remove_unused_hooks(folder_path)
             output = output + "\nRemoving unused environments:\n" + prune_result.output
 
         return UpdateResult(successful=update_result.successful, output=output)

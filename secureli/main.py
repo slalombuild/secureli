@@ -76,6 +76,7 @@ def init(
     """
     SecureliConfig.FOLDER_PATH = Path(directory)
     container.initializer_action().initialize_repo(Path(directory), reset, yes)
+    update()
 
 
 @app.command()
