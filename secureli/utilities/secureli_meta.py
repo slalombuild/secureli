@@ -1,6 +1,7 @@
-import pkg_resources
-
+from secureli.utilities.package import get_installed_version
 
 def secureli_version() -> str:
-    """Leverage package resources to determine the current version of secureli"""
-    return pkg_resources.get_distribution("secureli").version
+    return get_installed_version()
+
+if __name__ == "__main__":
+   print(secureli_version())
