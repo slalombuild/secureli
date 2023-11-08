@@ -11,7 +11,7 @@ from secureli.services.language_config import (
 @pytest.fixture()
 def mock_data_loader() -> MagicMock:
     mock_data_loader = MagicMock()
-    mock_data_loader.return_value = "a: 1"
+    mock_data_loader.return_value = "repos: { a: 1 }"
     return mock_data_loader
 
 
@@ -32,7 +32,7 @@ def test_that_language_config_service_treats_missing_templates_as_unsupported_la
 ):
     mock_data_loader.side_effect = ValueError
     with pytest.raises(LanguageNotSupportedError):
-        language_config_service.get_language_config("BadLang")
+        language_config_service.get_language_config("BadLang", True)
 
 
 def test_that_language_config_service_treats_missing_templates_as_unsupported_language_when_checking_versions(
@@ -41,13 +41,13 @@ def test_that_language_config_service_treats_missing_templates_as_unsupported_la
 ):
     mock_data_loader.side_effect = ValueError
     with pytest.raises(LanguageNotSupportedError):
-        language_config_service.get_language_config("BadLang")
+        language_config_service.get_language_config("BadLang", True)
 
 
 def test_that_version_identifiers_are_calculated_for_known_languages(
     language_config_service: LanguageConfigService,
 ):
-    version = language_config_service.get_language_config("Python").version
+    version = language_config_service.get_language_config("Python", True).version
 
     assert version != None
 
@@ -56,12 +56,11 @@ def test_that_language_config_service_templates_are_loaded_with_global_exclude_i
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
 ):
-    mock_data_loader.return_value = "yaml: data"
     language_config_service.ignored_file_patterns = [
         "mock_pattern1",
         "mock_pattern2",
     ]
-    result = language_config_service.get_language_config("Python")
+    result = language_config_service.get_language_config("Python", True)
 
     assert "exclude: ^(mock_pattern1|mock_pattern2)" in result.config_data
 
@@ -71,9 +70,8 @@ def test_that_language_config_service_templates_are_loaded_without_exclude(
     mock_data_loader: MagicMock,
     mock_open: MagicMock,
 ):
-    mock_data_loader.return_value = "yaml: data"
     language_config_service.ignored_file_patterns = []
-    result = language_config_service.get_language_config("Python")
+    result = language_config_service.get_language_config("Python", True)
 
     assert "exclude:" not in result.config_data
 
@@ -95,7 +93,7 @@ def test_that_language_config_service_does_nothing_when_pre_commit_settings_is_e
 
     mock_data_loader.side_effect = mock_loader_side_effect
 
-    result = language_config_service.get_language_config("Python")
+    result = language_config_service.get_language_config("Python", True)
 
     assert "orig_arg" in result.config_data
 
@@ -122,8 +120,7 @@ def test_that_language_config_service_templates_are_loaded_with_global_exclude_i
     mock_data_loader: MagicMock,
     mock_open: MagicMock,
 ):
-    mock_data_loader.return_value = "yaml: data"
     language_config_service.ignored_file_patterns = ["mock_pattern"]
-    result = language_config_service.get_language_config("Python")
+    result = language_config_service.get_language_config("Python", True)
 
     assert "exclude: mock_pattern" in result.config_data

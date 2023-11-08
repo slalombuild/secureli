@@ -1,0 +1,10 @@
+repos:
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.9.0
+    hooks:
+      - id: python-use-type-annotations
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.4
+    hooks:
+      - id: bandit
+        args: ["--exclude", "tests/", "--severity-level", "medium"]

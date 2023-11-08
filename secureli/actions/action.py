@@ -148,7 +148,19 @@ class Action(ABC):
             languages = list(analyze_result.language_proportions.keys())
             self.action_deps.echo.print(f"Overall Detected Languages: {languages}")
 
-            metadata = self.action_deps.language_support.apply_support(languages)
+            linter_languages = self._prompt_get_lint_config_languages(
+                languages, always_yes
+            )
+
+            language_config_result = (
+                self.action_deps.language_support._build_pre_commit_config(
+                    languages, linter_languages
+                )
+            )
+
+            metadata = self.action_deps.language_support.apply_support(
+                languages, language_config_result
+            )
 
         except (ValueError, LanguageNotSupportedError, InstallFailedError) as e:
             self.action_deps.echo.error(
@@ -160,6 +172,7 @@ class Action(ABC):
 
         config = SecureliConfig(
             languages=languages,
+            lint_languages=linter_languages,
             version_installed=metadata.version,
         )
         self.action_deps.secureli_config.save(config)
@@ -192,6 +205,30 @@ class Action(ABC):
             config=config,
             analyze_result=analyze_result,
         )
+
+    def _prompt_get_lint_config_languages(
+        self, languages: list[str], always_yes: bool
+    ) -> set[str]:
+        """
+        Prompts user to add lint pre-commit hooks for each detected language
+        :param languages: list of detected languages
+        :param always_yes: Assume "Yes" to all prompts
+        :return: set of filtered languages to add lint pre-commit hooks for
+        """
+        if always_yes:
+            return set(languages)
+
+        linter_languages: set[str] = set()
+
+        for language in languages:
+            add_linter = self.action_deps.echo.confirm(
+                f"Add lint pre-commit(s) for {language}?", default_response=True
+            )
+
+            if add_linter:
+                linter_languages.add(language)
+
+        return linter_languages
 
     def _update_secureli(self, always_yes: bool):
         """
