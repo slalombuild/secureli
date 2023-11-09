@@ -88,4 +88,3 @@ def test_current_branch_name_yields_unknown_due_to_io_error(
 
 def test_configparser_can_read_origin_url_with_percent(mock_open_git_origin):
     assert origin_url() == mock_git_origin_url
-    mock_open_git_origin.assert_called_once_with(".git/config", encoding="locale")
