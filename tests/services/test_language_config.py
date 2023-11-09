@@ -5,6 +5,7 @@ import pytest
 from secureli.services.language_config import (
     LanguageConfigService,
     LanguageNotSupportedError,
+    LoadLinterConfigsResult,
 )
 
 
@@ -54,7 +55,6 @@ def test_that_version_identifiers_are_calculated_for_known_languages(
 
 def test_that_language_config_service_templates_are_loaded_with_global_exclude_if_provided_multiple_patterns(
     language_config_service: LanguageConfigService,
-    mock_data_loader: MagicMock,
 ):
     language_config_service.ignored_file_patterns = [
         "mock_pattern1",
@@ -72,6 +72,17 @@ def test_that_language_config_service_templates_are_loaded_without_exclude(
     result = language_config_service.get_language_config("Python", True)
 
     assert "exclude:" not in result.config_data
+
+
+def test_that_language_config_service_templates_are_loaded_without_linter_config_if_include_linter_is_false(
+    language_config_service: LanguageConfigService,
+):
+    language_config_service.ignored_file_patterns = []
+    result = language_config_service.get_language_config("Python", False)
+
+    assert result.linter_config == LoadLinterConfigsResult(
+        successful=True, linter_data=[]
+    )
 
 
 def test_that_language_config_service_does_nothing_when_pre_commit_settings_is_empty(
