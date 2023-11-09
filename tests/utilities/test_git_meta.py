@@ -6,6 +6,7 @@ from pytest_mock import MockerFixture
 
 from secureli.utilities.git_meta import git_user_email, origin_url, current_branch_name
 
+mock_git_origin_url = r'git@github.com:my-org/repo%20with%20spaces.git'
 
 @pytest.fixture()
 def mock_subprocess(mocker: MockerFixture) -> MagicMock:
@@ -34,6 +35,17 @@ def mock_open_git_head(mocker: MockerFixture) -> MagicMock:
     )
     mocker.patch("builtins.open", mock_open_git_head)
     return mock_open_git_head
+
+
+@pytest.fixture()
+def mock_open_git_origin(mocker: MockerFixture) -> MagicMock:
+    mock_open_git_config = mocker.mock_open(
+        read_data='[remote "origin"]'
+        '\n    url = ' + mock_git_origin_url +
+        '\n    fetch = +refs/heads/*:refs/remotes/origin/*'
+    )
+    mocker.patch("builtins.open", mock_open_git_config)
+    return mock_open_git_config
 
 
 @pytest.fixture()
@@ -71,3 +83,10 @@ def test_current_branch_name_yields_unknown_due_to_io_error(
     result = current_branch_name()
 
     assert result == "UNKNOWN"
+
+
+def test_configparser_can_read_origin_url_with_percent(
+    mock_open_git_origin
+):
+    assert origin_url() == mock_git_origin_url
+    mock_open_git_origin.assert_called_once_with(".git/config", encoding='locale')
