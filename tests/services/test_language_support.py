@@ -315,3 +315,32 @@ def test_that_language_support_handles_invalid_language_config(
 
     metadata = language_support_service.apply_support(languages, build_config_result)
     assert metadata.security_hook_id is None
+
+
+def test_that_language_support_handles_empty_repos_list(
+    language_support_service: LanguageSupportService,
+    mock_language_config_service: MagicMock,
+    mock_data_loader: MagicMock,
+):
+    mock_language_config_service.get_language_config.return_value = LanguagePreCommitResult(
+        language="Python",
+        version="abc123",
+        linter_config=LoadLinterConfigsResult(
+            successful=True,
+            linter_data=[{"key": {"example"}}],
+        ),
+        config_data="""
+            repos:
+            """,
+    )
+
+    mock_data_loader.return_value = ""
+
+    languages = ["RadLang"]
+    linter_languages = set(languages)
+
+    build_config_result = language_support_service._build_pre_commit_config(
+        languages, linter_languages
+    )
+
+    assert build_config_result.config_data["repos"] == []

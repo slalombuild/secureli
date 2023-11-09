@@ -86,23 +86,27 @@ class LanguageConfigService:
         repo settings like ignored file patterns and pre-commit overrides
         :param language: The language to load the configuration for as a basis for
         the combined configuration
+        :param include_linter: Determines whether or not the lint pre-commit repos
+        should be added to the configuration result
         :return: The combined configuration data as a dictionary
         """
-        config = {}
+        config = {"repos": []}
         slugified_language = slugify(language)
-        base_config_data = self.data_loader(
-            f"pre-commit/base/{slugified_language}-pre-commit.yaml"
-        )
-        base_config = yaml.safe_load(base_config_data) or {"repos": None}
-        lint_config_data = self.data_loader(
-            f"pre-commit/lint/{slugified_language}-pre-commit.yaml"
-        )
-        lint_config = (
-            yaml.safe_load(lint_config_data) or {"repos": None}
-            if include_linter
-            else {"repos": None}
-        )
-        config["repos"] = [*(base_config["repos"] or []), *(lint_config["repos"] or [])]
+        config_folder_names = ["base"]
+
+        if include_linter:
+            config_folder_names.append("lint")
+
+        for folder_name in config_folder_names:
+            config_data = self.data_loader(
+                f"pre-commit/{folder_name}/{slugified_language}-pre-commit.yaml"
+            )
+            parsed_config = yaml.safe_load(config_data) or {"repos": None}
+            repos = parsed_config["repos"]
+
+            if repos and len(repos):
+                for repo in repos:
+                    config["repos"].append(repo)
 
         if self.ignored_file_patterns:
             config["exclude"] = combine_patterns(self.ignored_file_patterns)

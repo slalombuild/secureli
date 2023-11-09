@@ -11,7 +11,7 @@ from secureli.services.language_config import (
 @pytest.fixture()
 def mock_data_loader() -> MagicMock:
     mock_data_loader = MagicMock()
-    mock_data_loader.return_value = "repos: { a: 1 }"
+    mock_data_loader.return_value = "repos: [{ repo: 'mock-repo' }]"
     return mock_data_loader
 
 
@@ -67,8 +67,6 @@ def test_that_language_config_service_templates_are_loaded_with_global_exclude_i
 
 def test_that_language_config_service_templates_are_loaded_without_exclude(
     language_config_service: LanguageConfigService,
-    mock_data_loader: MagicMock,
-    mock_open: MagicMock,
 ):
     language_config_service.ignored_file_patterns = []
     result = language_config_service.get_language_config("Python", True)
@@ -117,10 +115,53 @@ def test_that_language_config_service_language_config_does_not_get_loaded(
 
 def test_that_language_config_service_templates_are_loaded_with_global_exclude_if_provided(
     language_config_service: LanguageConfigService,
-    mock_data_loader: MagicMock,
-    mock_open: MagicMock,
 ):
     language_config_service.ignored_file_patterns = ["mock_pattern"]
     result = language_config_service.get_language_config("Python", True)
 
     assert "exclude: mock_pattern" in result.config_data
+
+
+def test_that_calculate_combined_configuration_adds_lint_config(
+    language_config_service: LanguageConfigService,
+    mock_data_loader: MagicMock,
+):
+    mock_scanner_config = "repos: [{ repo: 'scanner-pre-commit'}]"
+    mock_linter_config = "repos: [{ repo: 'linter-pre-commit'}]"
+
+    def data_loader_side_effect(*args, **kwargs):
+        if "base" in args[0]:
+            return mock_scanner_config
+        elif "lint" in args[0]:
+            return mock_linter_config
+        else:
+            return "repos: []"
+
+    mock_data_loader.side_effect = data_loader_side_effect
+    result = language_config_service._calculate_combined_configuration("RadLang", True)
+
+    assert result == {
+        "repos": [{"repo": "scanner-pre-commit"}, {"repo": "linter-pre-commit"}]
+    }
+    assert mock_data_loader.call_count == 2
+
+
+def test_that_calculate_combined_configuration_ignores_lint_config(
+    language_config_service: LanguageConfigService,
+    mock_data_loader: MagicMock,
+):
+    mock_data_loader.return_value = "repos: [{ repo: 'scanner-pre-commit'}]"
+    result = language_config_service._calculate_combined_configuration("RadLang", False)
+
+    assert result == {"repos": [{"repo": "scanner-pre-commit"}]}
+    assert mock_data_loader.call_count == 1
+
+
+def test_that_calculate_combined_configuration_ignores_lint_config(
+    language_config_service: LanguageConfigService,
+    mock_data_loader: MagicMock,
+):
+    mock_data_loader.return_value = ""
+    result = language_config_service._calculate_combined_configuration("RadLang", False)
+
+    assert result == {"repos": []}

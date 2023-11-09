@@ -297,3 +297,64 @@ def test_that_update_secureli_handles_successful_update(
     update_result = action._update_secureli(always_yes=False)
 
     assert update_result.outcome == VerifyOutcome.UPDATE_SUCCEEDED
+
+
+def test_that_prompt_get_lint_config_languages_returns_all_languages_when_always_true_option_is_true(
+    action: Action,
+    mock_echo: MagicMock,
+):
+    mock_languages = ["RadLang", "MockLang"]
+
+    result = action._prompt_get_lint_config_languages(mock_languages, True)
+
+    mock_echo.confirm.assert_not_called()
+    assert result == set(mock_languages)
+
+
+def test_that_prompt_get_lint_config_languages_returns_no_languages(
+    action: Action,
+    mock_echo: MagicMock,
+):
+    mock_languages = ["RadLang", "MockLang"]
+    mock_echo.confirm.return_value = False
+
+    result = action._prompt_get_lint_config_languages(mock_languages, False)
+
+    mock_echo.confirm.assert_called()
+    assert mock_echo.confirm.call_count == len(mock_languages)
+    assert result == set()
+
+
+def test_that_prompt_get_lint_config_languages_returns_all_languages(
+    action: Action,
+    mock_echo: MagicMock,
+):
+    mock_languages = ["RadLang", "MockLang"]
+    mock_echo.confirm.return_value = True
+
+    result = action._prompt_get_lint_config_languages(mock_languages, False)
+
+    mock_echo.confirm.assert_called()
+    assert mock_echo.confirm.call_count == len(mock_languages)
+    assert result == set(mock_languages)
+
+
+def test_that_prompt_get_lint_config_languages_returns_filtered_languages_based_on_choice(
+    action: Action,
+    mock_echo: MagicMock,
+):
+    mock_languages = ["RadLang", "MockLang"]
+
+    def confirm_side_effect(*args, **kwargs):
+        if mock_languages[0] in args[0]:
+            return True
+        else:
+            return False
+
+    mock_echo.confirm.side_effect = confirm_side_effect
+
+    result = action._prompt_get_lint_config_languages(mock_languages, False)
+
+    mock_echo.confirm.assert_called()
+    assert mock_echo.confirm.call_count == len(mock_languages)
+    assert result == set([mock_languages[0]])
