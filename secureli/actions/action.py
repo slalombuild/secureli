@@ -148,13 +148,13 @@ class Action(ABC):
             languages = list(analyze_result.language_proportions.keys())
             self.action_deps.echo.print(f"Overall Detected Languages: {languages}")
 
-            linter_languages = self._prompt_get_lint_config_languages(
+            lint_languages = self._prompt_get_lint_config_languages(
                 languages, always_yes
             )
 
             language_config_result = (
                 self.action_deps.language_support._build_pre_commit_config(
-                    languages, linter_languages
+                    languages, lint_languages
                 )
             )
 
@@ -172,7 +172,7 @@ class Action(ABC):
 
         config = SecureliConfig(
             languages=languages,
-            lint_languages=linter_languages,
+            lint_languages=lint_languages,
             version_installed=metadata.version,
         )
         self.action_deps.secureli_config.save(config)
@@ -218,17 +218,17 @@ class Action(ABC):
         if always_yes:
             return set(languages)
 
-        linter_languages: set[str] = set()
+        lint_languages: set[str] = set()
 
         for language in languages:
             add_linter = self.action_deps.echo.confirm(
-                f"Add lint pre-commit(s) for {language}?", default_response=True
+                f"Add lint pre-commit hook(s) for {language}?", default_response=True
             )
 
             if add_linter:
-                linter_languages.add(language)
+                lint_languages.add(language)
 
-        return linter_languages
+        return lint_languages
 
     def _update_secureli(self, always_yes: bool):
         """
