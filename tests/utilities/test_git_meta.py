@@ -86,5 +86,5 @@ def test_current_branch_name_yields_unknown_due_to_io_error(
     assert result == "UNKNOWN"
 
 
-def test_configparser_can_read_origin_url_with_percent(mock_open_git_origin):
+def test_configparser_can_read_origin_url_with_percent(mock_open_git_origin: MagicMock):
     assert origin_url() == mock_git_origin_url
