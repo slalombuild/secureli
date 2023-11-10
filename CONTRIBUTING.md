@@ -289,6 +289,7 @@ A special thanks to everyone that has contributed to seCureLI so far:
 - Korey Earl
 - Martin Gallegos
 - Ryan Graue
+- Tyler Durkota
 - Jordan Hill
 - Kira Hollerman
 - Myung Kim

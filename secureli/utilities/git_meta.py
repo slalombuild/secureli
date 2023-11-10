@@ -15,7 +15,7 @@ def origin_url() -> str:
     git_config_parser = configparser.ConfigParser()
     git_config_parser.read(".git/config")
     return (
-        git_config_parser['remote "origin"'].get("url", "UNKNOWN")
+        git_config_parser['remote "origin"'].get("url", "UNKNOWN", raw=True)
         if git_config_parser.has_section('remote "origin"')
         else "UNKNOWN"
     )
