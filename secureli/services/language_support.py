@@ -219,9 +219,7 @@ class LanguageSupportService:
                     )
                 ) if result.linter_config.successful else None
                 data = yaml.safe_load(result.config_data)
-                if data["repos"] != None:
-                    for config in data["repos"]:
-                        config_data.append(config)
+                config_data += data["repos"] or []
 
         config = {"repos": config_data}
         version = hash_config(yaml.dump(config))

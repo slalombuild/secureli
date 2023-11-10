@@ -63,7 +63,7 @@ class LanguageConfigService:
             )
             linter_config_data = (
                 self._load_linter_config_file(language)
-                if include_linter is True
+                if include_linter
                 else LoadLinterConfigsResult(successful=True, linter_data=list())
             )
             version = hash_config(config_data)
@@ -103,10 +103,7 @@ class LanguageConfigService:
             )
             parsed_config = yaml.safe_load(config_data) or {"repos": None}
             repos = parsed_config["repos"]
-
-            if repos and len(repos):
-                for repo in repos:
-                    config["repos"].append(repo)
+            config["repos"] += repos or []
 
         if self.ignored_file_patterns:
             config["exclude"] = combine_patterns(self.ignored_file_patterns)

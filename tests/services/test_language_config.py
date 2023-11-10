@@ -33,7 +33,7 @@ def test_that_language_config_service_treats_missing_templates_as_unsupported_la
 ):
     mock_data_loader.side_effect = ValueError
     with pytest.raises(LanguageNotSupportedError):
-        language_config_service.get_language_config("BadLang", True)
+        language_config_service.get_language_config("BadLang", include_linter=True)
 
 
 def test_that_language_config_service_treats_missing_templates_as_unsupported_language_when_checking_versions(
@@ -48,7 +48,9 @@ def test_that_language_config_service_treats_missing_templates_as_unsupported_la
 def test_that_version_identifiers_are_calculated_for_known_languages(
     language_config_service: LanguageConfigService,
 ):
-    version = language_config_service.get_language_config("Python", True).version
+    version = language_config_service.get_language_config(
+        "Python", include_linter=True
+    ).version
 
     assert version != None
 
@@ -60,7 +62,7 @@ def test_that_language_config_service_templates_are_loaded_with_global_exclude_i
         "mock_pattern1",
         "mock_pattern2",
     ]
-    result = language_config_service.get_language_config("Python", True)
+    result = language_config_service.get_language_config("Python", include_linter=True)
 
     assert "exclude: ^(mock_pattern1|mock_pattern2)" in result.config_data
 
@@ -69,7 +71,7 @@ def test_that_language_config_service_templates_are_loaded_without_exclude(
     language_config_service: LanguageConfigService,
 ):
     language_config_service.ignored_file_patterns = []
-    result = language_config_service.get_language_config("Python", True)
+    result = language_config_service.get_language_config("Python", include_linter=True)
 
     assert "exclude:" not in result.config_data
 
@@ -78,7 +80,7 @@ def test_that_language_config_service_templates_are_loaded_without_linter_config
     language_config_service: LanguageConfigService,
 ):
     language_config_service.ignored_file_patterns = []
-    result = language_config_service.get_language_config("Python", False)
+    result = language_config_service.get_language_config("Python", include_linter=False)
 
     assert result.linter_config == LoadLinterConfigsResult(
         successful=True, linter_data=[]
@@ -102,7 +104,7 @@ def test_that_language_config_service_does_nothing_when_pre_commit_settings_is_e
 
     mock_data_loader.side_effect = mock_loader_side_effect
 
-    result = language_config_service.get_language_config("Python", True)
+    result = language_config_service.get_language_config("Python", include_linter=True)
 
     assert "orig_arg" in result.config_data
 
@@ -128,7 +130,7 @@ def test_that_language_config_service_templates_are_loaded_with_global_exclude_i
     language_config_service: LanguageConfigService,
 ):
     language_config_service.ignored_file_patterns = ["mock_pattern"]
-    result = language_config_service.get_language_config("Python", True)
+    result = language_config_service.get_language_config("Python", include_linter=True)
 
     assert "exclude: mock_pattern" in result.config_data
 
@@ -149,7 +151,9 @@ def test_that_calculate_combined_configuration_adds_lint_config(
             return "repos: []"
 
     mock_data_loader.side_effect = data_loader_side_effect
-    result = language_config_service._calculate_combined_configuration("RadLang", True)
+    result = language_config_service._calculate_combined_configuration(
+        "RadLang", include_linter=True
+    )
 
     assert result == {
         "repos": [{"repo": "scanner-pre-commit"}, {"repo": "linter-pre-commit"}]
@@ -162,7 +166,9 @@ def test_that_calculate_combined_configuration_ignores_lint_config(
     mock_data_loader: MagicMock,
 ):
     mock_data_loader.return_value = "repos: [{ repo: 'scanner-pre-commit'}]"
-    result = language_config_service._calculate_combined_configuration("RadLang", False)
+    result = language_config_service._calculate_combined_configuration(
+        "RadLang", include_linter=False
+    )
 
     assert result == {"repos": [{"repo": "scanner-pre-commit"}]}
     assert mock_data_loader.call_count == 1
@@ -173,6 +179,8 @@ def test_that_calculate_combined_configuration_ignores_lint_config(
     mock_data_loader: MagicMock,
 ):
     mock_data_loader.return_value = ""
-    result = language_config_service._calculate_combined_configuration("RadLang", False)
+    result = language_config_service._calculate_combined_configuration(
+        "RadLang", include_linter=False
+    )
 
     assert result == {"repos": []}
