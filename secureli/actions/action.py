@@ -208,7 +208,7 @@ class Action(ABC):
 
     def _prompt_get_lint_config_languages(
         self, languages: list[str], always_yes: bool
-    ) -> set[str]:
+    ) -> list[str]:
         """
         Prompts user to add lint pre-commit hooks for each detected language
         :param languages: list of detected languages
@@ -216,9 +216,9 @@ class Action(ABC):
         :return: set of filtered languages to add lint pre-commit hooks for
         """
         if always_yes:
-            return set(languages)
+            return [*languages]
 
-        lint_languages: set[str] = set()
+        lint_languages: list[str] = []
 
         for language in languages:
             add_linter = self.action_deps.echo.confirm(
@@ -226,7 +226,7 @@ class Action(ABC):
             )
 
             if add_linter:
-                lint_languages.add(language)
+                lint_languages.append(language)
 
         return lint_languages
 

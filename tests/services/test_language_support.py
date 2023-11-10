@@ -246,7 +246,7 @@ def test_that_language_support_writes_linter_config_files(
     mock_data_loader.side_effect = mock_loader_side_effect
 
     languages = ["RadLang"]
-    lint_languages = set(languages)
+    lint_languages = [*languages]
 
     build_config_result = language_support_service._build_pre_commit_config(
         languages, lint_languages
@@ -278,7 +278,7 @@ def test_that_language_support_throws_exception_when_language_config_file_cannot
     )
 
     languages = ["RadLang"]
-    lint_languages = set(languages)
+    lint_languages = [*languages]
 
     build_config_result = language_support_service._build_pre_commit_config(
         languages, lint_languages
@@ -307,7 +307,7 @@ def test_that_language_support_handles_invalid_language_config(
     )
 
     languages = ["RadLang"]
-    lint_languages = set(languages)
+    lint_languages = [*languages]
 
     build_config_result = language_support_service._build_pre_commit_config(
         languages, lint_languages
@@ -337,7 +337,7 @@ def test_that_language_support_handles_empty_repos_list(
     mock_data_loader.return_value = ""
 
     languages = ["RadLang"]
-    lint_languages = set(languages)
+    lint_languages = [*languages]
 
     build_config_result = language_support_service._build_pre_commit_config(
         languages, lint_languages

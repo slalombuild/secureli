@@ -137,7 +137,7 @@ class LanguageSupportService:
         :return: The hook ID to use for secrets analysis if supported, otherwise None.
         """
         # lint_languages param can be an empty set since we only need secrets detection hooks
-        language_config = self._build_pre_commit_config(languages, set())
+        language_config = self._build_pre_commit_config(languages, [])
         config = language_config.config_data
         secrets_detecting_repos_data = self.data_loader(
             "pre-commit/secrets_detecting_repos.yaml"
@@ -193,20 +193,20 @@ class LanguageSupportService:
         return HookConfiguration(repos=repos)
 
     def _build_pre_commit_config(
-        self, languages: list[str], lint_languages: set[str]
+        self, languages: list[str], lint_languages: list[str]
     ) -> BuildConfigResult:
         """
         Builds the final .pre-commit-config.yaml from all supported repo languages. Also returns any and all
         linter configuration data.
         :param languages: list of languages to get calculated configuration for.
-        :param lint_languages: set of languages to add lint pre-commit hooks for.
+        :param lint_languages: list of languages to add lint pre-commit hooks for.
         :return: BuildConfigResult
         """
         config_data = []
         successful_languages: list[str] = []
         linter_configs: list[LinterConfig] = []
         config_languages = [*languages, "base"]
-        config_lint_languages = set([*lint_languages, "base"])
+        config_lint_languages = [*lint_languages, "base"]
 
         for language in config_languages:
             include_linter = language in config_lint_languages

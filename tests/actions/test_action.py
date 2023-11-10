@@ -308,7 +308,7 @@ def test_that_prompt_get_lint_config_languages_returns_all_languages_when_always
     result = action._prompt_get_lint_config_languages(mock_languages, True)
 
     mock_echo.confirm.assert_not_called()
-    assert result == set(mock_languages)
+    assert result == mock_languages
 
 
 def test_that_prompt_get_lint_config_languages_returns_no_languages(
@@ -322,7 +322,7 @@ def test_that_prompt_get_lint_config_languages_returns_no_languages(
 
     mock_echo.confirm.assert_called()
     assert mock_echo.confirm.call_count == len(mock_languages)
-    assert result == set()
+    assert result == []
 
 
 def test_that_prompt_get_lint_config_languages_returns_all_languages(
@@ -336,7 +336,7 @@ def test_that_prompt_get_lint_config_languages_returns_all_languages(
 
     mock_echo.confirm.assert_called()
     assert mock_echo.confirm.call_count == len(mock_languages)
-    assert result == set(mock_languages)
+    assert result == mock_languages
 
 
 def test_that_prompt_get_lint_config_languages_returns_filtered_languages_based_on_choice(
@@ -357,4 +357,4 @@ def test_that_prompt_get_lint_config_languages_returns_filtered_languages_based_
 
     mock_echo.confirm.assert_called()
     assert mock_echo.confirm.call_count == len(mock_languages)
-    assert result == set([mock_languages[0]])
+    assert result == [mock_languages[0]]
