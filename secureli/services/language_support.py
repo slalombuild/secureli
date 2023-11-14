@@ -101,7 +101,9 @@ class LanguageSupportService:
         self.language_config = language_config
         self.data_loader = data_loader
 
-    def apply_support(self, languages: list[str]) -> LanguageMetadata:
+    def apply_support(
+        self, languages: list[str], language_config_result: BuildConfigResult
+    ) -> LanguageMetadata:
         """
         Applies Secure Build support for the provided language
         :param languages: list of languages to provide support for
@@ -111,8 +113,6 @@ class LanguageSupportService:
         """
 
         path_to_pre_commit_file = SecureliConfig.FOLDER_PATH / ".pre-commit-config.yaml"
-        # Raises a LanguageNotSupportedError if language doesn't resolve to a yaml file
-        language_config_result = self._build_pre_commit_config(languages)
 
         if len(language_config_result.linter_configs) > 0:
             self._write_pre_commit_configs(language_config_result.linter_configs)
@@ -136,9 +136,12 @@ class LanguageSupportService:
         :param languages: list of languages to check support for
         :return: The hook ID to use for secrets analysis if supported, otherwise None.
         """
-        language_config = self._build_pre_commit_config(languages)
+        # lint_languages param can be an empty set since we only need secrets detection hooks
+        language_config = self._build_pre_commit_config(languages, [])
         config = language_config.config_data
-        secrets_detecting_repos_data = self.data_loader("secrets_detecting_repos.yaml")
+        secrets_detecting_repos_data = self.data_loader(
+            "pre-commit/secrets_detecting_repos.yaml"
+        )
         secrets_detecting_repos = yaml.safe_load(secrets_detecting_repos_data)
 
         # Make sure the repos and configuration don't care about case sensitivity
@@ -177,7 +180,7 @@ class LanguageSupportService:
         :param languages: list of languages to get config for.
         :return: A serializable Configuration model
         """
-        config = self._build_pre_commit_config(languages).config_data
+        config = self._build_pre_commit_config(languages, set(languages)).config_data
 
         def create_repo(raw_repo: dict) -> Repo:
             return Repo(
@@ -189,21 +192,25 @@ class LanguageSupportService:
         repos = [create_repo(raw_repo) for raw_repo in config.get("repos", [])]
         return HookConfiguration(repos=repos)
 
-    def _build_pre_commit_config(self, languages: list[str]) -> BuildConfigResult:
+    def _build_pre_commit_config(
+        self, languages: list[str], lint_languages: list[str]
+    ) -> BuildConfigResult:
         """
         Builds the final .pre-commit-config.yaml from all supported repo languages. Also returns any and all
         linter configuration data.
         :param languages: list of languages to get calculated configuration for.
+        :param lint_languages: list of languages to add lint pre-commit hooks for.
         :return: BuildConfigResult
         """
         config_data = []
-        successful_languages = []
+        successful_languages: list[str] = []
         linter_configs: list[LinterConfig] = []
+        config_languages = [*languages, "base"]
+        config_lint_languages = [*lint_languages, "base"]
 
-        languages.append("base")
-
-        for language in languages:
-            result = self.language_config.get_language_config(language)
+        for language in config_languages:
+            include_linter = language in config_lint_languages
+            result = self.language_config.get_language_config(language, include_linter)
             if result.config_data:
                 successful_languages.append(language)
                 linter_configs.append(
@@ -212,10 +219,8 @@ class LanguageSupportService:
                     )
                 ) if result.linter_config.successful else None
                 data = yaml.safe_load(result.config_data)
-                for config in data["repos"]:
-                    config_data.append(config)
+                config_data += data["repos"] or []
 
-        languages.remove("base")
         config = {"repos": config_data}
         version = hash_config(yaml.dump(config))
 

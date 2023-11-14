@@ -7,7 +7,7 @@ from pytest_mock import MockerFixture
 from secureli.abstractions.pre_commit import (
     InstallResult,
 )
-from secureli.services.language_support import LanguageSupportService
+from secureli.services.language_support import BuildConfigResult, LanguageSupportService
 from secureli.services.language_config import (
     LanguageConfigService,
     LanguagePreCommitResult,
@@ -245,7 +245,14 @@ def test_that_language_support_writes_linter_config_files(
 
     mock_data_loader.side_effect = mock_loader_side_effect
 
-    metadata = language_support_service.apply_support(["RadLang"])
+    languages = ["RadLang"]
+    lint_languages = [*languages]
+
+    build_config_result = language_support_service._build_pre_commit_config(
+        languages, lint_languages
+    )
+
+    metadata = language_support_service.apply_support(["RadLang"], build_config_result)
 
     assert metadata.security_hook_id == "baddie-finder"
 
@@ -270,10 +277,17 @@ def test_that_language_support_throws_exception_when_language_config_file_cannot
                 """,
     )
 
+    languages = ["RadLang"]
+    lint_languages = [*languages]
+
+    build_config_result = language_support_service._build_pre_commit_config(
+        languages, lint_languages
+    )
+
     mock_open.side_effect = IOError
 
     with raises(IOError):
-        language_support_service.apply_support(["RadLang"])
+        language_support_service.apply_support(languages, build_config_result)
 
 
 def test_that_language_support_handles_invalid_language_config(
@@ -292,5 +306,41 @@ def test_that_language_support_handles_invalid_language_config(
         )
     )
 
-    metadata = language_support_service.apply_support(["RadLang"])
+    languages = ["RadLang"]
+    lint_languages = [*languages]
+
+    build_config_result = language_support_service._build_pre_commit_config(
+        languages, lint_languages
+    )
+
+    metadata = language_support_service.apply_support(languages, build_config_result)
     assert metadata.security_hook_id is None
+
+
+def test_that_language_support_handles_empty_repos_list(
+    language_support_service: LanguageSupportService,
+    mock_language_config_service: MagicMock,
+    mock_data_loader: MagicMock,
+):
+    mock_language_config_service.get_language_config.return_value = LanguagePreCommitResult(
+        language="Python",
+        version="abc123",
+        linter_config=LoadLinterConfigsResult(
+            successful=True,
+            linter_data=[{"key": {"example"}}],
+        ),
+        config_data="""
+            repos:
+            """,
+    )
+
+    mock_data_loader.return_value = ""
+
+    languages = ["RadLang"]
+    lint_languages = [*languages]
+
+    build_config_result = language_support_service._build_pre_commit_config(
+        languages, lint_languages
+    )
+
+    assert build_config_result.config_data["repos"] == []

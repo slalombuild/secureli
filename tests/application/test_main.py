@@ -57,3 +57,12 @@ def test_that_app_implements_version_option(
     assert secureli_version() in result.stdout
     mock_container.init_resources.assert_not_called()
     mock_container.wire.assert_not_called()
+
+
+def test_that_app_ignores_version_callback(mock_container: MagicMock):
+    result = CliRunner().invoke(secureli.main.app, ["scan"])
+
+    assert result.exit_code is 0
+    assert secureli_version() not in result.stdout
+    mock_container.init_resources.assert_called_once()
+    mock_container.wire.assert_called_once()
