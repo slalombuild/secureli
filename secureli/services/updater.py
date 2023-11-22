@@ -59,7 +59,7 @@ class UpdaterService:
 
         return UpdateResult(successful=update_result.successful, output=output)
 
-    def update(self, folder_path: Path):
+    def update(self, folder_path: Path = Path(".")):
         """
         Updates secureli with the latest local configuration.
         :param folder_path: Indicates the git folder against which you run secureli

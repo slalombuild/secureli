@@ -120,8 +120,8 @@ class SecureliFile(BaseModel):
     Represents the contents of the .secureli.yaml file
     """
 
-    repo_files: Optional[RepoFilesSettings]
-    echo: Optional[EchoSettings]
+    repo_files: Optional[RepoFilesSettings] = None
+    echo: Optional[EchoSettings] = None
     language_support: Optional[LanguageSupportSettings] = Field(default=None)
 
 

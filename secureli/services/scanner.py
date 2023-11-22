@@ -143,7 +143,7 @@ class ScannerService:
 
         return failure_lines
 
-    def _find_file_names(self, failure_output_list: list[str]) -> str:
+    def _find_file_names(self, failure_output_list: list[str]) -> list[str]:
         """
         Finds the file name for a hook rule failure
         :param failure_index: The index of the initial failure in failure_output_list

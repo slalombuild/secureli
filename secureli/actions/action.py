@@ -246,7 +246,8 @@ class Action(ABC):
 
         update_result = self.action_deps.updater.update()
         details = update_result.output
-        self.action_deps.echo.print(details)
+        if details:
+            self.action_deps.echo.print(details)
 
         if update_result.successful:
             return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
