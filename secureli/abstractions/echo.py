@@ -27,15 +27,26 @@ class EchoAbstraction(ABC):
     it harms our ability to refactor!)
     """
 
-    def __init__(self, level: str):  # TODO should we be using the EchoLevel enum in settings.py?
+    def __init__(self, level: str):
         self.print_enabled = level != EchoLevel.off
         self.debug_enabled = level == EchoLevel.debug
         self.info_enabled = level in [EchoLevel.debug, EchoLevel.info]
         self.warn_enabled = level in [EchoLevel.debug, EchoLevel.info, EchoLevel.warn]
-        self.error_enabled = level in [EchoLevel.debug, EchoLevel.info, EchoLevel.warn, EchoLevel.error]
+        self.error_enabled = level in [
+            EchoLevel.debug,
+            EchoLevel.info,
+            EchoLevel.warn,
+            EchoLevel.error,
+        ]
 
     @abstractmethod
-    def _echo(self, message: str, color: Optional[Color] = None, bold: bool = False, fd: IO = sys.stdout):
+    def _echo(
+        self,
+        message: str,
+        color: Optional[Color] = None,
+        bold: bool = False,
+        fd: IO = sys.stdout,
+    ):
         """
         Print the provided message to the terminal with the associated color and weight
         :param message: The message to print
@@ -110,7 +121,13 @@ class TyperEcho(EchoAbstraction):
     def __init__(self, level: str) -> None:
         super().__init__(level)
 
-    def _echo(self, message: str, color: Optional[Color] = None, bold: bool = False, fd: IO = sys.stdout) -> None:
+    def _echo(
+        self,
+        message: str,
+        color: Optional[Color] = None,
+        bold: bool = False,
+        fd: IO = sys.stdout,
+    ) -> None:
         fg = color.value if color else None
         message = typer.style(f"[seCureLI] {message}", fg=fg, bold=bold)
         typer.echo(message, file=fd)

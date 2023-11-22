@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class EchoLevel(str, Enum):
     debug = "DEBUG"
     info = "INFO"

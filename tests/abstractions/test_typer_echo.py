@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, ANY
 
 import pytest
 
+
 @pytest.fixture()
 def mock_echo_text() -> str:
     return "Hello, There"
