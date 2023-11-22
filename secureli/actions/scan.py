@@ -1,16 +1,25 @@
 import json
 import sys
 from pathlib import Path
+from time import time
 from typing import Optional
 
 from secureli.abstractions.echo import EchoAbstraction
-from secureli.actions.action import VerifyOutcome, Action, ActionDependencies
+from secureli.actions.action import (
+    VerifyOutcome,
+    Action,
+    ActionDependencies,
+    VerifyResult,
+)
 from secureli.services.logging import LoggingService, LogAction
 from secureli.services.scanner import (
     ScanMode,
     ScannerService,
 )
 from secureli.utilities.usage_stats import post_log, convert_failures_to_failure_count
+
+ONE_WEEK_IN_SECONDS: int = 7*24*60*60
+
 
 
 class ScanAction(Action):
@@ -34,6 +43,35 @@ class ScanAction(Action):
         self.echo = echo
         self.logging = logging
 
+    def _check_secureli_hook_updates(self, folder_path: Path) -> VerifyResult:
+        """
+        Queries repositories referenced by pre-commit hooks to check
+        if we have the latest revisions listed in the .pre-commit-config.yaml file
+        :param folder_path: The folder path containing the .pre-commit-config.yaml file
+        """
+
+        self.action_deps.echo.info("Checking for pre-commit hook updates...")
+        pre_commit_config = self.scanner.pre_commit.get_pre_commit_config(folder_path)
+
+        repos_to_update = self.scanner.pre_commit.check_for_hook_updates(
+            pre_commit_config
+        )
+
+        if not repos_to_update:
+            self.action_deps.echo.info("No hooks to update")
+            return VerifyResult(outcome=VerifyOutcome.UP_TO_DATE)
+
+        for repo, revs in repos_to_update.items():
+            self.action_deps.echo.debug(
+                f"Found update for {repo}: {revs.oldRev} -> {revs.newRev}"
+            )
+        self.action_deps.echo.warning(
+            "You have out-of-date pre-commit hooks. Run `secureli update` to update them."
+        )
+        self.action_deps.echo.error("Sample error message is printed to stderr\n")
+        # Since we don't actually perform the updates here, return an outcome of UPDATE_CANCELLED
+        return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)
+
     def scan_repo(
         self,
         folder_path: Path,
@@ -52,6 +90,14 @@ class ScanAction(Action):
         Otherwise, scans with all hooks.
         """
         verify_result = self.verify_install(folder_path, False, always_yes)
+
+        # Check if pre-commit hooks are up-to-date
+        secureli_config = self.action_deps.secureli_config.load()
+        now: int = int(time())
+        if (secureli_config.last_hook_update_check or 0) + ONE_WEEK_IN_SECONDS < now:
+            self._check_secureli_hook_updates(folder_path)
+            secureli_config.last_hook_update_check = now
+            self.action_deps.secureli_config.save(secureli_config)
 
         if verify_result.outcome in self.halting_outcomes:
             return

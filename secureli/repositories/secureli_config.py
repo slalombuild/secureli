@@ -12,6 +12,7 @@ class SecureliConfig(BaseModel):
     languages: Optional[list[str]] = None
     lint_languages: Optional[list[str]] = None
     version_installed: Optional[str] = None
+    last_hook_update_check: Optional[int] = 0
 
 
 class DeprecatedSecureliConfig(BaseModel):

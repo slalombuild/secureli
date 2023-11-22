@@ -1,10 +1,16 @@
-import stat
-import subprocess
 from pathlib import Path
 
-from typing import Optional
+# Note that this import is pulling from the pre-commit tool's internals.
+# A cleaner approach would be to update pre-commit
+# by implementing a dry-run option for the `autoupdate` command
+from pre_commit.commands.autoupdate import RevInfo as HookRepoRevInfo
+from typing import Any, Optional
 
 import pydantic
+import re
+import stat
+import subprocess
+import yaml
 
 
 class InstallFailedError(Exception):
@@ -32,6 +38,25 @@ class ExecuteResult(pydantic.BaseModel):
 
     successful: bool
     output: str
+
+
+class RevisionPair(pydantic.BaseModel):
+    """
+    Used for updating hooks.
+    This could alternatively be implemented as named tuple, but those can't subclass pydantic's BaseModel
+    """
+
+    oldRev: str
+    newRev: str
+
+
+class PreCommitRepoConfig(pydantic.BaseModel):
+    """
+    Schema for each item in the "repos" list in the .pre-commit-config.yaml file
+    """
+
+    repo: str
+    rev: str
 
 
 class InstallResult(pydantic.BaseModel):
@@ -104,6 +129,45 @@ class PreCommitAbstraction:
             return ExecuteResult(successful=False, output=output)
         else:
             return ExecuteResult(successful=True, output=output)
+
+    def check_for_hook_updates(
+        self,
+        config: dict[str, Any],
+        tags_only: bool = True,
+        freeze: Optional[bool] = None,
+    ) -> dict[str, RevisionPair]:
+        """
+        Call's pydantics undocumented/internal functions to check for updates to repositories containing hooks
+        :param config: A dictionary representing the contents of the .pre-commit-config.yaml file.
+        See :meth:`~get_pre_commit_config` to load the contents of the config file into a dictionary.
+        :param tags_only: Represents whether we should check for the latest git tag or the latest git commit.
+        This defaults to true since anyone who cares enough to be on the "bleeding edge" (tags_only=False) can manually
+        update with `secureli update`.
+        :param freeze: This indicates whether tags names should be converted to the corresponding commit hash,
+        in case a tag is updated to point to a different commit in the future. If not specified, we check
+        the existing revision in the .pre-commit-config.yaml file to see if it looks like a commit (40-character hex string),
+        and infer that we should replace the commit hash with another commit hash ("freezing" the tag ref).
+        :returns: A dictionary of outdated with repositories, where the key is the repository URL and the RevisionPair value
+        indicates the old and new revisions. If the result is empty/falsy, then no updates were found.
+        """
+        repos_config_dict: list[dict[str, Any]] = config["repos"]
+
+        git_commit_sha_pattern = re.compile(r"^[a-f0-9]{40}$")
+
+        repos_to_update: dict[str, RevisionPair] = {}
+        for repo_config_dict in repos_config_dict:
+            # convert dictionary to pydantic model
+            repo_config: PreCommitRepoConfig = PreCommitRepoConfig(**repo_config_dict)
+
+            old_rev_info = HookRepoRevInfo.from_config(repo_config_dict)
+            # if the revision currently specified in .pre-commit-config.yaml looks like a full git SHA
+            # (40-character hex string), then set freeze to True
+            freeze = freeze or bool(git_commit_sha_pattern.fullmatch(repo_config.rev))
+            new_rev_info = old_rev_info.update(tags_only, freeze)
+            revisions = RevisionPair(oldRev=old_rev_info.rev, newRev=new_rev_info.rev)
+            if revisions.oldRev != revisions.newRev:
+                repos_to_update[new_rev_info.repo] = revisions
+        return repos_to_update
 
     def autoupdate_hooks(
         self,
@@ -199,3 +263,13 @@ class PreCommitAbstraction:
             return ExecuteResult(successful=False, output=output)
         else:
             return ExecuteResult(successful=True, output=output)
+
+    def get_pre_commit_config(self, folder_path: Path):
+        """
+        Gets the contents of the .pre-commit-config file and returns it as a dictionary
+        :return: Dictionary containing the contents of the .pre-commit-config.yaml file
+        """
+        path_to_config = folder_path / ".pre-commit-config.yaml"
+        with open(path_to_config, "r") as f:
+            data = yaml.safe_load(f)
+            return data

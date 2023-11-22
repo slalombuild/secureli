@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pydantic
 import re
-import yaml
 
 from secureli.abstractions.pre_commit import PreCommitAbstraction
 
@@ -100,7 +99,7 @@ class ScannerService:
         """
         failures = []
         failure_indexes = []
-        config_data = self._get_config(folder_path)
+        config_data = self.pre_commit.get_pre_commit_config(folder_path)
 
         # Split the output up by each line and record the index of each failure
         output_by_line = output.split("\n")
@@ -193,13 +192,3 @@ class ScannerService:
                     return repo
 
         return OutputParseErrors.REPO_NOT_FOUND
-
-    def _get_config(self, folder_path: Path):
-        """
-        Gets the contents of the .pre-commit-config file and returns it as a dict
-        :return: Dict containing the contents of the .pre-commit-config.yaml file
-        """
-        path_to_config = folder_path / ".pre-commit-config.yaml"
-        with open(path_to_config, "r") as f:
-            data = yaml.safe_load(f)
-            return data

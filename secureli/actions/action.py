@@ -2,9 +2,6 @@ from abc import ABC
 from enum import Enum
 from pathlib import Path
 from typing import Optional
-
-import pydantic
-
 from secureli.abstractions.echo import EchoAbstraction, Color
 from secureli.abstractions.pre_commit import (
     InstallFailedError,
@@ -20,6 +17,8 @@ from secureli.services.language_config import LanguageNotSupportedError
 from secureli.services.language_support import LanguageSupportService
 from secureli.services.scanner import ScannerService, ScanMode
 from secureli.services.updater import UpdaterService
+
+import pydantic
 
 
 class VerifyOutcome(str, Enum):
