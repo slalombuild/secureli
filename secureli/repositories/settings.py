@@ -1,9 +1,10 @@
-from enum import Enum
 from pathlib import Path
 from typing import Optional
+from pydantic import BaseModel, BaseSettings, Field
+from secureli.utilities.logging import EchoLevel
 
 import yaml
-from pydantic import BaseModel, BaseSettings, Field
+
 
 default_ignored_extensions = [
     # Images
@@ -68,25 +69,12 @@ class RepoFilesSettings(BaseSettings):
     exclude_file_patterns: list[str] = Field(default=[])
 
 
-class EchoLevel(str, Enum):
-    debug = "DEBUG"
-    info = "INFO"
-    warn = "WARN"
-    error = "ERROR"
-
-    def __str__(self) -> str:
-        return self.value
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
-
 class EchoSettings(BaseSettings):
     """
     Settings that affect how seCureLI provides information to the user.
     """
 
-    level: EchoLevel = Field(default=EchoLevel.error)
+    level: EchoLevel = Field(default=EchoLevel.warn)
 
 
 class LanguageSupportSettings(BaseSettings):
