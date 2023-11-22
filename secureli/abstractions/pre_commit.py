@@ -113,7 +113,7 @@ class PreCommitAbstraction:
         repos: Optional[list] = None,
     ) -> ExecuteResult:
         """
-        Updates the precommit hooks but executing precommit's autoupdate command.  Additional info at
+        Updates the precommit hooks by executing precommit's autoupdate command. Additional info at
         https://pre-commit.com/#pre-commit-autoupdate
         :param folder_path: Indicates the git folder against which you run secureli
         :param bleeding_edge: True if updating to the bleeding edge of the default branch instead of

@@ -257,7 +257,7 @@ class Action(ABC):
     def _update_secureli_config_only(self, always_yes: bool) -> VerifyResult:
         self.action_deps.echo.print("seCureLI is using an out-of-date config.")
         response = always_yes or self.action_deps.echo.confirm(
-            "Update config only now?",
+            "Update configuration now?",
             default_response=True,
         )
         if not response:
