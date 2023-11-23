@@ -50,6 +50,14 @@ class RevisionPair(pydantic.BaseModel):
     newRev: str
 
 
+class PreCommitHookConfig(pydantic.BaseModel):
+    """
+    Schema for individual hooks in .pre-commit-config.yaml
+    """
+
+    id: str
+
+
 class PreCommitRepoConfig(pydantic.BaseModel):
     """
     Schema for each item in the "repos" list in the .pre-commit-config.yaml file
@@ -57,7 +65,16 @@ class PreCommitRepoConfig(pydantic.BaseModel):
 
     repo: str
     rev: str
+    hooks: list[PreCommitHookConfig]
 
+
+class PreCommitConfig(pydantic.BaseModel):
+    """
+    Schema for .pre-commit-config.yaml file.
+    There are other configuration options not included in this schema
+    See for details: https://pre-commit.com/#pre-commit-configyaml---top-level
+    """
+    repos: list[PreCommitRepoConfig]
 
 class InstallResult(pydantic.BaseModel):
     """
@@ -132,14 +149,14 @@ class PreCommitAbstraction:
 
     def check_for_hook_updates(
         self,
-        config: dict[str, Any],
+        config: PreCommitConfig,
         tags_only: bool = True,
         freeze: Optional[bool] = None,
     ) -> dict[str, RevisionPair]:
         """
         Call's pydantics undocumented/internal functions to check for updates to repositories containing hooks
-        :param config: A dictionary representing the contents of the .pre-commit-config.yaml file.
-        See :meth:`~get_pre_commit_config` to load the contents of the config file into a dictionary.
+        :param config: A model representing the contents of the .pre-commit-config.yaml file.
+        See :meth:`~get_pre_commit_config` to deserialize the config file into a model.
         :param tags_only: Represents whether we should check for the latest git tag or the latest git commit.
         This defaults to true since anyone who cares enough to be on the "bleeding edge" (tags_only=False) can manually
         update with `secureli update`.
@@ -150,16 +167,13 @@ class PreCommitAbstraction:
         :returns: A dictionary of outdated with repositories, where the key is the repository URL and the RevisionPair value
         indicates the old and new revisions. If the result is empty/falsy, then no updates were found.
         """
-        repos_config_dict: list[dict[str, Any]] = config["repos"]
 
         git_commit_sha_pattern = re.compile(r"^[a-f0-9]{40}$")
 
         repos_to_update: dict[str, RevisionPair] = {}
-        for repo_config_dict in repos_config_dict:
-            # convert dictionary to pydantic model
-            repo_config: PreCommitRepoConfig = PreCommitRepoConfig(**repo_config_dict)
+        for repo_config in config.repos:
 
-            old_rev_info = HookRepoRevInfo.from_config(repo_config_dict)
+            old_rev_info = HookRepoRevInfo.from_config(repo_config.__dict__)
             # if the revision currently specified in .pre-commit-config.yaml looks like a full git SHA
             # (40-character hex string), then set freeze to True
             freeze = freeze or bool(git_commit_sha_pattern.fullmatch(repo_config.rev))
@@ -271,5 +285,5 @@ class PreCommitAbstraction:
         """
         path_to_config = folder_path / ".pre-commit-config.yaml"
         with open(path_to_config, "r") as f:
-            data = yaml.safe_load(f)
+            data = PreCommitConfig(**yaml.safe_load(f))
             return data

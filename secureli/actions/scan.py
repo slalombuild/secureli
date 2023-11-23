@@ -20,8 +20,6 @@ from secureli.utilities.usage_stats import post_log, convert_failures_to_failure
 
 ONE_WEEK_IN_SECONDS: int = 7*24*60*60
 
-
-
 class ScanAction(Action):
     """The action for the secureli `scan` command, orchestrating services and outputs results"""
 
@@ -68,7 +66,6 @@ class ScanAction(Action):
         self.action_deps.echo.warning(
             "You have out-of-date pre-commit hooks. Run `secureli update` to update them."
         )
-        self.action_deps.echo.error("Sample error message is printed to stderr\n")
         # Since we don't actually perform the updates here, return an outcome of UPDATE_CANCELLED
         return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)
 

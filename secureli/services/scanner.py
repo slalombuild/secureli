@@ -5,7 +5,7 @@ from pathlib import Path
 import pydantic
 import re
 
-from secureli.abstractions.pre_commit import PreCommitAbstraction
+from secureli.abstractions.pre_commit import PreCommitAbstraction, PreCommitConfig
 
 
 class ScanMode(str, Enum):
@@ -99,7 +99,7 @@ class ScannerService:
         """
         failures = []
         failure_indexes = []
-        config_data = self.pre_commit.get_pre_commit_config(folder_path)
+        pre_commit_config: PreCommitConfig = self.pre_commit.get_pre_commit_config(folder_path)
 
         # Split the output up by each line and record the index of each failure
         output_by_line = output.split("\n")
@@ -114,7 +114,7 @@ class ScannerService:
             id = self._remove_ansi_from_string(id_with_encoding)
 
             # Retrieve repo url for failure
-            repo = self._find_repo_from_id(hook_id=id, config=config_data)
+            repo = self._find_repo_from_id(hook_id=id, config=pre_commit_config)
 
             # Capture all output lines for this failure
             failure_output_list = self._get_single_failure_output(
@@ -174,21 +174,20 @@ class ScannerService:
 
         return clean_string
 
-    def _find_repo_from_id(self, hook_id: str, config: dict):
+    def _find_repo_from_id(self, hook_id: str, config: PreCommitConfig):
         """
         Retrieves the repo URL that a hook ID belongs to and returns it
         :param linter_id: The hook id we want to retrieve the repo url for
-        :config: A dict containing the contents of the .pre-commit-config.yaml file
+        :config: A model of the YAML data in .pre-commit-config.yaml file
         :return: The repo url our hook id belongs to
         """
-        repos = config.get("repos")
 
-        for repo in repos:
-            hooks = repo["hooks"]
-            repo = repo["repo"]
+        for repo in config.repos:
+            hooks = repo.hooks
+            repo_str = repo.repo
 
             for hook in hooks:
-                if hook["id"] == hook_id:
-                    return repo
+                if hook.id == hook_id:
+                    return repo_str
 
         return OutputParseErrors.REPO_NOT_FOUND
