@@ -193,3 +193,38 @@ def test_that_scan_repo_does_not_add_ignore_if_always_yes_is_true(
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, True)
 
     mock_settings_repository.save.assert_not_called()
+
+
+@pytest.mark.skip(reason="TODO implement")
+def test_that_scan_checks_for_updates():
+    pass  # TODO
+
+
+@pytest.mark.skip(reason="TODO implement")
+def test_that_scan_only_checks_for_updates_periodically():
+    pass  # TODO
+
+
+@pytest.mark.skip(reason="TODO implement")
+def test_that_scan_update_check_uses_pre_commit_config():
+    pass  # TODO
+
+
+@pytest.mark.skip(reason="TODO implement")
+def test_that_scan_update_check_uses_pre_commit():
+    pass  # TODO
+
+
+@pytest.mark.skip(reason="TODO implement")
+def test_scan_update_check_return_value_when_up_to_date():
+    pass  # TODO
+
+
+@pytest.mark.skip(reason="TODO implement")
+def test_scan_update_check_return_value_when_not_up_to_date():
+    pass  # TODO
+
+
+@pytest.mark.skip(reason="TODO implement")
+def test_that_scan_update_check_updates_last_update_time():
+    pass  # TODO

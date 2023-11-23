@@ -284,3 +284,28 @@ def test_that_pre_commit_install_creates_pre_commit_hook_for_secureli(
 
         mock_open.assert_called_once()
         mock_chmod.assert_called_once()
+
+
+@pytest.mark.skip(reason="TODO implement")
+def test_pre_commit_config_file_is_deserialized_correctly():
+    pass  # TODO
+
+
+@pytest.mark.skip(reason="TODO implement")
+def test_check_for_hook_updates_infers_freeze_param_when_not_provided():
+    pass  # TODO
+
+
+@pytest.mark.skip(reason="TODO implement")
+def test_check_for_hook_updates_respects_freeze_param_when_false():
+    pass  # TODO
+
+
+@pytest.mark.skip(reason="TODO implement")
+def test_check_for_hook_updates_respects_freeze_param_when_true():
+    pass  # TODO
+
+
+@pytest.mark.skip(reason="TODO implement")
+def test_check_for_hook_updates_returns_repos_with_new_revs():
+    pass  # TODO
