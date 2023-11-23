@@ -99,7 +99,9 @@ class ScannerService:
         """
         failures = []
         failure_indexes = []
-        pre_commit_config: PreCommitConfig = self.pre_commit.get_pre_commit_config(folder_path)
+        pre_commit_config: PreCommitConfig = self.pre_commit.get_pre_commit_config(
+            folder_path
+        )
 
         # Split the output up by each line and record the index of each failure
         output_by_line = output.split("\n")

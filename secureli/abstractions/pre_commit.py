@@ -74,7 +74,9 @@ class PreCommitConfig(pydantic.BaseModel):
     There are other configuration options not included in this schema
     See for details: https://pre-commit.com/#pre-commit-configyaml---top-level
     """
+
     repos: list[PreCommitRepoConfig]
+
 
 class InstallResult(pydantic.BaseModel):
     """
@@ -172,7 +174,6 @@ class PreCommitAbstraction:
 
         repos_to_update: dict[str, RevisionPair] = {}
         for repo_config in config.repos:
-
             old_rev_info = HookRepoRevInfo.from_config(repo_config.__dict__)
             # if the revision currently specified in .pre-commit-config.yaml looks like a full git SHA
             # (40-character hex string), then set freeze to True

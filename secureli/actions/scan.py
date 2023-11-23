@@ -18,7 +18,8 @@ from secureli.services.scanner import (
 )
 from secureli.utilities.usage_stats import post_log, convert_failures_to_failure_count
 
-ONE_WEEK_IN_SECONDS: int = 7*24*60*60
+ONE_WEEK_IN_SECONDS: int = 7 * 24 * 60 * 60
+
 
 class ScanAction(Action):
     """The action for the secureli `scan` command, orchestrating services and outputs results"""
