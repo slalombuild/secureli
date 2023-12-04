@@ -60,12 +60,14 @@ def mock_updater() -> MagicMock:
 
 @pytest.fixture()
 def mock_get_time_near_epoch(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch("secureli.actions.scan.time", return_value=1.0)  # 1 second after epoch
+    return mocker.patch(
+        "secureli.actions.scan.time", return_value=1.0
+    )  # 1 second after epoch
 
 
 @pytest.fixture()
 def mock_get_time_far_from_epoch(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch("secureli.actions.scan.time", return_value=1E6)
+    return mocker.patch("secureli.actions.scan.time", return_value=1e6)
 
 
 @pytest.fixture()
@@ -276,4 +278,4 @@ def test_that_scan_update_check_updates_last_check_time(
     mock_secureli_config.verify.return_value = VerifyConfigOutcome.UP_TO_DATE
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, always_yes=True)
     mock_secureli_config.save.assert_called_once()
-    assert mock_secureli_config.save.call_args.args[0].last_hook_update_check == 1E6
+    assert mock_secureli_config.save.call_args.args[0].last_hook_update_check == 1e6
