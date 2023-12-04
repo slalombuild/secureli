@@ -174,7 +174,7 @@ def test_that_calculate_combined_configuration_ignores_lint_config(
     assert mock_data_loader.call_count == 1
 
 
-def test_that_calculate_combined_configuration_ignores_lint_config(
+def test_that_calculate_combined_configuration_returns_valid_config_if_config_file_is_empty(
     language_config_service: LanguageConfigService,
     mock_data_loader: MagicMock,
 ):
