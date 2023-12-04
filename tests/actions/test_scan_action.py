@@ -1,28 +1,55 @@
-import os
 from pathlib import Path
-from unittest import mock
-from unittest.mock import MagicMock
-
-import pytest
-
-from secureli.actions.action import ActionDependencies
+from secureli.abstractions.pre_commit import RevisionPair
+from secureli.actions.action import ActionDependencies, VerifyOutcome
 from secureli.actions.scan import ScanAction
-from secureli.repositories.secureli_config import SecureliConfig
+from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
 from secureli.repositories.settings import (
+    PreCommitHook,
+    PreCommitRepo,
+    PreCommitSettings,
     SecureliFile,
     EchoSettings,
     EchoLevel,
 )
 from secureli.services.scanner import ScanMode, ScanResult, Failure
+from unittest import mock
+from unittest.mock import MagicMock
+from pytest_mock import MockerFixture
+
+import os
+import pytest
 
 test_folder_path = Path("does-not-matter")
 
 
 @pytest.fixture()
-def mock_scanner() -> MagicMock:
+def mock_scanner(mock_pre_commit) -> MagicMock:
     mock_scanner = MagicMock()
     mock_scanner.scan_repo.return_value = ScanResult(successful=True, failures=[])
+    mock_scanner.pre_commit = mock_pre_commit
     return mock_scanner
+
+
+@pytest.fixture()
+def mock_pre_commit() -> MagicMock:
+    mock_pre_commit = MagicMock()
+    mock_pre_commit.get_pre_commit_config.return_value = PreCommitSettings(
+        repos=[
+            PreCommitRepo(
+                url="http://example-repo.com/",
+                rev="master",
+                hooks=[
+                    PreCommitHook(
+                        id="hook-id",
+                        arguments=None,
+                        additional_args=None,
+                    )
+                ],
+            )
+        ]
+    )
+    mock_pre_commit.check_for_hook_updates.return_value = {}
+    return mock_pre_commit
 
 
 @pytest.fixture()
@@ -32,33 +59,19 @@ def mock_updater() -> MagicMock:
 
 
 @pytest.fixture()
+def mock_get_time_near_epoch(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch("secureli.actions.scan.time", return_value=1.0)  # 1 second after epoch
+
+
+@pytest.fixture()
+def mock_get_time_far_from_epoch(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch("secureli.actions.scan.time", return_value=1E6)
+
+
+@pytest.fixture()
 def mock_default_settings(mock_settings_repository: MagicMock) -> MagicMock:
-    mock_echo_settings = EchoSettings(EchoLevel.info)
+    mock_echo_settings = EchoSettings(level=EchoLevel.info)
     mock_settings_file = SecureliFile(echo=mock_echo_settings)
-    mock_settings_repository.load.return_value = mock_settings_file
-
-    return mock_settings_repository
-
-
-@pytest.fixture()
-def mock_default_settings_populated(mock_settings_repository: MagicMock) -> MagicMock:
-    mock_echo_settings = EchoSettings(EchoLevel.info)
-    mock_settings_file = SecureliFile(
-        echo=mock_echo_settings,
-    )
-    mock_settings_repository.load.return_value = mock_settings_file
-
-    return mock_settings_repository
-
-
-@pytest.fixture()
-def mock_default_settings_ignore_already_exists(
-    mock_settings_repository: MagicMock,
-) -> MagicMock:
-    mock_echo_settings = EchoSettings(EchoLevel.info)
-    mock_settings_file = SecureliFile(
-        echo=mock_echo_settings,
-    )
     mock_settings_repository.load.return_value = mock_settings_file
 
     return mock_settings_repository
@@ -195,36 +208,72 @@ def test_that_scan_repo_does_not_add_ignore_if_always_yes_is_true(
     mock_settings_repository.save.assert_not_called()
 
 
-@pytest.mark.skip(reason="TODO implement")
-def test_that_scan_checks_for_updates():
-    pass  # TODO
+def test_that_scan_checks_for_updates(
+    scan_action: ScanAction,
+    mock_scanner: MagicMock,
+    mock_secureli_config: MagicMock,
+    mock_pass_install_verification: MagicMock,
+):
+    scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, always_yes=True)
+    mock_scanner.pre_commit.check_for_hook_updates.assert_called_once()
 
 
-@pytest.mark.skip(reason="TODO implement")
-def test_that_scan_only_checks_for_updates_periodically():
-    pass  # TODO
+def test_that_scan_only_checks_for_updates_periodically(
+    scan_action: ScanAction,
+    mock_scanner: MagicMock,
+    mock_get_time_near_epoch: MagicMock,
+    mock_secureli_config: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig()
+
+    scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, always_yes=True)
+    mock_scanner.pre_commit.check_for_hook_updates.assert_not_called()
 
 
-@pytest.mark.skip(reason="TODO implement")
-def test_that_scan_update_check_uses_pre_commit_config():
-    pass  # TODO
+def test_that_scan_update_check_uses_pre_commit_config(
+    scan_action: ScanAction,
+    mock_scanner: MagicMock,
+    mock_secureli_config: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig()
+    scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, always_yes=True)
+    mock_scanner.pre_commit.get_pre_commit_config.assert_called_once()
 
 
-@pytest.mark.skip(reason="TODO implement")
-def test_that_scan_update_check_uses_pre_commit():
-    pass  # TODO
+# Test that _check_secureli_hook_updates returns UP_TO_DATE if no hooks need updating
+def test_scan_update_check_return_value_when_up_to_date(
+    scan_action: ScanAction,
+    mock_scanner: MagicMock,
+    mock_secureli_config: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig()
+    result = scan_action._check_secureli_hook_updates(test_folder_path)
+    assert result.outcome == VerifyOutcome.UP_TO_DATE
 
 
-@pytest.mark.skip(reason="TODO implement")
-def test_scan_update_check_return_value_when_up_to_date():
-    pass  # TODO
+# Test that _check_secureli_hook_updates returns UPDATE_CANCELED if hooks need updating
+def test_scan_update_check_return_value_when_not_up_to_date(
+    scan_action: ScanAction,
+    mock_scanner: MagicMock,
+    mock_secureli_config: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig()
+    mock_scanner.pre_commit.check_for_hook_updates.return_value = {
+        "http://example-repo.com/": RevisionPair(oldRev="old-rev", newRev="new-rev")
+    }
+    result = scan_action._check_secureli_hook_updates(test_folder_path)
+    assert result.outcome == VerifyOutcome.UPDATE_CANCELED
 
 
-@pytest.mark.skip(reason="TODO implement")
-def test_scan_update_check_return_value_when_not_up_to_date():
-    pass  # TODO
-
-
-@pytest.mark.skip(reason="TODO implement")
-def test_that_scan_update_check_updates_last_update_time():
-    pass  # TODO
+# Validate that scan_repo persists changes to the .secureli.yaml file after checking for hook updates
+def test_that_scan_update_check_updates_last_check_time(
+    scan_action: ScanAction,
+    mock_scanner: MagicMock,
+    mock_get_time_far_from_epoch: MagicMock,
+    mock_secureli_config: MagicMock,
+    mock_pass_install_verification: MagicMock,
+):
+    mock_secureli_config.verify.return_value = VerifyConfigOutcome.UP_TO_DATE
+    scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, always_yes=True)
+    mock_secureli_config.save.assert_called_once()
+    assert mock_secureli_config.save.call_args.args[0].last_hook_update_check == 1E6
