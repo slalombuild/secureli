@@ -24,6 +24,7 @@ def settings_dict() -> dict:
         repos=[
             PreCommitRepo(
                 url="http://example-repo.com/",
+                rev="master",
                 hooks=[
                     PreCommitHook(
                         id="hook-id",

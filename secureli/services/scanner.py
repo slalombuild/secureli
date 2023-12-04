@@ -5,7 +5,8 @@ from pathlib import Path
 import pydantic
 import re
 
-from secureli.abstractions.pre_commit import PreCommitAbstraction, PreCommitConfig
+from secureli.abstractions.pre_commit import PreCommitAbstraction
+from secureli.repositories.settings import PreCommitSettings
 
 
 class ScanMode(str, Enum):
@@ -99,7 +100,7 @@ class ScannerService:
         """
         failures = []
         failure_indexes = []
-        pre_commit_config: PreCommitConfig = self.pre_commit.get_pre_commit_config(
+        pre_commit_config: PreCommitSettings = self.pre_commit.get_pre_commit_config(
             folder_path
         )
 
@@ -176,7 +177,7 @@ class ScannerService:
 
         return clean_string
 
-    def _find_repo_from_id(self, hook_id: str, config: PreCommitConfig):
+    def _find_repo_from_id(self, hook_id: str, config: PreCommitSettings):
         """
         Retrieves the repo URL that a hook ID belongs to and returns it
         :param linter_id: The hook id we want to retrieve the repo url for
@@ -186,7 +187,7 @@ class ScannerService:
 
         for repo in config.repos:
             hooks = repo.hooks
-            repo_str = repo.repo
+            repo_str = repo.url
 
             for hook in hooks:
                 if hook.id == hook_id:

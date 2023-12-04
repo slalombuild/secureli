@@ -85,7 +85,7 @@ class LanguageSupportSettings(BaseSettings):
     command_timeout_seconds: int = Field(default=300)
 
 
-class PreCommitHook(BaseSettings):
+class PreCommitHook(BaseModel):
     """
     Hook settings for pre-commit.
     """
@@ -96,19 +96,24 @@ class PreCommitHook(BaseSettings):
     exclude_file_patterns: Optional[list[str]] = Field(default=[])
 
 
-class PreCommitRepo(BaseSettings):
+class PreCommitRepo(BaseModel):
     """
     Repo settings for pre-commit.
     """
 
-    url: str
+    url: str = Field(validation_alias="repo", serialization_alias="repo")
+    rev: str
     hooks: list[PreCommitHook] = Field(default=[])
     suppressed_hook_ids: list[str] = Field(default=[])
 
 
-class PreCommitSettings(BaseSettings):
+class PreCommitSettings(BaseModel):
     """
     Various adjustments that affect how seCureLI configures the pre-commit system.
+
+    Extends schema for .pre-commit-config.yaml file.
+    See for details: https://pre-commit.com/#pre-commit-configyaml---top-level
+
     """
 
     repos: list[PreCommitRepo] = Field(default=[])

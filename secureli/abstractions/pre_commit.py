@@ -12,6 +12,8 @@ import stat
 import subprocess
 import yaml
 
+from secureli.repositories.settings import PreCommitSettings
+
 
 class InstallFailedError(Exception):
     """Attempting to invoke pre-commit to set up our repo for the given template did not succeed"""
@@ -48,34 +50,6 @@ class RevisionPair(pydantic.BaseModel):
 
     oldRev: str
     newRev: str
-
-
-class PreCommitHookConfig(pydantic.BaseModel):
-    """
-    Schema for individual hooks in .pre-commit-config.yaml
-    """
-
-    id: str
-
-
-class PreCommitRepoConfig(pydantic.BaseModel):
-    """
-    Schema for each item in the "repos" list in the .pre-commit-config.yaml file
-    """
-
-    repo: str
-    rev: str
-    hooks: list[PreCommitHookConfig]
-
-
-class PreCommitConfig(pydantic.BaseModel):
-    """
-    Schema for .pre-commit-config.yaml file.
-    There are other configuration options not included in this schema
-    See for details: https://pre-commit.com/#pre-commit-configyaml---top-level
-    """
-
-    repos: list[PreCommitRepoConfig]
 
 
 class InstallResult(pydantic.BaseModel):
@@ -151,7 +125,7 @@ class PreCommitAbstraction:
 
     def check_for_hook_updates(
         self,
-        config: PreCommitConfig,
+        config: PreCommitSettings,
         tags_only: bool = True,
         freeze: Optional[bool] = None,
     ) -> dict[str, RevisionPair]:
@@ -286,5 +260,5 @@ class PreCommitAbstraction:
         """
         path_to_config = folder_path / ".pre-commit-config.yaml"
         with open(path_to_config, "r") as f:
-            data = PreCommitConfig(**yaml.safe_load(f))
+            data = PreCommitSettings(**yaml.safe_load(f))
             return data
