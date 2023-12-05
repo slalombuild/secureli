@@ -15,7 +15,6 @@ secureliFormulaPath = "./homebrew-secureli/Formula"
 # Filter out additional packages that are needed for the pip package, but not the homebrew formula
 packagesToRemoveFromFormula = [
     "colorama",
-    "six",
     "shellingham",
     "distlib",
     "filelock",
