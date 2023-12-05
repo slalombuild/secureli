@@ -101,7 +101,7 @@ class PreCommitRepo(BaseModel):
     Repo settings for pre-commit.
     """
 
-    url: str = Field(validation_alias="repo", serialization_alias="repo")
+    url: str = Field(alias="repo")
     rev: str
     hooks: list[PreCommitHook] = Field(default=[])
     suppressed_hook_ids: list[str] = Field(default=[])

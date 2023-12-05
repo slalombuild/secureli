@@ -23,7 +23,7 @@ def settings_dict() -> dict:
     return PreCommitSettings(
         repos=[
             PreCommitRepo(
-                url="http://example-repo.com/",
+                repo="http://example-repo.com/",
                 rev="master",
                 hooks=[
                     PreCommitHook(

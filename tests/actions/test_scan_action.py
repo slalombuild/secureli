@@ -36,7 +36,7 @@ def mock_pre_commit() -> MagicMock:
     mock_pre_commit.get_pre_commit_config.return_value = PreCommitSettings(
         repos=[
             PreCommitRepo(
-                url="http://example-repo.com/",
+                repo="http://example-repo.com/",
                 rev="master",
                 hooks=[
                     PreCommitHook(
