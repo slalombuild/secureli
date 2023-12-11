@@ -16,7 +16,7 @@ from secureli.repositories.settings import (
 )
 
 test_folder_path = Path("does-not-matter")
-
+example_git_sha = "a" * 40
 
 @pytest.fixture()
 def settings_dict() -> dict:
@@ -287,26 +287,86 @@ def test_that_pre_commit_install_creates_pre_commit_hook_for_secureli(
         mock_chmod.assert_called_once()
 
 
-@pytest.mark.skip(reason="TODO implement")
-def test_pre_commit_config_file_is_deserialized_correctly():
-    pass  # TODO
+def test_pre_commit_config_file_is_deserialized_correctly(
+    pre_commit: PreCommitAbstraction,
+):
+    with um.patch("builtins.open", um.mock_open()) as mock_open:
+        mock_open.return_value.read.return_value = (
+            "repos:\n"
+            "  - repo: my-repo\n"
+            "    rev: tag1\n"
+            "    hooks:\n"
+            "      - id: detect-secrets\n"
+            "        args: ['--foo', '--bar']\n"
+        )
+        pre_commit_config = pre_commit.get_pre_commit_config(test_folder_path)
+        assert pre_commit_config.repos[0].url == "my-repo"
+        assert pre_commit_config.repos[0].rev == "tag1"
+        assert pre_commit_config.repos[0].hooks[0].id == "detect-secrets"
 
 
-@pytest.mark.skip(reason="TODO implement")
-def test_check_for_hook_updates_infers_freeze_param_when_not_provided():
-    pass  # TODO
+@pytest.mark.parametrize(argnames=["rev", "rev_is_sha"], argvalues=[("tag1", False), (example_git_sha, True)])
+def test_check_for_hook_updates_infers_freeze_param_when_not_provided(
+    pre_commit: PreCommitAbstraction,
+    rev: str,
+    rev_is_sha: bool,
+):
+    with um.patch("secureli.abstractions.pre_commit.HookRepoRevInfo.from_config") as mock_hook_repo_rev_info:
+        pre_commit_config_repo = PreCommitRepo(repo="http://example-repo.com/", rev=rev, hooks=[PreCommitHook(id="hook-id")])
+        pre_commit_config = PreCommitSettings(repos=[pre_commit_config_repo])
+        rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
+        mock_hook_repo_rev_info.return_value = rev_info_mock
+        rev_info_mock.update.return_value = rev_info_mock  # Returning the same revision info on update means the hook will be considered up to date
+        pre_commit.check_for_hook_updates(pre_commit_config)
+        rev_info_mock.update.assert_called_with(tags_only=True, freeze=rev_is_sha)
 
 
-@pytest.mark.skip(reason="TODO implement")
-def test_check_for_hook_updates_respects_freeze_param_when_false():
-    pass  # TODO
+def test_check_for_hook_updates_respects_freeze_param_when_false(
+        pre_commit: PreCommitAbstraction,
+):
+    """
+    When freeze is explicitly provided, the rev_info.update() method respect that value
+    regardless of whether the existing rev is a tag or a commit hash.
+    """
+    with um.patch("secureli.abstractions.pre_commit.HookRepoRevInfo.from_config") as mock_hook_repo_rev_info:
+        pre_commit_config_repo = PreCommitRepo(repo="http://example-repo.com/", rev=example_git_sha, hooks=[PreCommitHook(id="hook-id")])
+        pre_commit_config = PreCommitSettings(repos=[pre_commit_config_repo])
+        rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
+        mock_hook_repo_rev_info.return_value = rev_info_mock
+        rev_info_mock.update.return_value = rev_info_mock  # Returning the same revision info on update means the hook will be considered up to date
+        pre_commit.check_for_hook_updates(pre_commit_config, freeze=False)
+        rev_info_mock.update.assert_called_with(tags_only=True, freeze=False)
 
 
-@pytest.mark.skip(reason="TODO implement")
-def test_check_for_hook_updates_respects_freeze_param_when_true():
-    pass  # TODO
+
+def test_check_for_hook_updates_respects_freeze_param_when_true(
+        pre_commit: PreCommitAbstraction,
+):
+    with um.patch("secureli.abstractions.pre_commit.HookRepoRevInfo.from_config") as mock_hook_repo_rev_info:
+        pre_commit_config_repo = PreCommitRepo(repo="http://example-repo.com/", rev="tag1", hooks=[PreCommitHook(id="hook-id")])
+        pre_commit_config = PreCommitSettings(repos=[pre_commit_config_repo])
+        rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
+        mock_hook_repo_rev_info.return_value = rev_info_mock
+        rev_info_mock.update.return_value = rev_info_mock  # Returning the same revision info on update means the hook will be considered up to date
+        pre_commit.check_for_hook_updates(pre_commit_config, freeze=True)
+        rev_info_mock.update.assert_called_with(tags_only=True, freeze=True)
 
 
-@pytest.mark.skip(reason="TODO implement")
-def test_check_for_hook_updates_returns_repos_with_new_revs():
-    pass  # TODO
+def test_check_for_hook_updates_returns_repos_with_new_revs(
+        pre_commit: PreCommitAbstraction,
+):
+    with um.patch("secureli.abstractions.pre_commit.HookRepoRevInfo") as mock_hook_repo_rev_info:
+        repo_urls = ["http://example-repo.com/", "http://example-repo-2.com/"]
+        old_rev = "tag1"
+        repo_1_new_rev = "tag2"
+        pre_commit_config = PreCommitSettings(repos=[PreCommitRepo(repo=repo_url, rev=old_rev, hooks=[PreCommitHook(id="hook-id")]) for repo_url in repo_urls])
+        repo_1_old_rev_mock = MagicMock(rev=old_rev, repo=repo_urls[0])
+        repo_1_new_rev_mock = MagicMock(rev=repo_1_new_rev, repo=repo_urls[0])
+        repo_2_old_rev_mock = MagicMock(rev=old_rev, repo=repo_urls[1])
+        mock_hook_repo_rev_info.from_config = MagicMock(side_effect=[repo_1_old_rev_mock, repo_2_old_rev_mock])
+        repo_1_old_rev_mock.update.return_value = repo_1_new_rev_mock
+        repo_2_old_rev_mock.update.return_value = repo_2_old_rev_mock  # this update should return the same rev info
+        updated_repos = pre_commit.check_for_hook_updates(pre_commit_config)
+        assert len(updated_repos) == 1  # only the first repo should be returned
+        assert updated_repos[repo_urls[0]].oldRev == "tag1"
+        assert updated_repos[repo_urls[0]].newRev == "tag2"
