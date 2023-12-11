@@ -1,9 +1,8 @@
+from pytest_mock import MockerFixture
+from secureli.abstractions.echo import TyperEcho, Color
 from unittest.mock import MagicMock, ANY
 
 import pytest
-from pytest_mock import MockerFixture
-
-from secureli.abstractions.echo import TyperEcho, Color
 
 
 @pytest.fixture()
@@ -55,7 +54,7 @@ def test_that_typer_echo_stylizes_message(
     typer_echo.info(mock_echo_text)
 
     mock_typer_style.assert_called_once()
-    mock_typer_echo.assert_called_once_with(mock_echo_text)
+    mock_typer_echo.assert_called_once_with(mock_echo_text, file=ANY)
 
 
 def test_that_typer_echo_stylizes_message_when_printing(
@@ -67,7 +66,7 @@ def test_that_typer_echo_stylizes_message_when_printing(
     typer_echo.print(mock_echo_text)
 
     mock_typer_style.assert_called_once()
-    mock_typer_echo.assert_called_once_with(mock_echo_text)
+    mock_typer_echo.assert_called_once_with(mock_echo_text, file=ANY)
 
 
 def test_that_typer_echo_does_not_even_print_when_off(

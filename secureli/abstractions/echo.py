@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Optional
+from typing import IO, Optional
 
+import sys
 import typer
+
+from secureli.utilities.logging import EchoLevel
 
 
 class Color(str, Enum):
@@ -25,18 +28,31 @@ class EchoAbstraction(ABC):
     """
 
     def __init__(self, level: str):
-        self.print_enabled = level != "OFF"
-        self.info_enabled = level in ["DEBUG", "INFO"]
-        self.warn_enabled = level in ["DEBUG", "INFO", "WARN"]
-        self.error_enabled = level in ["DEBUG", "INFO", "WARN", "ERROR"]
+        self.print_enabled = level != EchoLevel.off
+        self.debug_enabled = level == EchoLevel.debug
+        self.info_enabled = level in [EchoLevel.debug, EchoLevel.info]
+        self.warn_enabled = level in [EchoLevel.debug, EchoLevel.info, EchoLevel.warn]
+        self.error_enabled = level in [
+            EchoLevel.debug,
+            EchoLevel.info,
+            EchoLevel.warn,
+            EchoLevel.error,
+        ]
 
     @abstractmethod
-    def _echo(self, message: str, color: Optional[Color] = None, bold: bool = False):
+    def _echo(
+        self,
+        message: str,
+        color: Optional[Color] = None,
+        bold: bool = False,
+        fd: IO = sys.stdout,
+    ):
         """
         Print the provided message to the terminal with the associated color and weight
         :param message: The message to print
         :param color: The color to use
         :param bold: Whether to make this message appear bold or not
+        :param fd: A file descriptor, defaults to stdout
         """
         pass
 
@@ -59,10 +75,16 @@ class EchoAbstraction(ABC):
         :param color: The color to use
         :param bold: Whether to make this message appear bold or not
         """
-        if not self.print_enabled:
-            return
+        if self.print_enabled:
+            self._echo(message, color, bold)
 
-        self._echo(message, color, bold)
+    def debug(self, message: str) -> None:
+        """
+        Prints the message to the terminal in light blue and bold
+        :param message: The debug message to print
+        """
+        if self.debug_enabled:
+            self._echo(f"[DEBUG] {message}", color=Color.CYAN, bold=True)
 
     def info(self, message: str, color: Optional[Color] = None, bold: bool = False):
         """
@@ -71,28 +93,24 @@ class EchoAbstraction(ABC):
         :param color: The color to use
         :param bold: Whether to make this message appear bold or not
         """
-        if not self.info_enabled:
-            return
-
-        self._echo(message, color, bold)
+        if self.info_enabled:
+            self._echo(f"[INFO] {message}", color, bold)
 
     def error(self, message: str):
         """
         Prints the provided message to the terminal in red and bold
         :param message: The error message to print
         """
-        if not self.error_enabled:
-            return
-        self._echo(message, color=Color.RED, bold=True)
+        if self.error_enabled:
+            self._echo(f"[ERROR] {message}", color=Color.RED, bold=True, fd=sys.stderr)
 
     def warning(self, message: str):
         """
         Prints the provided message to the terminal in red and bold
         :param message: The error message to print
         """
-        if not self.warn_enabled:
-            return
-        self._echo(message, color=Color.YELLOW, bold=False)
+        if self.warn_enabled:
+            self._echo(f"[WARN] {message}", color=Color.YELLOW, bold=False)
 
 
 class TyperEcho(EchoAbstraction):
@@ -100,13 +118,19 @@ class TyperEcho(EchoAbstraction):
     Encapsulates the Typer dependency for printing purposes, allows us to render stuff to the screen.
     """
 
-    def __init__(self, level: str):
+    def __init__(self, level: str) -> None:
         super().__init__(level)
 
-    def _echo(self, message: str, color: Optional[Color] = None, bold: bool = False):
+    def _echo(
+        self,
+        message: str,
+        color: Optional[Color] = None,
+        bold: bool = False,
+        fd: IO = sys.stdout,
+    ) -> None:
         fg = color.value if color else None
-        message = typer.style(message, fg=fg, bold=bold)
-        typer.echo(message)
+        message = typer.style(f"[seCureLI] {message}", fg=fg, bold=bold)
+        typer.echo(message, file=fd)
 
     def confirm(self, message: str, default_response: Optional[bool] = False) -> bool:
         return typer.confirm(message, default=default_response, show_default=True)
