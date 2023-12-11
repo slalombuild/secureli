@@ -211,7 +211,7 @@ def test_that_pre_commit_autoupdate_hooks_ignores_repos_when_repos_is_a_dict(
 ):
     test_repos = {}
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)  # type: ignore
 
     assert execute_result.successful
     assert "--repo {}" not in mock_subprocess.run.call_args_list[0].args[0]
@@ -223,7 +223,7 @@ def test_that_pre_commit_autoupdate_hooks_converts_repos_when_repos_is_a_string(
 ):
     test_repos = "string"
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
+    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)  # type: ignore
 
     assert execute_result.successful
     assert "--repo string" in mock_subprocess.run.call_args_list[0].args[0]
