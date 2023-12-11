@@ -148,11 +148,17 @@ class PreCommitAbstraction:
 
         repos_to_update: dict[str, RevisionPair] = {}
         for repo_config in config.repos:
-            repo_config_dict = repo_config.__dict__ | {"repo": repo_config.url}  # PreCommitSettings uses "url" instead of "repo", so we need to copy that value over
+            repo_config_dict = repo_config.__dict__ | {
+                "repo": repo_config.url
+            }  # PreCommitSettings uses "url" instead of "repo", so we need to copy that value over
             old_rev_info = HookRepoRevInfo.from_config(repo_config_dict)
             # if the revision currently specified in .pre-commit-config.yaml looks like a full git SHA
             # (40-character hex string), then set freeze to True
-            freeze = bool(git_commit_sha_pattern.fullmatch(repo_config.rev)) if freeze is None else freeze
+            freeze = (
+                bool(git_commit_sha_pattern.fullmatch(repo_config.rev))
+                if freeze is None
+                else freeze
+            )
             new_rev_info = old_rev_info.update(tags_only=tags_only, freeze=freeze)
             revisions = RevisionPair(oldRev=old_rev_info.rev, newRev=new_rev_info.rev)
             if revisions.oldRev != revisions.newRev:
