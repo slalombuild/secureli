@@ -130,7 +130,7 @@ class PreCommitAbstraction:
         freeze: Optional[bool] = None,
     ) -> dict[str, RevisionPair]:
         """
-        Call's pydantics undocumented/internal functions to check for updates to repositories containing hooks
+        Call's pre-commit's undocumented/internal functions to check for updates to repositories containing hooks
         :param config: A model representing the contents of the .pre-commit-config.yaml file.
         See :meth:`~get_pre_commit_config` to deserialize the config file into a model.
         :param tags_only: Represents whether we should check for the latest git tag or the latest git commit.
