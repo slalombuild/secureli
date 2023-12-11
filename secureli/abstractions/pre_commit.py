@@ -261,5 +261,9 @@ class PreCommitAbstraction:
         """
         path_to_config = folder_path / ".pre-commit-config.yaml"
         with open(path_to_config, "r") as f:
-            data = PreCommitSettings(**yaml.safe_load(f))
-            return data
+            # For some reason, the mocking causes an infinite loop when we try to use yaml.safe_load()
+            # directly on the file-like object f. Reading the contents of the file into a string as a workaround.
+            # return PreCommitSettings(**yaml.safe_load(f))  # TODO figure out why this isn't working
+            contents = f.read()
+            yaml_values = yaml.safe_load(contents)
+            return PreCommitSettings(**yaml_values)
