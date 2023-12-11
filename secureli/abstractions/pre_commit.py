@@ -156,7 +156,7 @@ class PreCommitAbstraction:
             new_rev_info = old_rev_info.update(tags_only=tags_only, freeze=freeze)
             revisions = RevisionPair(oldRev=old_rev_info.rev, newRev=new_rev_info.rev)
             if revisions.oldRev != revisions.newRev:
-                repos_to_update[new_rev_info.repo] = revisions
+                repos_to_update[old_rev_info.repo] = revisions
         return repos_to_update
 
     def autoupdate_hooks(
