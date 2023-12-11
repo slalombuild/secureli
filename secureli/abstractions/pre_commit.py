@@ -152,8 +152,8 @@ class PreCommitAbstraction:
             old_rev_info = HookRepoRevInfo.from_config(repo_config_dict)
             # if the revision currently specified in .pre-commit-config.yaml looks like a full git SHA
             # (40-character hex string), then set freeze to True
-            freeze = freeze or bool(git_commit_sha_pattern.fullmatch(repo_config.rev))
-            new_rev_info = old_rev_info.update(tags_only, freeze)
+            freeze = bool(git_commit_sha_pattern.fullmatch(repo_config.rev)) if freeze is None else freeze
+            new_rev_info = old_rev_info.update(tags_only=tags_only, freeze=freeze)
             revisions = RevisionPair(oldRev=old_rev_info.rev, newRev=new_rev_info.rev)
             if revisions.oldRev != revisions.newRev:
                 repos_to_update[new_rev_info.repo] = revisions
