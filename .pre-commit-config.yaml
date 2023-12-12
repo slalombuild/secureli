@@ -1,1 +1,46 @@
-repos: []
+repos:
+- hooks:
+  - id: python-use-type-annotations
+  repo: https://github.com/pre-commit/pygrep-hooks
+  rev: v1.10.0
+- hooks:
+  - args:
+    - --exclude
+    - tests/
+    - --severity-level
+    - medium
+    id: bandit
+  repo: https://github.com/PyCQA/bandit
+  rev: 1.7.6
+- hooks:
+  - id: black
+  repo: https://github.com/psf/black
+  rev: 23.12.0
+- hooks:
+  - id: check-added-large-files
+  - id: check-ast
+  - id: check-docstring-first
+  - id: check-executables-have-shebangs
+  - id: check-shebang-scripts-are-executable
+  - id: check-merge-conflict
+  - id: check-toml
+  - id: check-json
+  - id: check-xml
+  - id: check-yaml
+  - id: debug-statements
+  - args:
+    - --allow-missing-credentials
+    id: detect-aws-credentials
+  - id: detect-private-key
+  - args:
+    - --pytest-test-first
+    id: name-tests-test
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+  - id: check-yaml
+  repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+- hooks:
+  - id: detect-secrets
+  repo: https://github.com/Yelp/detect-secrets
+  rev: v1.4.0
