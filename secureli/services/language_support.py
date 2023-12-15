@@ -252,15 +252,25 @@ class LanguageSupportService:
             # parse though each config for the given language.
             for config in language_linter_configs.linter_data:
                 try:
-                    config_name = list(config.keys())[0]
                     # generate relative file name and path.
-                    config_file_name = f"{slugify(language_linter_configs.language)}.{config_name}.yaml"
-                    path_to_config_file = (
-                        SecureliConfig.FOLDER_PATH / ".secureli/{config_file_name}"
+                    config_file_name = (
+                        f"{slugify(language_linter_configs.language)}.config.yaml"
                     )
-                    with open(path_to_config_file, "w") as f:
-                        f.write(yaml.dump(config[config_name]))
-                    num_configs_success += 1
+
+                    absolute_secureli_path = (
+                        f'{Path(f"{__file__}").parent.resolve()}'.rsplit("/", 1)[0]
+                    )
+
+                    path_to_config_file = Path(
+                        f"{absolute_secureli_path}/resources/files/configs/{config_file_name}"
+                    )
+
+                    if Path.exists(path_to_config_file):
+                        with open(
+                            Path(SecureliConfig.FOLDER_PATH / config["filename"]), "w"
+                        ) as f:
+                            f.write(yaml.dump(config["data"]))
+                            num_configs_success += 1
                 except Exception as e:
                     num_configs_non_success += 1
                     non_success_messages.append(f"Unable to install config: {e}")
