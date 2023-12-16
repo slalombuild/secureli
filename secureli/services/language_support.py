@@ -102,23 +102,34 @@ class LanguageSupportService:
         self.data_loader = data_loader
 
     def apply_support(
-        self, languages: list[str], language_config_result: BuildConfigResult
+        self,
+        languages: list[str],
+        language_config_result: BuildConfigResult,
+        overwrite_pre_commit: bool,
     ) -> LanguageMetadata:
         """
         Applies Secure Build support for the provided language
         :param languages: list of languages to provide support for
+        :param language_config_result: resulting config from language hook detection
+        :param overwrite_pre_commit: flag to determine if config should overwrite or append to config file
         :raises LanguageNotSupportedError if support for the language is not provided
         :return: Metadata including version of the language configuration that was just installed
         as well as a secret-detection hook ID, if present.
         """
 
-        path_to_pre_commit_file = SecureliConfig.FOLDER_PATH / ".pre-commit-config.yaml"
+        path_to_pre_commit_file = Path(SecureliConfig.FOLDER_PATH / ".pre-commit-config.yaml")
 
         if len(language_config_result.linter_configs) > 0:
             self._write_pre_commit_configs(language_config_result.linter_configs)
 
-        with open(path_to_pre_commit_file, "w") as f:
-            f.write(yaml.dump(language_config_result.config_data))
+        pre_commit_file_mode = "w" if overwrite_pre_commit else "a"
+        with open(path_to_pre_commit_file, pre_commit_file_mode) as f:
+            data = (
+                language_config_result.config_data
+                if overwrite_pre_commit
+                else language_config_result.config_data["repos"]
+            )
+            f.write(yaml.dump(data))
 
         # Add .secureli/ to the gitignore folder if needed
         self.git_ignore.ignore_secureli_files()

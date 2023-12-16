@@ -10,7 +10,6 @@ FOLDER_PATH = Path(".")
 
 class SecureliConfig(BaseModel):
     languages: Optional[list[str]]
-    lint_languages: Optional[list[str]]
     version_installed: Optional[str]
 
 
@@ -97,7 +96,6 @@ class SecureliConfigRepository:
 
         return SecureliConfig(
             languages=[old_config.overall_language],
-            lint_languages=[old_config.overall_language],
             version_installed=old_config.version_installed,
         )
 
