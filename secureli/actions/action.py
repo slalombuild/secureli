@@ -101,17 +101,26 @@ class Action(ABC):
 
         config = SecureliConfig() if reset else self.action_deps.secureli_config.load()
 
-        languages = self._detect_languages(folder_path)
-        newly_detected_languages = [
-            language
-            for language in (languages or [])
-            if language not in (config.languages or [])
-        ]
+        try:
+            languages = self._detect_languages(folder_path)
+            newly_detected_languages = [
+                language
+                for language in (languages or [])
+                if language not in (config.languages or [])
+            ]
+        except (ValueError, LanguageNotSupportedError) as e:
+            if not config.languages:
+                self.action_deps.echo.error(
+                    f"seCureLI could not be installed due to an error: {str(e)}"
+                )
+                return VerifyResult(
+                    outcome=VerifyOutcome.INSTALL_FAILED,
+                )
 
         if (
             not config.languages
             or not config.version_installed
-            or len(newly_detected_languages)
+            or len(newly_detected_languages or [])
         ):
             return self._install_secureli(
                 folder_path, languages, newly_detected_languages, always_yes
@@ -140,34 +149,31 @@ class Action(ABC):
         :param always_yes: Assume "Yes" to all prompts
         :return: The new SecureliConfig after install or None if installation did not complete
         """
+
         new_install = len(detected_languages) == len(install_languages)
 
-        self._prompt_to_install(install_languages, always_yes, new_install)
-
-        try:
-            lint_languages = self._prompt_get_lint_config_languages(
-                install_languages, always_yes
-            )
-
-            language_config_result = (
-                self.action_deps.language_support._build_pre_commit_config(
-                    install_languages, lint_languages
-                )
-            )
-            metadata = self.action_deps.language_support.apply_support(
-                install_languages,
-                language_config_result,
-                new_install,
-            )
-
-        except (ValueError, LanguageNotSupportedError, InstallFailedError) as e:
-            self.action_deps.echo.error(
-                f"seCureLI could not be installed due to an error: {str(e)}"
-            )
+        should_install = self._prompt_to_install(
+            install_languages, always_yes, new_install
+        )
+        if not should_install:
+            self.action_deps.echo.error("User canceled install process")
             return VerifyResult(
-                outcome=VerifyOutcome.INSTALL_FAILED,
+                outcome=VerifyOutcome.INSTALL_CANCELED,
             )
 
+        lint_languages = self._prompt_get_lint_config_languages(
+            install_languages, always_yes
+        )
+        language_config_result = (
+            self.action_deps.language_support._build_pre_commit_config(
+                install_languages, lint_languages
+            )
+        )
+        metadata = self.action_deps.language_support.apply_support(
+            install_languages,
+            language_config_result,
+            new_install,
+        )
         config = SecureliConfig(
             languages=detected_languages,
             version_installed=metadata.version,
@@ -179,7 +185,6 @@ class Action(ABC):
         self.action_deps.echo.print(
             f"seCureLI has been installed successfully (languages = {', '.join(install_languages)})"
         )
-
         return VerifyResult(
             outcome=VerifyOutcome.INSTALL_SUCCEEDED,
             config=config,
@@ -187,7 +192,7 @@ class Action(ABC):
 
     def _prompt_to_install(
         self, languages: list[str], always_yes: bool, new_install: bool
-    ) -> VerifyResult:
+    ) -> bool:
         """
         Prompts user to determine if secureli should be installed or not
         :param languages: List of language names to display
@@ -195,17 +200,13 @@ class Action(ABC):
         :param new_install: Used to determine if the install is new or
         if additional languages are being added
         """
+
         new_install_message = "seCureLI has not yet been installed, install now?"
         add_languages_message = f"seCureLI has not been installed for the following languages: {', '.join(languages)}, install now?"
-        response = always_yes or self.action_deps.echo.confirm(
+        return always_yes or self.action_deps.echo.confirm(
             new_install_message if new_install else add_languages_message,
             default_response=True,
         )
-        if not response:
-            self.action_deps.echo.error("User canceled install process")
-            return VerifyResult(
-                outcome=VerifyOutcome.INSTALL_CANCELED,
-            )
 
     def _run_post_install_scan(
         self,
@@ -249,6 +250,7 @@ class Action(ABC):
         :param folder_path: The folder path to initialize the repo for
         :return: A list of all languages found in the repository
         """
+
         analyze_result = self.action_deps.language_analyzer.analyze(folder_path)
 
         if analyze_result.skipped_files:
@@ -280,6 +282,7 @@ class Action(ABC):
         :param always_yes: Assume "Yes" to all prompts
         :return: set of filtered languages to add lint pre-commit hooks for
         """
+
         if always_yes:
             return [*languages]
 

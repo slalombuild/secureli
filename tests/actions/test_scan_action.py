@@ -13,6 +13,7 @@ from secureli.repositories.settings import (
     EchoSettings,
     EchoLevel,
 )
+from secureli.services.language_analyzer import AnalyzeResult
 from secureli.services.scanner import ScanMode, ScanResult, Failure
 
 test_folder_path = Path("does-not-matter")
@@ -129,8 +130,12 @@ def test_that_scan_repo_scans_if_installed(
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
     mock_scanner: MagicMock,
-    mock_echo: MagicMock,
+    mock_language_analyzer: MagicMock,
 ):
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"RadLang": 1.0},
+        skipped_files=[],
+    )
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
@@ -148,7 +153,12 @@ def test_that_scan_repo_continue_scan_if_upgrade_canceled(
     mock_language_support: MagicMock,
     mock_scanner: MagicMock,
     mock_echo: MagicMock,
+    mock_language_analyzer: MagicMock,
 ):
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"RadLang": 1.0},
+        skipped_files=[],
+    )
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )

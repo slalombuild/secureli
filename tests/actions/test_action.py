@@ -82,7 +82,7 @@ def test_that_initialize_repo_install_flow_selects_both_languages(
     action.verify_install(test_folder_path, reset=True, always_yes=True)
 
     mock_echo.print.assert_called_with(
-        "seCureLI has been installed successfully (languages = ['RadLang', 'CoolLang'])"
+        "seCureLI has been installed successfully (languages = RadLang, CoolLang)"
     )
 
 
@@ -183,7 +183,12 @@ def test_that_initialize_repo_selects_previously_selected_language(
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
     mock_echo: MagicMock,
+    mock_language_analyzer: MagicMock,
 ):
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"PreviousLang": 1.0},
+        skipped_files=[],
+    )
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=["PreviousLang"], version_installed="abc123"
     )
@@ -191,7 +196,7 @@ def test_that_initialize_repo_selects_previously_selected_language(
 
     action.verify_install(test_folder_path, reset=False, always_yes=True)
 
-    mock_echo.print.assert_called_once_with(
+    mock_echo.print.assert_called_with(
         "seCureLI is installed and up-to-date (languages = ['PreviousLang'])"
     )
 
@@ -216,8 +221,12 @@ def test_that_initialize_repo_updates_repo_config_if_old_schema(
     action: Action,
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
-    mock_echo: MagicMock,
+    mock_language_analyzer: MagicMock,
 ):
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"PreviousLang": 1.0},
+        skipped_files=[],
+    )
     mock_secureli_config.verify.return_value = VerifyConfigOutcome.OUT_OF_DATE
 
     mock_secureli_config.update.return_value = SecureliConfig(

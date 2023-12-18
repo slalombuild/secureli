@@ -252,7 +252,9 @@ def test_that_language_support_writes_linter_config_files(
         languages, lint_languages
     )
 
-    metadata = language_support_service.apply_support(["RadLang"], build_config_result)
+    metadata = language_support_service.apply_support(
+        ["RadLang"], build_config_result, overwrite_pre_commit=True
+    )
 
     assert metadata.security_hook_id == "baddie-finder"
 
@@ -287,7 +289,9 @@ def test_that_language_support_throws_exception_when_language_config_file_cannot
     mock_open.side_effect = IOError
 
     with raises(IOError):
-        language_support_service.apply_support(languages, build_config_result)
+        language_support_service.apply_support(
+            languages, build_config_result, overwrite_pre_commit=True
+        )
 
 
 def test_that_language_support_handles_invalid_language_config(
@@ -313,7 +317,9 @@ def test_that_language_support_handles_invalid_language_config(
         languages, lint_languages
     )
 
-    metadata = language_support_service.apply_support(languages, build_config_result)
+    metadata = language_support_service.apply_support(
+        languages, build_config_result, overwrite_pre_commit=True
+    )
     assert metadata.security_hook_id is None
 
 
