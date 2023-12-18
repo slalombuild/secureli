@@ -109,18 +109,23 @@ class Action(ABC):
                 if language not in (config.languages or [])
             ]
         except (ValueError, LanguageNotSupportedError) as e:
-            if not config.languages:
-                self.action_deps.echo.error(
-                    f"seCureLI could not be installed due to an error: {str(e)}"
+            if config.languages and config.version_installed:
+                self.action_deps.echo.warning(
+                    f"Newly detected languages are unsupported by seCureLI"
                 )
-                return VerifyResult(
-                    outcome=VerifyOutcome.INSTALL_FAILED,
-                )
+                return VerifyResult(outcome=VerifyOutcome.UP_TO_DATE, config=config)
+
+            self.action_deps.echo.error(
+                f"seCureLI could not be installed due to an error: {str(e)}"
+            )
+            return VerifyResult(
+                outcome=VerifyOutcome.INSTALL_FAILED,
+            )
 
         if (
             not config.languages
             or not config.version_installed
-            or len(newly_detected_languages or [])
+            or newly_detected_languages
         ):
             return self._install_secureli(
                 folder_path, languages, newly_detected_languages, always_yes
