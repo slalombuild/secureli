@@ -161,14 +161,14 @@ class Action(ABC):
             install_languages, always_yes, new_install
         )
         if not should_install:
-            self.action_deps.echo.error("User canceled install process")
-            return (
-                VerifyResult(
+            if new_install:
+                self.action_deps.echo.error("User canceled install process")
+                return VerifyResult(
                     outcome=VerifyOutcome.INSTALL_CANCELED,
                 )
-                if new_install
-                else VerifyResult(outcome=VerifyOutcome.UP_TO_DATE)
-            )
+
+            self.action_deps.echo.warning("Newly detected languages were not installed")
+            return VerifyResult(outcome=VerifyOutcome.UP_TO_DATE)
 
         lint_languages = self._prompt_get_lint_config_languages(
             install_languages, always_yes
