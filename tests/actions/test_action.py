@@ -274,6 +274,25 @@ def test_that_initialize_repo_is_aborted_by_the_user_if_the_process_is_canceled(
     mock_echo.error.assert_called_with("User canceled install process")
 
 
+def test_that_initialize_repo_returns_up_to_date_if_the_process_is_canceled_on_existing_install(
+    action: Action,
+    mock_secureli_config: MagicMock,
+    mock_language_analyzer: MagicMock,
+    mock_echo: MagicMock,
+):
+    # User elects to cancel the process
+    mock_echo.confirm.return_value = False
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang"], version_installed="abc123"
+    )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"RadLang": 0.5, "CoolLang": 0.5}, skipped_files=[]
+    )
+
+    result = action.verify_install(test_folder_path, reset=False, always_yes=False)
+    assert result.outcome == VerifyOutcome.UP_TO_DATE
+
+
 def test_that_verify_install_returns_failed_result_on_new_install_language_not_supported(
     action: Action,
     mock_secureli_config: MagicMock,

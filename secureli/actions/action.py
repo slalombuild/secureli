@@ -103,11 +103,6 @@ class Action(ABC):
 
         try:
             languages = self._detect_languages(folder_path)
-            newly_detected_languages = [
-                language
-                for language in (languages or [])
-                if language not in (config.languages or [])
-            ]
         except (ValueError, LanguageNotSupportedError) as e:
             if config.languages and config.version_installed:
                 self.action_deps.echo.warning(
@@ -122,6 +117,11 @@ class Action(ABC):
                 outcome=VerifyOutcome.INSTALL_FAILED,
             )
 
+        newly_detected_languages = [
+            language
+            for language in (languages or [])
+            if language not in (config.languages or [])
+        ]
         if (
             not config.languages
             or not config.version_installed
@@ -162,8 +162,12 @@ class Action(ABC):
         )
         if not should_install:
             self.action_deps.echo.error("User canceled install process")
-            return VerifyResult(
-                outcome=VerifyOutcome.INSTALL_CANCELED,
+            return (
+                VerifyResult(
+                    outcome=VerifyOutcome.INSTALL_CANCELED,
+                )
+                if new_install
+                else VerifyResult(outcome=VerifyOutcome.UP_TO_DATE)
             )
 
         lint_languages = self._prompt_get_lint_config_languages(
