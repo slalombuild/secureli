@@ -394,7 +394,7 @@ def test_write_pre_commit_configs_ignores_empty_linter_arr(
     mock_echo.warning.assert_not_called()
 
 
-def test_write_pre_commit_configs_ignores_exceptions(
+def test_write_pre_commit_configs_handle_exceptions(
     language_support_service: LanguageSupportService,
     mock_open: MagicMock,
     mock_echo: MagicMock,
