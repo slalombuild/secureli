@@ -7,7 +7,6 @@ import yaml
 from secureli.resources.slugify import slugify
 from secureli.utilities.hash import hash_config
 from secureli.utilities.patterns import combine_patterns
-import secureli.repositories.secureli_config as SecureliConfig
 
 
 class LanguageNotSupportedError(Exception):
