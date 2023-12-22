@@ -75,7 +75,7 @@ class LinterConfigData(pydantic.BaseModel):
     """
 
     filename: str
-    data: Any
+    settings: Any
 
 
 class LinterConfig(pydantic.BaseModel):
@@ -264,7 +264,7 @@ class LanguageSupportService:
         for config, language in linter_config_data:
             try:
                 with open(Path(SecureliConfig.FOLDER_PATH / config.filename), "w") as f:
-                    f.write(yaml.dump(config.data))
+                    f.write(yaml.dump(config.settings))
             except:
                 self.echo.warning(
                     f"Failed to write {config.filename} config file for {language}"

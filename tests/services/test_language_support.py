@@ -247,7 +247,7 @@ def test_that_language_support_writes_linter_config_files(
         version="abc123",
         linter_config=LoadLinterConfigsResult(
             successful=True,
-            linter_data=[{"filename": "test.txt", "data": {}}],
+            linter_data=[{"filename": "test.txt", "settings": {}}],
         ),
         config_data="""
             repos:
@@ -281,7 +281,7 @@ def test_that_language_support_throws_exception_when_language_config_file_cannot
         version="abc123",
         linter_config=LoadLinterConfigsResult(
             successful=True,
-            linter_data=[{"filename": "test.txt", "data": {}}],
+            linter_data=[{"filename": "test.txt", "settings": {}}],
         ),
         config_data="""
                 repos:
@@ -314,7 +314,7 @@ def test_that_language_support_handles_invalid_language_config(
             version="abc123",
             linter_config=LoadLinterConfigsResult(
                 successful=True,
-                linter_data=[{"filename": "test.txt", "data": {}}],
+                linter_data=[{"filename": "test.txt", "settings": {}}],
             ),
             config_data="",
         )
@@ -341,7 +341,7 @@ def test_that_language_support_handles_empty_repos_list(
         version="abc123",
         linter_config=LoadLinterConfigsResult(
             successful=True,
-            linter_data=[{"filename": "test.txt", "data": {}}],
+            linter_data=[{"filename": "test.txt", "settings": {}}],
         ),
         config_data="""
             repos:
@@ -368,11 +368,11 @@ def test_write_pre_commit_configs_writes_successfully(
     configs = [
         LinterConfig(
             language="RadLag",
-            linter_data=[LinterConfigData(filename="rad-lint.yml", data={})],
+            linter_data=[LinterConfigData(filename="rad-lint.yml", settings={})],
         ),
         LinterConfig(
             language="CoolLang",
-            linter_data=[LinterConfigData(filename="cool-lint.yml", data={})],
+            linter_data=[LinterConfigData(filename="cool-lint.yml", settings={})],
         ),
     ]
     language_support_service._write_pre_commit_configs(configs)
@@ -406,7 +406,7 @@ def test_write_pre_commit_configs_handle_exceptions(
         [
             LinterConfig(
                 language=mock_language,
-                linter_data=[LinterConfigData(filename=mock_filename, data={})],
+                linter_data=[LinterConfigData(filename=mock_filename, settings={})],
             ),
         ]
     )

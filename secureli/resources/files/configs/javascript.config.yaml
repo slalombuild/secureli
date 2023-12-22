@@ -1,5 +1,5 @@
 filename: ".eslintrc.yaml"
-data:
+settings:
   extends: ["google"]
   env:
     es6: true
