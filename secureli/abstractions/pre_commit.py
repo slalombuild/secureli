@@ -81,7 +81,9 @@ class PreCommitAbstraction:
         pre_commit_hook = folder_path / ".git/hooks/pre-commit"
         with open(pre_commit_hook, "w") as f:
             f.write("#!/bin/sh\n")
-            f.write("secureli scan\n")
+            # if running scan as part of a commit (as opposed to a manual invocation of `secureli scan`),
+            # then publish the results to the configured observability platform (e.g. New Relic)
+            f.write("secureli scan --publish-results=always\n")
 
         # Make pre-commit executable
         pre_commit_hook.chmod(pre_commit_hook.stat().st_mode | stat.S_IEXEC)
