@@ -141,17 +141,21 @@ class ScanAction(Action):
             scan_result.failures
         )
 
-        log_data = self.logging.success(LogAction.scan) if scan_result.successful else self.logging.failure(
+        log_data = (
+            self.logging.success(LogAction.scan)
+            if scan_result.successful
+            else self.logging.failure(
                 LogAction.scan,
                 scan_result_failures_json_string,
                 failure_count,
                 individual_failure_count,
             )
+        )
         self.publish_results(
-                publish_results_condition,
-                action_successful=scan_result.successful,
-                log_str=log_data.json(exclude_none=True),
-            )
+            publish_results_condition,
+            action_successful=scan_result.successful,
+            log_str=log_data.json(exclude_none=True),
+        )
         if scan_result.successful:
             self.echo.print("Scan executed successfully and detected no issues!")
         else:
