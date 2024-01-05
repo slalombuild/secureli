@@ -44,7 +44,7 @@ def post_log(log_data: str) -> PublishLogResult:
     except Exception as e:
         return PublishLogResult(
             result=Result.FAILURE,
-            result_message=f"Error posting log to {API_ENDPOINT}: {e}",
+            result_message=f'Error posting log to {API_ENDPOINT}: "{e}"',
         )
 
     return PublishLogResult(result=Result.SUCCESS, result_message=result.text)
