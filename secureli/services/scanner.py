@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pydantic
 import re
-import yaml
 
 from secureli.abstractions.pre_commit import PreCommitAbstraction
+from secureli.repositories.settings import PreCommitSettings
 
 
 class ScanMode(str, Enum):
@@ -94,12 +94,15 @@ class ScannerService:
         """
         Parses the output from a scan and returns a list of Failure objects representing any
         hook rule failures during a scan.
+        :param folder_path: folder containing .pre-commit-config.yaml, usually repository root
         :param output: Raw output from a scan.
         :return: ScanOuput object representing a list of hook rule Failure objects.
         """
         failures = []
         failure_indexes = []
-        config_data = self._get_config(folder_path)
+        pre_commit_config: PreCommitSettings = self.pre_commit.get_pre_commit_config(
+            folder_path
+        )
 
         # Split the output up by each line and record the index of each failure
         output_by_line = output.split("\n")
@@ -114,7 +117,7 @@ class ScannerService:
             id = self._remove_ansi_from_string(id_with_encoding)
 
             # Retrieve repo url for failure
-            repo = self._find_repo_from_id(hook_id=id, config=config_data)
+            repo = self._find_repo_from_id(hook_id=id, config=pre_commit_config)
 
             # Capture all output lines for this failure
             failure_output_list = self._get_single_failure_output(
@@ -143,7 +146,7 @@ class ScannerService:
 
         return failure_lines
 
-    def _find_file_names(self, failure_output_list: list[str]) -> str:
+    def _find_file_names(self, failure_output_list: list[str]) -> list[str]:
         """
         Finds the file name for a hook rule failure
         :param failure_index: The index of the initial failure in failure_output_list
@@ -174,31 +177,20 @@ class ScannerService:
 
         return clean_string
 
-    def _find_repo_from_id(self, hook_id: str, config: dict):
+    def _find_repo_from_id(self, hook_id: str, config: PreCommitSettings):
         """
         Retrieves the repo URL that a hook ID belongs to and returns it
         :param linter_id: The hook id we want to retrieve the repo url for
-        :config: A dict containing the contents of the .pre-commit-config.yaml file
+        :config: A model of the YAML data in .pre-commit-config.yaml file
         :return: The repo url our hook id belongs to
         """
-        repos = config.get("repos")
 
-        for repo in repos:
-            hooks = repo["hooks"]
-            repo = repo["repo"]
+        for repo in config.repos:
+            hooks = repo.hooks
+            repo_str = repo.url
 
             for hook in hooks:
-                if hook["id"] == hook_id:
-                    return repo
+                if hook.id == hook_id:
+                    return repo_str
 
         return OutputParseErrors.REPO_NOT_FOUND
-
-    def _get_config(self, folder_path: Path):
-        """
-        Gets the contents of the .pre-commit-config file and returns it as a dict
-        :return: Dict containing the contents of the .pre-commit-config.yaml file
-        """
-        path_to_config = folder_path / ".pre-commit-config.yaml"
-        with open(path_to_config, "r") as f:
-            data = yaml.safe_load(f)
-            return data
