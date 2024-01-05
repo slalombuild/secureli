@@ -108,6 +108,7 @@ class Container(containers.DeclarativeContainer):
         git_ignore=git_ignore_service,
         language_config=language_config_service,
         data_loader=read_resource,
+        echo=echo,
     )
 
     """Analyzes a given repo to try to identify the most common language"""
