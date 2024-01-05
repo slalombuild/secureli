@@ -293,6 +293,7 @@ def test_that_language_support_throws_exception_when_language_config_file_cannot
 def test_that_language_support_handles_invalid_language_config(
     language_support_service: LanguageSupportService,
     mock_language_config_service: MagicMock,
+    mock_open: MagicMock,
 ):
     mock_language_config_service.get_language_config.return_value = (
         LanguagePreCommitResult(

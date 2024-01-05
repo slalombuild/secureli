@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Optional, Any
+from typing import Callable, Iterable, Optional, Any
 
 import pydantic
 import yaml
@@ -105,9 +105,9 @@ class LanguageSupportService:
         self, languages: list[str], language_config_result: BuildConfigResult
     ) -> LanguageMetadata:
         """
-        Applies Secure Build support for the provided language
+        Applies Secure Build support for the provided languages
         :param languages: list of languages to provide support for
-        :raises LanguageNotSupportedError if support for the language is not provided
+        :raises LanguageNotSupportedError if support for any language is not provided
         :return: Metadata including version of the language configuration that was just installed
         as well as a secret-detection hook ID, if present.
         """
@@ -193,7 +193,7 @@ class LanguageSupportService:
         return HookConfiguration(repos=repos)
 
     def _build_pre_commit_config(
-        self, languages: list[str], lint_languages: list[str]
+        self, languages: list[str], lint_languages: Iterable[str]
     ) -> BuildConfigResult:
         """
         Builds the final .pre-commit-config.yaml from all supported repo languages. Also returns any and all
