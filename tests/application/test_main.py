@@ -75,7 +75,6 @@ def test_that_app_ignores_version_callback(mock_container: MagicMock):
         VerifyOutcome.INSTALL_SUCCEEDED,
         VerifyOutcome.UPDATE_SUCCEEDED,
         VerifyOutcome.UP_TO_DATE,
-        VerifyOutcome.UPGRADE_SUCCEEDED,
     ],
 )
 def test_that_successful_init_runs_update(
@@ -96,8 +95,6 @@ def test_that_successful_init_runs_update(
         VerifyOutcome.INSTALL_FAILED,
         VerifyOutcome.UPDATE_CANCELED,
         VerifyOutcome.UPDATE_FAILED,
-        VerifyOutcome.UPGRADE_CANCELED,
-        VerifyOutcome.UPGRADE_FAILED,
     ],
 )
 def test_that_unsuccessful_init_does_not_run_update(

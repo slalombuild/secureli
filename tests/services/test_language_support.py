@@ -7,7 +7,11 @@ from pytest_mock import MockerFixture
 from secureli.abstractions.pre_commit import (
     InstallResult,
 )
-from secureli.services.language_support import BuildConfigResult, LanguageSupportService
+from secureli.services.language_support import (
+    LanguageSupportService,
+    LinterConfig,
+    LinterConfigData,
+)
 from secureli.services.language_config import (
     LanguageConfigService,
     LanguagePreCommitResult,
@@ -32,6 +36,8 @@ def mock_open_config(mocker: MockerFixture):
     """
     )
     mocker.patch("builtins.open", mock_open)
+    mock_open.return_value.write = MagicMock()
+    return mock_open
 
 
 @pytest.fixture()
@@ -78,6 +84,12 @@ def mock_git_ignore() -> MagicMock:
 
 
 @pytest.fixture()
+def mock_echo() -> MagicMock:
+    mock_echo = MagicMock()
+    return mock_echo
+
+
+@pytest.fixture()
 def mock_language_config_service() -> LanguageConfigService:
     mock_language_config_service = MagicMock()
 
@@ -90,12 +102,14 @@ def language_support_service(
     mock_git_ignore: MagicMock,
     mock_language_config_service: MagicMock,
     mock_data_loader: MagicMock,
+    mock_echo: MagicMock,
 ) -> LanguageSupportService:
     return LanguageSupportService(
         pre_commit_hook=mock_pre_commit_hook,
         git_ignore=mock_git_ignore,
         language_config=mock_language_config_service,
         data_loader=mock_data_loader,
+        echo=mock_echo,
     )
 
 
@@ -233,7 +247,7 @@ def test_that_language_support_writes_linter_config_files(
         version="abc123",
         linter_config=LoadLinterConfigsResult(
             successful=True,
-            linter_data=[{"key": {"example"}}],
+            linter_data=[{"filename": "test.txt", "settings": {}}],
         ),
         config_data="""
             repos:
@@ -269,7 +283,7 @@ def test_that_language_support_throws_exception_when_language_config_file_cannot
         version="abc123",
         linter_config=LoadLinterConfigsResult(
             successful=True,
-            linter_data=[{"key": {"example"}}],
+            linter_data=[{"filename": "test.txt", "settings": {}}],
         ),
         config_data="""
                 repos:
@@ -297,6 +311,7 @@ def test_that_language_support_throws_exception_when_language_config_file_cannot
 def test_that_language_support_handles_invalid_language_config(
     language_support_service: LanguageSupportService,
     mock_language_config_service: MagicMock,
+    mock_open: MagicMock,
 ):
     mock_language_config_service.get_language_config.return_value = (
         LanguagePreCommitResult(
@@ -304,7 +319,7 @@ def test_that_language_support_handles_invalid_language_config(
             version="abc123",
             linter_config=LoadLinterConfigsResult(
                 successful=True,
-                linter_data=[{"key": {"example"}}],
+                linter_data=[{"filename": "test.txt", "settings": {}}],
             ),
             config_data="",
         )
@@ -333,7 +348,7 @@ def test_that_language_support_handles_empty_repos_list(
         version="abc123",
         linter_config=LoadLinterConfigsResult(
             successful=True,
-            linter_data=[{"key": {"example"}}],
+            linter_data=[{"filename": "test.txt", "settings": {}}],
         ),
         config_data="""
             repos:
@@ -350,3 +365,61 @@ def test_that_language_support_handles_empty_repos_list(
     )
 
     assert build_config_result.config_data["repos"] == []
+
+
+def test_write_pre_commit_configs_writes_successfully(
+    language_support_service: LanguageSupportService,
+    mock_open: MagicMock,
+    mock_echo: MagicMock,
+):
+    configs = [
+        LinterConfig(
+            language="RadLag",
+            linter_data=[LinterConfigData(filename="rad-lint.yml", settings={})],
+        ),
+        LinterConfig(
+            language="CoolLang",
+            linter_data=[LinterConfigData(filename="cool-lint.yml", settings={})],
+        ),
+    ]
+    language_support_service._write_pre_commit_configs(configs)
+
+    assert mock_open.call_count == len(configs)
+    assert mock_open.return_value.write.call_count == len(configs)
+    mock_echo.warning.assert_not_called()
+
+
+def test_write_pre_commit_configs_ignores_empty_linter_arr(
+    language_support_service: LanguageSupportService,
+    mock_open: MagicMock,
+    mock_echo: MagicMock,
+):
+    language_support_service._write_pre_commit_configs([])
+
+    mock_open.assert_not_called()
+    mock_open.return_value.write.assert_not_called()
+    mock_echo.warning.assert_not_called()
+
+
+def test_write_pre_commit_configs_handle_exceptions(
+    language_support_service: LanguageSupportService,
+    mock_open: MagicMock,
+    mock_echo: MagicMock,
+):
+    mock_open.side_effect = Exception("error")
+    mock_language = "CoolLang"
+    mock_filename = "cool-lint-config.yml"
+    language_support_service._write_pre_commit_configs(
+        [
+            LinterConfig(
+                language=mock_language,
+                linter_data=[LinterConfigData(filename=mock_filename, settings={})],
+            ),
+        ]
+    )
+
+    mock_open.assert_called_once()
+    mock_open.return_value.write.assert_not_called()
+    mock_echo.warning.assert_called_once_with(
+        f"Failed to write {mock_filename} config file for {mock_language}"
+    )

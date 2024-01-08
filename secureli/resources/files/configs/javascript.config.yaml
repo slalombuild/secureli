@@ -1,6 +1,6 @@
-eslintrc:
-    extends: ["google"]
-    env:
-        es6: true
-    plugins:
-        - prettier
+filename: ".eslintrc.yaml"
+settings:
+  extends: ["google"]
+  env:
+    es6: true
+  plugins: ["prettier"]

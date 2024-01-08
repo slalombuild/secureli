@@ -2,9 +2,6 @@ from abc import ABC
 from enum import Enum
 from pathlib import Path
 from typing import Optional
-
-import pydantic
-
 from secureli.abstractions.echo import EchoAbstraction, Color
 from secureli.abstractions.pre_commit import (
     InstallFailedError,
@@ -24,14 +21,13 @@ from secureli.services.language_support import (
 from secureli.services.scanner import ScannerService, ScanMode
 from secureli.services.updater import UpdaterService
 
+import pydantic
+
 
 class VerifyOutcome(str, Enum):
     INSTALL_CANCELED = "install-canceled"
     INSTALL_FAILED = "install-failed"
     INSTALL_SUCCEEDED = "install-succeeded"
-    UPGRADE_CANCELED = "upgrade-canceled"
-    UPGRADE_SUCCEEDED = "upgrade-succeeded"
-    UPGRADE_FAILED = "upgrade-failed"
     UPDATE_CANCELED = "update-canceled"
     UPDATE_SUCCEEDED = "update-succeeded"
     UPDATE_FAILED = "update-failed"
@@ -326,7 +322,8 @@ class Action(ABC):
 
         update_result = self.action_deps.updater.update()
         details = update_result.output
-        self.action_deps.echo.print(details)
+        if details:
+            self.action_deps.echo.print(details)
 
         if update_result.successful:
             return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
@@ -336,7 +333,7 @@ class Action(ABC):
     def _update_secureli_config_only(self, always_yes: bool) -> VerifyResult:
         self.action_deps.echo.print("seCureLI is using an out-of-date config.")
         response = always_yes or self.action_deps.echo.confirm(
-            "Update config only now?",
+            "Update configuration now?",
             default_response=True,
         )
         if not response:

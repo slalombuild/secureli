@@ -9,8 +9,9 @@ FOLDER_PATH = Path(".")
 
 
 class SecureliConfig(BaseModel):
-    languages: Optional[list[str]]
-    version_installed: Optional[str]
+    languages: Optional[list[str]] = None
+    version_installed: Optional[str] = None
+    last_hook_update_check: Optional[int] = 0
 
 
 class DeprecatedSecureliConfig(BaseModel):
@@ -75,6 +76,8 @@ class SecureliConfigRepository:
         for key in expected_config_schema["properties"]:
             expected_keys.append(key)
 
+        print(current_data, expected_keys)
+
         for key in current_data:
             if key not in expected_keys:
                 return VerifyConfigOutcome.OUT_OF_DATE
@@ -93,9 +96,12 @@ class SecureliConfigRepository:
         with open(secureli_config_path, "r") as f:
             data = yaml.safe_load(f)
             old_config = DeprecatedSecureliConfig.parse_obj(data)
+        languages: list[str] | None = (
+            [old_config.overall_language] if old_config.overall_language else None
+        )
 
         return SecureliConfig(
-            languages=[old_config.overall_language],
+            languages=languages,
             version_installed=old_config.version_installed,
         )
 
