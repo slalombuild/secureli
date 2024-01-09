@@ -37,6 +37,7 @@ class LogAction(str, Enum):
     init = "INIT"
     build = "_BUILD"
     update = "UPDATE"
+    publish = "PUBLISH"  # "PUBLISH" does not correspond to a CLI action/subcommand
 
 
 class LogFailure(pydantic.BaseModel):

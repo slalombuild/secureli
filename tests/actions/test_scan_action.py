@@ -2,6 +2,8 @@ from pathlib import Path
 from secureli.abstractions.pre_commit import RevisionPair
 from secureli.actions.action import ActionDependencies, VerifyOutcome
 from secureli.actions.scan import ScanAction
+from secureli.models.publish_results import PublishResultsOption
+from secureli.models.result import Result
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
 from secureli.repositories.settings import (
     PreCommitHook,
@@ -11,6 +13,7 @@ from secureli.repositories.settings import (
     EchoSettings,
     EchoLevel,
 )
+from secureli.services.logging import LogAction
 from secureli.services.scanner import ScanMode, ScanResult, Failure
 from unittest import mock
 from unittest.mock import MagicMock
@@ -121,6 +124,11 @@ def scan_action(
         logging=mock_logging_service,
         scanner=action_deps.scanner,
     )
+
+
+@pytest.fixture()
+def mock_post_log(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch("secureli.actions.scan.post_log")
 
 
 # @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
@@ -279,3 +287,34 @@ def test_that_scan_update_check_updates_last_check_time(
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, always_yes=True)
     mock_secureli_config.save.assert_called_once()
     assert mock_secureli_config.save.call_args.args[0].last_hook_update_check == 1e6
+
+
+def test_publish_results_always(scan_action: ScanAction, mock_post_log: MagicMock):
+    mock_post_log.return_value.result = Result.SUCCESS
+    mock_post_log.return_value.result_message = "Success"
+
+    scan_action.publish_results(PublishResultsOption.ALWAYS, True, "log_str")
+
+    mock_post_log.assert_called_once_with("log_str")
+    scan_action.logging.success.assert_called_once_with(LogAction.publish)
+
+
+def test_publish_results_on_fail_and_action_successful(
+    scan_action: ScanAction, mock_post_log: MagicMock
+):
+    scan_action.publish_results(PublishResultsOption.ON_FAIL, True, "log_str")
+
+    mock_post_log.assert_not_called()
+    scan_action.logging.success.assert_not_called()
+
+
+def test_publish_results_on_fail_and_action_not_successful(
+    scan_action: ScanAction, mock_post_log: MagicMock
+):
+    mock_post_log.return_value.result = Result.FAILURE
+    mock_post_log.return_value.result_message = "Failure"
+
+    scan_action.publish_results(PublishResultsOption.ON_FAIL, False, "log_str")
+
+    mock_post_log.assert_called_once_with("log_str")
+    scan_action.logging.failure.assert_called_once_with(LogAction.publish, "Failure")

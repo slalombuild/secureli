@@ -8,6 +8,7 @@ from secureli.actions.scan import ScanMode
 from secureli.actions.setup import SetupAction
 from secureli.container import Container
 from secureli.abstractions.echo import Color
+from secureli.models.publish_results import PublishResultsOption
 from secureli.resources import read_resource
 from secureli.settings import Settings
 import secureli.repositories.secureli_config as SecureliConfig
@@ -93,6 +94,10 @@ def scan(
         "-m",
         help="Scan the files you're about to commit (the default) or all files in the repo.",
     ),
+    publish_results: PublishResultsOption = Option(
+        "never",
+        help="When to publish the results of the scan to the configured observability platform",
+    ),
     specific_test: Optional[str] = Option(
         None,
         "--specific-test",
@@ -113,7 +118,13 @@ def scan(
     Performs an explicit check of the repository to detect security issues without remote logging.
     """
     SecureliConfig.FOLDER_PATH = Path(directory)
-    container.scan_action().scan_repo(Path(directory), mode, yes, specific_test)
+    container.scan_action().scan_repo(
+        folder_path=Path(directory),
+        scan_mode=mode,
+        always_yes=False,
+        publish_results_condition=publish_results,
+        specific_test=specific_test,
+    )
 
 
 @app.command(hidden=True)

@@ -1,5 +1,7 @@
 import requests
 import os
+from secureli.models.publish_results import PublishLogResult
+from secureli.models.result import Result
 
 from secureli.services.scanner import Failure
 from collections import Counter
@@ -20,7 +22,7 @@ def convert_failures_to_failure_count(failure_list: list[Failure]):
     return failure_count_list
 
 
-def post_log(log_data: str):
+def post_log(log_data: str) -> PublishLogResult:
     """
     Send a log through http post
     :param log_data: a string to be sent to backend instrumentation
@@ -30,10 +32,19 @@ def post_log(log_data: str):
     API_KEY = os.getenv("API_KEY")
 
     if not API_ENDPOINT or not API_KEY:
-        return
+        return PublishLogResult(
+            result=Result.FAILURE,
+            result_message="API_ENDPOINT or API_KEY not found in environment variables",
+        )
 
-    result = requests.post(
-        url=API_ENDPOINT, headers={"Api-Key": API_KEY}, data=log_data
-    )
+    try:
+        result = requests.post(
+            url=API_ENDPOINT, headers={"Api-Key": API_KEY}, data=log_data
+        )
+    except Exception as e:
+        return PublishLogResult(
+            result=Result.FAILURE,
+            result_message=f'Error posting log to {API_ENDPOINT}: "{e}"',
+        )
 
-    return result.text
+    return PublishLogResult(result=Result.SUCCESS, result_message=result.text)
