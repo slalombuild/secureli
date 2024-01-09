@@ -76,8 +76,6 @@ class SecureliConfigRepository:
         for key in expected_config_schema["properties"]:
             expected_keys.append(key)
 
-        print(current_data, expected_keys)
-
         for key in current_data:
             if key not in expected_keys:
                 return VerifyConfigOutcome.OUT_OF_DATE
