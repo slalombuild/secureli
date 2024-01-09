@@ -13,6 +13,7 @@ from secureli.repositories.settings import (
     EchoSettings,
     EchoLevel,
 )
+from secureli.services.language_analyzer import AnalyzeResult
 from secureli.services.logging import LogAction
 from secureli.services.scanner import ScanMode, ScanResult, Failure
 from unittest import mock
@@ -152,8 +153,12 @@ def test_that_scan_repo_scans_if_installed(
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
     mock_scanner: MagicMock,
-    mock_echo: MagicMock,
+    mock_language_analyzer: MagicMock,
 ):
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"RadLang": 1.0},
+        skipped_files=[],
+    )
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
@@ -171,7 +176,12 @@ def test_that_scan_repo_continue_scan_if_upgrade_canceled(
     mock_language_support: MagicMock,
     mock_scanner: MagicMock,
     mock_echo: MagicMock,
+    mock_language_analyzer: MagicMock,
 ):
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"RadLang": 1.0},
+        skipped_files=[],
+    )
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
@@ -283,6 +293,9 @@ def test_that_scan_update_check_updates_last_check_time(
     mock_secureli_config: MagicMock,
     mock_pass_install_verification: MagicMock,
 ):
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang", "BadLang"], version_installed="abc123"
+    )
     mock_secureli_config.verify.return_value = VerifyConfigOutcome.UP_TO_DATE
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, always_yes=True)
     mock_secureli_config.save.assert_called_once()

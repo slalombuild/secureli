@@ -3,6 +3,7 @@ from typing import Optional
 from typing_extensions import Annotated
 import typer
 from typer import Option
+from secureli.actions.action import VerifyOutcome
 
 from secureli.actions.scan import ScanMode
 from secureli.actions.setup import SetupAction
@@ -76,8 +77,16 @@ def init(
     Detect languages and initialize pre-commit hooks and linters for the project
     """
     SecureliConfig.FOLDER_PATH = Path(directory)
-    container.initializer_action().initialize_repo(Path(directory), reset, yes)
-    update()
+
+    init_result = container.initializer_action().initialize_repo(
+        Path(directory), reset, yes
+    )
+    if init_result.outcome in [
+        VerifyOutcome.INSTALL_SUCCEEDED,
+        VerifyOutcome.UP_TO_DATE,
+        VerifyOutcome.UPDATE_SUCCEEDED,
+    ]:
+        update()
 
 
 @app.command()

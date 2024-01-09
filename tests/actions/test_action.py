@@ -82,7 +82,7 @@ def test_that_initialize_repo_install_flow_selects_both_languages(
     action.verify_install(test_folder_path, reset=True, always_yes=True)
 
     mock_echo.print.assert_called_with(
-        "seCureLI has been installed successfully (languages = ['RadLang', 'CoolLang'])"
+        "seCureLI has been installed successfully (languages = RadLang, CoolLang)"
     )
 
 
@@ -183,7 +183,12 @@ def test_that_initialize_repo_selects_previously_selected_language(
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
     mock_echo: MagicMock,
+    mock_language_analyzer: MagicMock,
 ):
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"PreviousLang": 1.0},
+        skipped_files=[],
+    )
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=["PreviousLang"], version_installed="abc123"
     )
@@ -191,7 +196,7 @@ def test_that_initialize_repo_selects_previously_selected_language(
 
     action.verify_install(test_folder_path, reset=False, always_yes=True)
 
-    mock_echo.print.assert_called_once_with(
+    mock_echo.print.assert_called_with(
         "seCureLI is installed and up-to-date (languages = ['PreviousLang'])"
     )
 
@@ -216,8 +221,12 @@ def test_that_initialize_repo_updates_repo_config_if_old_schema(
     action: Action,
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
-    mock_echo: MagicMock,
+    mock_language_analyzer: MagicMock,
 ):
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"PreviousLang": 1.0},
+        skipped_files=[],
+    )
     mock_secureli_config.verify.return_value = VerifyConfigOutcome.OUT_OF_DATE
 
     mock_secureli_config.update.return_value = SecureliConfig(
@@ -263,6 +272,105 @@ def test_that_initialize_repo_is_aborted_by_the_user_if_the_process_is_canceled(
     action.verify_install(test_folder_path, reset=False, always_yes=False)
 
     mock_echo.error.assert_called_with("User canceled install process")
+
+
+def test_that_initialize_repo_returns_up_to_date_if_the_process_is_canceled_on_existing_install(
+    action: Action,
+    mock_secureli_config: MagicMock,
+    mock_language_analyzer: MagicMock,
+    mock_echo: MagicMock,
+):
+    # User elects to cancel the process
+    mock_echo.confirm.return_value = False
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang"], version_installed="abc123"
+    )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"RadLang": 0.5, "CoolLang": 0.5}, skipped_files=[]
+    )
+
+    result = action.verify_install(test_folder_path, reset=False, always_yes=False)
+    assert result.outcome == VerifyOutcome.UP_TO_DATE
+
+
+def test_that_verify_install_returns_failed_result_on_new_install_language_not_supported(
+    action: Action,
+    mock_secureli_config: MagicMock,
+    mock_language_analyzer: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=[], version_installed=None
+    )
+
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={}, skipped_files=[]
+    )
+
+    verify_result = action.verify_install(
+        test_folder_path, reset=False, always_yes=False
+    )
+
+    assert verify_result.outcome == VerifyOutcome.INSTALL_FAILED
+
+
+def test_that_verify_install_returns_up_to_date_result_on_existing_install_languages_not_supported(
+    action: Action,
+    mock_secureli_config: MagicMock,
+    mock_language_analyzer: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang"], version_installed="abc123"
+    )
+
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={}, skipped_files=[]
+    )
+
+    verify_result = action.verify_install(
+        test_folder_path, reset=False, always_yes=False
+    )
+
+    assert verify_result.outcome == VerifyOutcome.UP_TO_DATE
+
+
+def test_that_verify_install_returns_up_to_date_result_on_existing_install_no_new_languages(
+    action: Action,
+    mock_secureli_config: MagicMock,
+    mock_language_analyzer: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang"], version_installed="abc123"
+    )
+
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"RadLang": 1.0}, skipped_files=[]
+    )
+
+    verify_result = action.verify_install(
+        test_folder_path, reset=False, always_yes=False
+    )
+
+    assert verify_result.outcome == VerifyOutcome.UP_TO_DATE
+
+
+def test_that_verify_install_returns_success_result_newly_detected_language_install(
+    action: Action,
+    mock_secureli_config: MagicMock,
+    mock_language_analyzer: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang"], version_installed="abc123"
+    )
+
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"RadLang": 0.5, "CoolLang": 0.5}, skipped_files=[]
+    )
+
+    verify_result = action.verify_install(
+        test_folder_path, reset=False, always_yes=True
+    )
+
+    assert verify_result.outcome == VerifyOutcome.INSTALL_SUCCEEDED
 
 
 def test_that_update_secureli_handles_declined_update(
@@ -358,3 +466,38 @@ def test_that_prompt_get_lint_config_languages_returns_filtered_languages_based_
     mock_echo.confirm.assert_called()
     assert mock_echo.confirm.call_count == len(mock_languages)
     assert result == [mock_languages[0]]
+
+
+def test_that_prompt_to_install_asks_new_install_msg(
+    action: Action, mock_echo: MagicMock
+):
+    mock_languages = ["RadLang", "CoolLang"]
+    action._prompt_to_install(mock_languages, always_yes=False, new_install=True)
+
+    mock_echo.confirm.assert_called_once_with(
+        "seCureLI has not yet been installed, install now?", default_response=True
+    )
+
+
+def test_that_prompt_to_install_asks_add_languages_install_msg(
+    action: Action, mock_echo: MagicMock
+):
+    mock_languages = ["RadLang", "CoolLang"]
+    action._prompt_to_install(mock_languages, always_yes=False, new_install=False)
+
+    mock_echo.confirm.assert_called_once_with(
+        f"seCureLI has not been installed for the following languages: {', '.join(mock_languages)}, install now?",
+        default_response=True,
+    )
+
+
+def test_that_prompt_to_install_does_not_prompt_if_always_yes(
+    action: Action, mock_echo: MagicMock
+):
+    mock_languages = ["RadLang", "CoolLang"]
+    result = action._prompt_to_install(
+        mock_languages, always_yes=True, new_install=False
+    )
+
+    assert result == True
+    mock_echo.confirm.not_called()
