@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from secureli.actions.scan import ScanAction
-from secureli.actions.action import Action, ActionDependencies
+from secureli.actions.action import Action, ActionDependencies, VerifyResult
 from secureli.services.logging import LoggingService, LogAction
 
 
@@ -16,7 +16,9 @@ class InitializerAction(Action):
         super().__init__(action_deps)
         self.logging = logging
 
-    def initialize_repo(self, folder_path: Path, reset: bool, always_yes: bool):
+    def initialize_repo(
+        self, folder_path: Path, reset: bool, always_yes: bool
+    ) -> VerifyResult:
         """
         Initializes seCureLI for the specified folder path
         :param folder_path: The folder path to initialize the repo for
@@ -39,3 +41,5 @@ class InitializerAction(Action):
             self.logging.failure(LogAction.init, verify_result.outcome)
         else:
             self.logging.success(LogAction.init)
+
+        return verify_result

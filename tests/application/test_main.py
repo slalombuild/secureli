@@ -3,6 +3,7 @@ from typer.testing import CliRunner
 
 import pytest
 from pytest_mock import MockerFixture
+from secureli.actions.action import VerifyOutcome, VerifyResult
 
 import secureli.container
 import secureli.main
@@ -66,3 +67,42 @@ def test_that_app_ignores_version_callback(mock_container: MagicMock):
     assert secureli_version() not in result.stdout
     mock_container.init_resources.assert_called_once()
     mock_container.wire.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "test_input",
+    [
+        VerifyOutcome.INSTALL_SUCCEEDED,
+        VerifyOutcome.UPDATE_SUCCEEDED,
+        VerifyOutcome.UP_TO_DATE,
+    ],
+)
+def test_that_successful_init_runs_update(
+    test_input: VerifyOutcome, mock_container: MagicMock
+):
+    mock_container.initializer_action.return_value.initialize_repo.return_value = (
+        VerifyResult(outcome=test_input)
+    )
+    secureli.main.init()
+
+    mock_container.update_action.return_value.update_hooks.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "test_input",
+    [
+        VerifyOutcome.INSTALL_CANCELED,
+        VerifyOutcome.INSTALL_FAILED,
+        VerifyOutcome.UPDATE_CANCELED,
+        VerifyOutcome.UPDATE_FAILED,
+    ],
+)
+def test_that_unsuccessful_init_does_not_run_update(
+    test_input: VerifyOutcome, mock_container: MagicMock
+):
+    mock_container.initializer_action.return_value.initialize_repo.return_value = (
+        VerifyResult(outcome=test_input)
+    )
+    secureli.main.init()
+
+    mock_container.update_action.return_value.update_hooks.assert_not_called()
