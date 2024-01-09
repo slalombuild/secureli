@@ -11,6 +11,8 @@ from secureli.actions.action import (
     ActionDependencies,
     VerifyResult,
 )
+from secureli.models.publish_results import PublishResultsOption
+from secureli.models.result import Result
 from secureli.services.logging import LoggingService, LogAction
 from secureli.services.scanner import (
     ScanMode,
@@ -70,11 +72,36 @@ class ScanAction(Action):
         # Since we don't actually perform the updates here, return an outcome of UPDATE_CANCELLED
         return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)
 
+    def publish_results(
+        self,
+        publish_results_condition: PublishResultsOption,
+        action_successful: bool,
+        log_str: str,
+    ):
+        """
+        Publish the results of the scan to the configured observability platform
+        :param publish_results_condition: When to publish the results of the scan to the configured observability platform
+        :param action_successful: Whether we should publish a success or failure
+        :param log_str: a string to be POSTed to backend instrumentation
+        """
+        if publish_results_condition == PublishResultsOption.ALWAYS or (
+            publish_results_condition == PublishResultsOption.ON_FAIL
+            and not action_successful
+        ):
+            result = post_log(log_str)
+            self.echo.debug(result.result_message)
+
+            if result.result == Result.SUCCESS:
+                self.logging.success(LogAction.publish)
+            else:
+                self.logging.failure(LogAction.publish, result.result_message)
+
     def scan_repo(
         self,
         folder_path: Path,
         scan_mode: ScanMode,
         always_yes: bool,
+        publish_results_condition: PublishResultsOption = PublishResultsOption.NEVER,
         specific_test: Optional[str] = None,
     ):
         """
@@ -114,18 +141,22 @@ class ScanAction(Action):
             scan_result.failures
         )
 
-        if not scan_result.successful:
-            log_data = self.logging.failure(
+        log_data = (
+            self.logging.success(LogAction.scan)
+            if scan_result.successful
+            else self.logging.failure(
                 LogAction.scan,
                 scan_result_failures_json_string,
                 failure_count,
                 individual_failure_count,
             )
-
-            post_log(log_data.json(exclude_none=True))
-            sys.exit("Issues Found...Aborting")
-        else:
+        )
+        self.publish_results(
+            publish_results_condition,
+            action_successful=scan_result.successful,
+            log_str=log_data.json(exclude_none=True),
+        )
+        if scan_result.successful:
             self.echo.print("Scan executed successfully and detected no issues!")
-            log_data = self.logging.success(LogAction.scan)
-
-            post_log(log_data.json(exclude_none=True))
+        else:
+            sys.exit(1)
