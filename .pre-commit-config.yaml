@@ -12,3 +12,7 @@ repos:
     rev: 23.11.0
     hooks:
     -   id: black
+-   repo: https://github.com/yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+    -   id: detect-secrets
