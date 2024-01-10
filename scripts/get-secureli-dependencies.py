@@ -18,7 +18,6 @@ packagesToRemoveFromFormula = [
     "shellingham",
     "distlib",
     "filelock",
-    "identify",
     "nodeenv",
     "platformdirs",
     "setuptools",
