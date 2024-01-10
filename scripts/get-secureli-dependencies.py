@@ -23,7 +23,6 @@ packagesToRemoveFromFormula = [
     "setuptools",
     "virtualenv",
     "cfgv",
-    "pre-commit",
 ]
 
 secureliPackageNamesCmd = "poetry show --only main | awk '{print $1}'"
