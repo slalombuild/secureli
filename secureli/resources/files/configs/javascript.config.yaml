@@ -1,6 +1,6 @@
-filename: ".eslintrc.yaml"
+filename: "javascript.eslintrc.yaml"
 settings:
-  extends: ["google"]
+  extends: ["eslint:recommended"]
   env:
     es6: true
   plugins: ["prettier"]

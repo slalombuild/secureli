@@ -1,5 +1,5 @@
-filename: ".eslintrc.yaml"
+filename: "typescript.eslintrc.yaml"
 settings:
-  extends: ["google", "plugin:@typescript-eslint/recommended", "prettier"]
+  extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"]
   parser: "@typescript-eslint/parser"
   plugins: ["@typescript-eslint"]
