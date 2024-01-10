@@ -5,7 +5,7 @@ repos:
       - id: eslint
         files: \.[j]sx?$ # *.js and *.jsx
         types: [file]
-        args: ["--config", ".eslintrc.yaml", "--fix"]
+        args: ["--config", "javascript.eslintrc.yaml", "--fix"]
         additional_dependencies:
           - eslint@8.42.0
           - eslint-plugin-prettier@4.2.1

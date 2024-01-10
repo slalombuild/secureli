@@ -1,4 +1,4 @@
-filename: ".eslintrc.yaml"
+filename: "javascript.eslintrc.yaml"
 settings:
   extends: ["eslint:recommended"]
   env:
