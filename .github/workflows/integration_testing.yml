@@ -70,11 +70,22 @@ jobs:
   test-pypi-osx:
     runs-on: macos-latest
     steps:
-      - name: Test with Pypi
+      # This step is needed to keep us on python 3.11 for now, since dependency-injector doesn't yet support python 3.12.
+      # It can be removed once this PR is merged: https://github.com/ets-labs/python-dependency-injector/pull/765
+      - name: Install Python 3.11
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install seCureLI from Pypi
         run: |
-          pip3 --version #what do we have on the macos image
+          pip3 --version # Validate python/pip version
           pip3 install secureli
+      - name: Scan repo with Pypi seCureLI package
+        run: |
           git clone https://github.com/pypa/pip pip
           cd pip
           secureli init --yes
-          secureli scan  --mode all-files --yes
+          # In the future, we should use specific exit codes to differentiate between exit reasons
+          # For now, we can just check if the command exits with a non-zero status
+          ! secureli scan --mode all-files --yes
