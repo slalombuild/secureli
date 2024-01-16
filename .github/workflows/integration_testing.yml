@@ -16,7 +16,7 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install seCureLI
         # Note that this is a powershell script
@@ -33,7 +33,6 @@ jobs:
           $ErrorActionPreference = 'SilentlyContinue'
           secureli scan --mode all-files --yes
           $LastExitCode = 0  # Force exit code to 0 to avoid failing the build since scan returns nonzero exit status
-
 
   test-homebrew-macos:
     runs-on: macos-latest
@@ -66,8 +65,10 @@ jobs:
           path: pip
 
       - name: Init seCureLI
-        run: cd pip && secureli init --yes && secureli scan
-
+        run: |
+          cd pip
+          secureli init --yes
+          ! secureli scan --mode all-files --yes
 
   test-pypi-macos:
     runs-on: macos-latest
