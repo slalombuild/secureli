@@ -60,9 +60,13 @@ version_toml = ["pyproject.toml:tool.poetry.version"]
 major_on_zero = true
 branch = "main"
 upload_to_vcs_release = true
-upload_to_repository = false
-prerelease = true
 patch_tags = ["fix", "perf", "chore(release)"]
 build_command = "pip install poetry && poetry build"
 commit_message = "chore(release): Tag v{version} [skip ci]"
 tag_format = "v{version}"
+
+# Enable in a future PR (https://github.com/slalombuild/secureli/issues/250)
+# Consider enabling in pipeline first with no-op option to validate release name
+# [tools.semantic_release.branches.main]
+# prerelease = true
+# prerelease_token = "alpha"
