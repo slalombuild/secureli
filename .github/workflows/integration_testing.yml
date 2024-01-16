@@ -1,6 +1,8 @@
 # This workflow pulls the published seCureLI packages from Pypi & Homebrew & executes them against a test repo
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
+# TODO we should rename these to smoke tests but I'd rather hold off on doing that for now
+# since renaming the workflow/action might cause us to lose history for executions under the old name
 name: Integration Testing
 
 on:
