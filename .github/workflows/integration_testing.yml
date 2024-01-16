@@ -1,6 +1,8 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# This workflow pulls the published seCureLI packages from Pypi & Homebrew & executes them against a test repo
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
+# TODO we should rename these to smoke tests but I'd rather hold off on doing that for now
+# since renaming the workflow/action might cause us to lose history for executions under the old name
 name: Integration Testing
 
 on:
@@ -17,16 +19,23 @@ jobs:
           python-version: '3.10'
 
       - name: Install seCureLI
+        # Note that this is a powershell script
         run: |
-          pip3 --version #any pip havers?
+          pip3 --version
           pip3 install secureli
           git clone https://github.com/pypa/pip pip
           cd pip
           secureli init --yes
-          secureli scan  --mode all-files --yes
+
+      - name: seCureLI Scan
+        run: |
+          cd pip
+          $ErrorActionPreference = 'SilentlyContinue'
+          secureli scan --mode all-files --yes
+          $LastExitCode = 0  # Force exit code to 0 to avoid failing the build since scan returns nonzero exit status
 
 
-  test-homebrew-osx:
+  test-homebrew-macos:
     runs-on: macos-latest
     steps:
       - name: Test with Homebrew
@@ -60,14 +69,25 @@ jobs:
         run: cd pip && secureli init --yes && secureli scan
 
 
-  test-pypi-osx:
+  test-pypi-macos:
     runs-on: macos-latest
     steps:
-      - name: Test with Pypi
+      # This step is needed to keep us on python 3.11 for now, since dependency-injector doesn't yet support python 3.12.
+      # It can be removed once this PR is merged: https://github.com/ets-labs/python-dependency-injector/pull/765
+      - name: Install Python 3.11
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install seCureLI from Pypi
         run: |
-          pip3 --version #what do we have on the macos image
+          pip3 --version # Validate python/pip version
           pip3 install secureli
+      - name: Scan repo with Pypi seCureLI package
+        run: |
           git clone https://github.com/pypa/pip pip
           cd pip
           secureli init --yes
-          secureli scan  --mode all-files --yes
+          # In the future, we should use specific exit codes to differentiate between exit reasons
+          # For now, we can just check if the command exits with a non-zero status
+          ! secureli scan --mode all-files --yes

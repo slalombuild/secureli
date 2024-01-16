@@ -21,7 +21,7 @@ class UpdateAction(Action):
 
     def update_hooks(self, folder_path: Path, latest: Optional[bool] = False):
         """
-        Installs the hooks defined in pre-commit-config.yml.
+        Installs the hooks defined in .pre-commit-config.yml.
         :param latest: Indicates whether you want to update to the latest versions
         of the installed hooks.
         :param folder_path: Indicates the git folder against which you run secureli
