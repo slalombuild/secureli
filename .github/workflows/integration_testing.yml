@@ -35,7 +35,7 @@ jobs:
           $LastExitCode = 0  # Force exit code to 0 to avoid failing the build since scan returns nonzero exit status
 
 
-  test-homebrew-osx:
+  test-homebrew-macos:
     runs-on: macos-latest
     steps:
       - name: Test with Homebrew
@@ -69,7 +69,7 @@ jobs:
         run: cd pip && secureli init --yes && secureli scan
 
 
-  test-pypi-osx:
+  test-pypi-macos:
     runs-on: macos-latest
     steps:
       # This step is needed to keep us on python 3.11 for now, since dependency-injector doesn't yet support python 3.12.
