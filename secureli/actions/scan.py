@@ -11,6 +11,7 @@ from secureli.actions.action import (
     ActionDependencies,
     VerifyResult,
 )
+from secureli.models.exit_codes import ExitCode
 from secureli.models.publish_results import PublishResultsOption
 from secureli.models.result import Result
 from secureli.services.logging import LoggingService, LogAction
@@ -159,4 +160,4 @@ class ScanAction(Action):
         if scan_result.successful:
             self.echo.print("Scan executed successfully and detected no issues!")
         else:
-            sys.exit(1)
+            sys.exit(ExitCode.SCAN_ISSUES_DETECTED.value)
