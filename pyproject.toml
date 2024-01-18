@@ -1,3 +1,7 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "secureli"
 version = "0.21.5"
@@ -26,7 +30,8 @@ test = ["init", "lint", "coverage_run", "coverage_report"]
 e2e = "bats tests/end-to-end/test.bats"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+# Until `python-dependency-injector` supports python 3.12, restrict to python 3.11 and lower
+python = ">= 3.9, < 3.12"
 typer = {version = ">=0.6.1,<0.10.0", extras = ["all"]}
 pygments = "^2.13.0"
 # Uncomment the following line to enable python 3.12 support prior to dependency-injector officially supporting it
@@ -52,10 +57,6 @@ black = ">=22.10,<24.0"
 identify = "^2.5.7"
 poethepoet = ">=0.16.4,<0.25.0"
 python-semantic-release = ">=8.0.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.semantic_release]
 # Documentation for these options: https://python-semantic-release.readthedocs.io/en/latest/configuration.html
