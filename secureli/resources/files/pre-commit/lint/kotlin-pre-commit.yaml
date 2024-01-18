@@ -1,5 +1,5 @@
 repos:
-  - repo: https://github.com/detekt/detekt
+  - repo: https://github.com/quwac/pre-commit-detekt
     rev: v1.23.4
     hooks:
       - id: detekt
