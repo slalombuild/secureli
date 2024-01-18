@@ -13,18 +13,16 @@ secureliPackageUrl = f"https://github.com/slalombuild/secureli/releases/download
 secureliPackageDependencies = []
 secureliFormulaPath = "./homebrew-secureli/Formula"
 # Filter out additional packages that are needed for the pip package, but not the homebrew formula
+# Unneeded packages are removed from the homebrew formula in order to minimize secureli homebrew installation time
 packagesToRemoveFromFormula = [
     "colorama",
     "shellingham",
     "distlib",
     "filelock",
-    "identify",
     "nodeenv",
     "platformdirs",
     "setuptools",
     "virtualenv",
-    "cfgv",
-    "pre-commit",
 ]
 
 secureliPackageNamesCmd = "poetry show --only main | awk '{print $1}'"

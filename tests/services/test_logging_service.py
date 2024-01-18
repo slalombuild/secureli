@@ -33,15 +33,6 @@ def mock_open(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
-def mock_open(mocker: MockerFixture) -> MagicMock:
-    mock_open = mocker.mock_open()
-
-    mocker.patch("builtins.open", mock_open)
-
-    return mock_open
-
-
-@pytest.fixture()
 def mock_language_support() -> MagicMock:
     mock_language_support = MagicMock()
 

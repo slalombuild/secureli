@@ -1,16 +1,27 @@
 import json
 import sys
 from pathlib import Path
+from time import time
 from typing import Optional
 
 from secureli.abstractions.echo import EchoAbstraction
-from secureli.actions.action import VerifyOutcome, Action, ActionDependencies
+from secureli.actions.action import (
+    VerifyOutcome,
+    Action,
+    ActionDependencies,
+    VerifyResult,
+)
+from secureli.models.exit_codes import ExitCode
+from secureli.models.publish_results import PublishResultsOption
+from secureli.models.result import Result
 from secureli.services.logging import LoggingService, LogAction
 from secureli.services.scanner import (
     ScanMode,
     ScannerService,
 )
 from secureli.utilities.usage_stats import post_log, convert_failures_to_failure_count
+
+ONE_WEEK_IN_SECONDS: int = 7 * 24 * 60 * 60
 
 
 class ScanAction(Action):
@@ -34,11 +45,64 @@ class ScanAction(Action):
         self.echo = echo
         self.logging = logging
 
+    def _check_secureli_hook_updates(self, folder_path: Path) -> VerifyResult:
+        """
+        Queries repositories referenced by pre-commit hooks to check
+        if we have the latest revisions listed in the .pre-commit-config.yaml file
+        :param folder_path: The folder path containing the .pre-commit-config.yaml file
+        """
+
+        self.action_deps.echo.info("Checking for pre-commit hook updates...")
+        pre_commit_config = self.scanner.pre_commit.get_pre_commit_config(folder_path)
+
+        repos_to_update = self.scanner.pre_commit.check_for_hook_updates(
+            pre_commit_config
+        )
+
+        if not repos_to_update:
+            self.action_deps.echo.info("No hooks to update")
+            return VerifyResult(outcome=VerifyOutcome.UP_TO_DATE)
+
+        for repo, revs in repos_to_update.items():
+            self.action_deps.echo.debug(
+                f"Found update for {repo}: {revs.oldRev} -> {revs.newRev}"
+            )
+        self.action_deps.echo.warning(
+            "You have out-of-date pre-commit hooks. Run `secureli update` to update them."
+        )
+        # Since we don't actually perform the updates here, return an outcome of UPDATE_CANCELLED
+        return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)
+
+    def publish_results(
+        self,
+        publish_results_condition: PublishResultsOption,
+        action_successful: bool,
+        log_str: str,
+    ):
+        """
+        Publish the results of the scan to the configured observability platform
+        :param publish_results_condition: When to publish the results of the scan to the configured observability platform
+        :param action_successful: Whether we should publish a success or failure
+        :param log_str: a string to be POSTed to backend instrumentation
+        """
+        if publish_results_condition == PublishResultsOption.ALWAYS or (
+            publish_results_condition == PublishResultsOption.ON_FAIL
+            and not action_successful
+        ):
+            result = post_log(log_str)
+            self.echo.debug(result.result_message)
+
+            if result.result == Result.SUCCESS:
+                self.logging.success(LogAction.publish)
+            else:
+                self.logging.failure(LogAction.publish, result.result_message)
+
     def scan_repo(
         self,
         folder_path: Path,
         scan_mode: ScanMode,
         always_yes: bool,
+        publish_results_condition: PublishResultsOption = PublishResultsOption.NEVER,
         specific_test: Optional[str] = None,
     ):
         """
@@ -52,6 +116,14 @@ class ScanAction(Action):
         Otherwise, scans with all hooks.
         """
         verify_result = self.verify_install(folder_path, False, always_yes)
+
+        # Check if pre-commit hooks are up-to-date
+        secureli_config = self.action_deps.secureli_config.load()
+        now: int = int(time())
+        if (secureli_config.last_hook_update_check or 0) + ONE_WEEK_IN_SECONDS < now:
+            self._check_secureli_hook_updates(folder_path)
+            secureli_config.last_hook_update_check = now
+            self.action_deps.secureli_config.save(secureli_config)
 
         if verify_result.outcome in self.halting_outcomes:
             return
@@ -70,18 +142,22 @@ class ScanAction(Action):
             scan_result.failures
         )
 
-        if not scan_result.successful:
-            log_data = self.logging.failure(
+        log_data = (
+            self.logging.success(LogAction.scan)
+            if scan_result.successful
+            else self.logging.failure(
                 LogAction.scan,
                 scan_result_failures_json_string,
                 failure_count,
                 individual_failure_count,
             )
-
-            post_log(log_data.json(exclude_none=True))
-            sys.exit("Issues Found...Aborting")
-        else:
+        )
+        self.publish_results(
+            publish_results_condition,
+            action_successful=scan_result.successful,
+            log_str=log_data.json(exclude_none=True),
+        )
+        if scan_result.successful:
             self.echo.print("Scan executed successfully and detected no issues!")
-            log_data = self.logging.success(LogAction.scan)
-
-            post_log(log_data.json(exclude_none=True))
+        else:
+            sys.exit(ExitCode.SCAN_ISSUES_DETECTED.value)

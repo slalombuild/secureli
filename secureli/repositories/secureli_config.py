@@ -9,9 +9,9 @@ FOLDER_PATH = Path(".")
 
 
 class SecureliConfig(BaseModel):
-    languages: Optional[list[str]]
-    lint_languages: Optional[list[str]]
-    version_installed: Optional[str]
+    languages: Optional[list[str]] = None
+    version_installed: Optional[str] = None
+    last_hook_update_check: Optional[int] = 0
 
 
 class DeprecatedSecureliConfig(BaseModel):
@@ -94,10 +94,12 @@ class SecureliConfigRepository:
         with open(secureli_config_path, "r") as f:
             data = yaml.safe_load(f)
             old_config = DeprecatedSecureliConfig.parse_obj(data)
+        languages: list[str] | None = (
+            [old_config.overall_language] if old_config.overall_language else None
+        )
 
         return SecureliConfig(
-            languages=[old_config.overall_language],
-            lint_languages=[old_config.overall_language],
+            languages=languages,
             version_installed=old_config.version_installed,
         )
 

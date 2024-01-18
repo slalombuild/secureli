@@ -12,8 +12,12 @@ Like this:
 `chore: my PR title`
 
 Valid prefixes are defined in the [angular documentation](https://github.com/angular/angular/blob/main/CONTRIBUTING.md#commit)
-_Important: Use "feat" to have a release automatically published. "fix,perf,docs,chore,chore(release)" only creates a patch
-version which does not get automatically released._
+
+| :memo:        | Note       |
+|---------------|:-----------|
+
+> _Use "feat" to cut a minor release automatically. "fix", "perf", or "chore(release)" will create a patch release.
+ Note that "build", "chore", "ci", "docs", "style", "refactor", and "test" do not create a release._
 
 # Environment Requirements
 

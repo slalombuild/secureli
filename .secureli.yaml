@@ -1,5 +1,5 @@
 echo:
-  level: ERROR
+  level: DEBUG
 repo_files:
   exclude_file_patterns:
   - .idea/
