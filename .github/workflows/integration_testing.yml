@@ -41,6 +41,10 @@ jobs:
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
       - name: Preinstall Formula Dependencies
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
         run: |
           brew install \
           pre-commit \
@@ -67,9 +71,13 @@ jobs:
       #     '/usr/local/bin/python3.12-config'
 
       - name: Set up seCureLI
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
         run: |
           brew tap slalombuild/secureli
-          HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install secureli
+          brew install secureli
 
       - name: Checkout test repo
         uses: actions/checkout@v4
