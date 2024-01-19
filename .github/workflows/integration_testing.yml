@@ -50,25 +50,6 @@ jobs:
           brew install --only-dependencies --display-times --verbose secureli
         continue-on-error: true
 
-      # - name: Remove existing Python installs # Removes python 3.11.3 and 3.12 to avoid conflict with homebrew python
-      #   run: |
-      #     rm -rf \
-      #     '/usr/local/bin/2to3' \
-      #     '/usr/local/bin/2to3-3.11' \
-      #     '/usr/local/bin/2to3-3.12' \
-      #     '/usr/local/bin/idle3' \
-      #     '/usr/local/bin/idle3.11' \
-      #     '/usr/local/bin/idle3.12' \
-      #     '/usr/local/bin/pydoc3' \
-      #     '/usr/local/bin/pydoc3.11' \
-      #     '/usr/local/bin/pydoc3.12' \
-      #     '/usr/local/bin/python3' \
-      #     '/usr/local/bin/python3.11' \
-      #     '/usr/local/bin/python3.12' \
-      #     '/usr/local/bin/python3-config' \
-      #     '/usr/local/bin/python3.11-config' \
-      #     '/usr/local/bin/python3.12-config'
-
       - name: Set up seCureLI
         env:
           HOMEBREW_NO_AUTO_UPDATE: 1
