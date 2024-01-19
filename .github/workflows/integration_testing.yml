@@ -40,24 +40,31 @@ jobs:
       - name: Test with Homebrew
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-      - name: Remove existing Python installs # Removes python 3.11.3 and 3.12 to avoid conflict with homebrew python
+      - name: Preinstall Formula Dependencies
         run: |
-          rm -rf \
-          '/usr/local/bin/2to3' \
-          '/usr/local/bin/2to3-3.11' \
-          '/usr/local/bin/2to3-3.12' \
-          '/usr/local/bin/idle3' \
-          '/usr/local/bin/idle3.11' \
-          '/usr/local/bin/idle3.12' \
-          '/usr/local/bin/pydoc3' \
-          '/usr/local/bin/pydoc3.11' \
-          '/usr/local/bin/pydoc3.12' \
-          '/usr/local/bin/python3' \
-          '/usr/local/bin/python3.11' \
-          '/usr/local/bin/python3.12' \
-          '/usr/local/bin/python3-config' \
-          '/usr/local/bin/python3.11-config' \
-          '/usr/local/bin/python3.12-config'
+          brew install \
+          pre-commit \
+          python@3.9
+        continue-on-error: true
+
+      # - name: Remove existing Python installs # Removes python 3.11.3 and 3.12 to avoid conflict with homebrew python
+      #   run: |
+      #     rm -rf \
+      #     '/usr/local/bin/2to3' \
+      #     '/usr/local/bin/2to3-3.11' \
+      #     '/usr/local/bin/2to3-3.12' \
+      #     '/usr/local/bin/idle3' \
+      #     '/usr/local/bin/idle3.11' \
+      #     '/usr/local/bin/idle3.12' \
+      #     '/usr/local/bin/pydoc3' \
+      #     '/usr/local/bin/pydoc3.11' \
+      #     '/usr/local/bin/pydoc3.12' \
+      #     '/usr/local/bin/python3' \
+      #     '/usr/local/bin/python3.11' \
+      #     '/usr/local/bin/python3.12' \
+      #     '/usr/local/bin/python3-config' \
+      #     '/usr/local/bin/python3.11-config' \
+      #     '/usr/local/bin/python3.12-config'
 
       - name: Set up seCureLI
         run: |
