@@ -105,13 +105,11 @@ class LanguageSupportService:
         language_config: LanguageConfigService,
         git_ignore: GitIgnoreService,
         data_loader: Callable[[str], str],
-        echo: EchoAbstraction,
     ):
         self.git_ignore = git_ignore
         self.pre_commit_hook = pre_commit_hook
         self.language_config = language_config
         self.data_loader = data_loader
-        self.echo = echo
 
     def apply_support(
         self,
@@ -269,16 +267,11 @@ class LanguageSupportService:
         """
 
         linter_config_data = [
-            (linter_data, config.language)
+            linter_data
             for config in all_linter_configs
             for linter_data in config.linter_data
         ]
 
-        for config, language in linter_config_data:
-            try:
-                with open(Path(SecureliConfig.FOLDER_PATH / config.filename), "w") as f:
-                    f.write(yaml.dump(config.settings))
-            except:
-                self.echo.warning(
-                    f"Failed to write {config.filename} config file for {language}"
-                )
+        for config in linter_config_data:
+            with open(Path(SecureliConfig.FOLDER_PATH / config.filename), "w") as f:
+                f.write(yaml.dump(config.settings))
