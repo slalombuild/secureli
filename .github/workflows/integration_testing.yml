@@ -47,6 +47,7 @@ jobs:
           HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
         run: |
           brew install pre-commit
+          brew install python@3.12
           brew install python@3.9
         continue-on-error: true
 
