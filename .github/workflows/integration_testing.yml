@@ -47,7 +47,7 @@ jobs:
           HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
         run: |
           brew tap slalombuild/secureli
-          brew install --only-dependencies secureli
+          brew install --only-dependencies --display-times --verbose secureli
         continue-on-error: true
 
       # - name: Remove existing Python installs # Removes python 3.11.3 and 3.12 to avoid conflict with homebrew python
@@ -75,7 +75,7 @@ jobs:
           HOMEBREW_NO_INSTALL_CLEANUP: 1
           HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
         run: |
-          brew install secureli
+          brew install --display-times --verbose secureli
 
       - name: Checkout test repo
         uses: actions/checkout@v4
