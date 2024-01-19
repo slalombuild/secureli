@@ -2,6 +2,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from secureli.abstractions.echo import Color
 
 from secureli.actions.action import Action, ActionDependencies, VerifyOutcome
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
@@ -82,7 +83,8 @@ def test_that_initialize_repo_install_flow_selects_both_languages(
     action.verify_install(test_folder_path, reset=True, always_yes=True)
 
     mock_echo.print.assert_called_with(
-        "seCureLI has been installed successfully (languages = RadLang, CoolLang)"
+        "seCureLI has been installed successfully for the following language(s): RadLang and CoolLang.\n",
+        color=Color.CYAN,
     )
 
 
@@ -197,7 +199,7 @@ def test_that_initialize_repo_selects_previously_selected_language(
     action.verify_install(test_folder_path, reset=False, always_yes=True)
 
     mock_echo.print.assert_called_with(
-        "seCureLI is installed and up-to-date (languages = ['PreviousLang'])"
+        "seCureLI is installed and up-to-date for the following language(s): PreviousLang"
     )
 
 
@@ -486,7 +488,7 @@ def test_that_prompt_to_install_asks_add_languages_install_msg(
     action._prompt_to_install(mock_languages, always_yes=False, new_install=False)
 
     mock_echo.confirm.assert_called_once_with(
-        f"seCureLI has not been installed for the following languages: {', '.join(mock_languages)}, install now?",
+        f"seCureLI has not been installed for the following language(s): RadLang and CoolLang, install now?",
         default_response=True,
     )
 

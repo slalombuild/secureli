@@ -80,11 +80,11 @@ class EchoAbstraction(ABC):
 
     def debug(self, message: str) -> None:
         """
-        Prints the message to the terminal in light blue and bold
+        Prints the message to the terminal in green and bold
         :param message: The debug message to print
         """
         if self.debug_enabled:
-            self._echo(f"[DEBUG] {message}", color=Color.CYAN, bold=True)
+            self._echo(f"[DEBUG] {message}", color=Color.GREEN, bold=True)
 
     def info(self, message: str, color: Optional[Color] = None, bold: bool = False):
         """
