@@ -46,9 +46,8 @@ jobs:
           HOMEBREW_NO_INSTALL_CLEANUP: 1
           HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
         run: |
-          brew install \
-          pre-commit \
-          python@3.9
+          brew install pre-commit
+          brew install python@3.9
         continue-on-error: true
 
       # - name: Remove existing Python installs # Removes python 3.11.3 and 3.12 to avoid conflict with homebrew python
