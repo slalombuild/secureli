@@ -40,18 +40,24 @@ jobs:
       - name: Test with Homebrew
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-      - name: Prep for python 3.11.3 install # Removes python 3.11.3 to avoid conflict with homebrew python
+      - name: Remove existing Python installs # Removes python 3.11.3 and 3.12 to avoid conflict with homebrew python
         run: |
-          rm -rf '/usr/local/bin/2to3'
-          rm -rf '/usr/local/bin/2to3-3.11'
-          rm -rf '/usr/local/bin/idle3'
-          rm -rf '/usr/local/bin/idle3.11'
-          rm -rf '/usr/local/bin/pydoc3'
-          rm -rf '/usr/local/bin/pydoc3.11'
-          rm -rf '/usr/local/bin/python3'
-          rm -rf '/usr/local/bin/python3-config'
-          rm -rf '/usr/local/bin/python3.11'
-          rm -rf '/usr/local/bin/python3.11-config'
+          rm -rf \
+          '/usr/local/bin/2to3' \
+          '/usr/local/bin/2to3-3.11' \
+          '/usr/local/bin/2to3-3.12' \
+          '/usr/local/bin/idle3' \
+          '/usr/local/bin/idle3.11' \
+          '/usr/local/bin/idle3.12' \
+          '/usr/local/bin/pydoc3' \
+          '/usr/local/bin/pydoc3.11' \
+          '/usr/local/bin/pydoc3.12' \
+          '/usr/local/bin/python3' \
+          '/usr/local/bin/python3.11' \
+          '/usr/local/bin/python3.12' \
+          '/usr/local/bin/python3-config' \
+          '/usr/local/bin/python3.11-config' \
+          '/usr/local/bin/python3.12-config'
 
       - name: Set up seCureLI
         run: |
