@@ -21,6 +21,7 @@ supported_languages = [
     "JavaScript",
     "Go",
     "Swift",
+    "Kotlin",
 ]
 
 

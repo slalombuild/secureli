@@ -33,6 +33,7 @@ seCureLI has Slalom-maintained templates for security management of the followin
 - C#
 - Swift
 - Golang
+- Kotlin
 
 ## Python 3.9.9
 
