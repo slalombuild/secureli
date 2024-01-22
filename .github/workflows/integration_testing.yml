@@ -111,7 +111,7 @@ jobs:
 
       - name: Run Bats
         env:
-          BATS_LIBS_ROOT: /usr/local/lib
+          BATS_LIBS_ROOT: /usr/lib
         run: |
           pip3 install poetry poethepoet secureli
           poetry install
