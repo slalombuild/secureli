@@ -92,3 +92,28 @@ jobs:
           # In the future, we should use specific exit codes to differentiate between exit reasons
           # For now, we can just check if the command exits with a non-zero status
           ! secureli scan --mode all-files --yes
+
+  test-bats-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bats and bats libs
+        uses: bats-core/bats-action@1.5.4
+
+      - name: Install Python 3.9
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install seCureLI from Pypi
+        run: |
+          pip3 install poetry
+          poetry shell
+          poetry install
+          poe test
+          secureli
+          poe e2e
