@@ -180,6 +180,10 @@ class Action(ABC):
             language_config_result,
             new_install,
         )
+
+        for error_msg in metadata.linter_config_write_errors:
+            self.action_deps.echo.warning(error_msg)
+
         config = SecureliConfig(
             languages=detected_languages,
             version_installed=metadata.version,

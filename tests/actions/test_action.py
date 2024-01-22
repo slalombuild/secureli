@@ -295,6 +295,24 @@ def test_that_initialize_repo_returns_up_to_date_if_the_process_is_canceled_on_e
     assert result.outcome == VerifyOutcome.UP_TO_DATE
 
 
+def test_that_initialize_repo_prints_warnings_for_failed_linter_config_writes(
+    action: Action,
+    mock_language_support: MagicMock,
+    mock_echo: MagicMock,
+):
+    config_write_error = "Failed to write config file for RadLang"
+
+    mock_language_support.apply_support.return_value = LanguageMetadata(
+        version="abc123",
+        security_hook_id="test_hook_id",
+        linter_config_write_errors=[config_write_error],
+    )
+
+    action.verify_install(test_folder_path, reset=True, always_yes=True)
+
+    mock_echo.warning.assert_called_once_with(config_write_error)
+
+
 def test_that_verify_install_returns_failed_result_on_new_install_language_not_supported(
     action: Action,
     mock_secureli_config: MagicMock,

@@ -11,6 +11,7 @@ from secureli.services.language_support import (
     LanguageSupportService,
     LinterConfig,
     LinterConfigData,
+    LinterConfigWriteResult,
 )
 from secureli.services.language_config import (
     LanguageConfigService,
@@ -403,3 +404,43 @@ def test_write_pre_commit_configs_ignores_empty_linter_arr(
 
     mock_open.assert_not_called()
     mock_open.return_value.write.assert_not_called()
+
+
+def test_write_pre_commit_configs_returns_error_messages(
+    language_support_service: LanguageSupportService,
+    mock_open: MagicMock,
+):
+    mock_open.side_effect = Exception("error")
+    mock_language = "CoolLang"
+    mock_filename = "cool-lint-config.yml"
+    result = language_support_service._write_pre_commit_configs(
+        [
+            LinterConfig(
+                language=mock_language,
+                linter_data=[LinterConfigData(filename=mock_filename, settings={})],
+            ),
+        ]
+    )
+
+    mock_open.assert_called_once()
+    mock_open.return_value.write.assert_not_called()
+    assert result == LinterConfigWriteResult(
+        error_messages=[
+            f"Failed to write {mock_filename} linter config file for {mock_language}"
+        ],
+        successful_languages=[],
+    )
+
+
+def test_write_pre_commit_configs_handles_empty_lint_configs(
+    language_support_service: LanguageSupportService,
+    mock_open: MagicMock,
+):
+    result = language_support_service._write_pre_commit_configs([])
+
+    mock_open.assert_not_called()
+    mock_open.return_value.write.assert_not_called()
+    assert result == LinterConfigWriteResult(
+        error_messages=[],
+        successful_languages=[],
+    )

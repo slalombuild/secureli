@@ -28,6 +28,7 @@ supported_languages = [
 class LanguageMetadata(pydantic.BaseModel):
     version: str
     security_hook_id: Optional[str]
+    linter_config_write_errors: Optional[list[str]] = []
 
 
 class ValidateConfigResult(pydantic.BaseModel):
@@ -51,14 +52,6 @@ class HookConfiguration(pydantic.BaseModel):
     """A simplified pre-commit configuration representation for logging purposes"""
 
     repos: list[Repo]
-
-
-class LanguageLinterWriteResult(pydantic.BaseModel):
-    """Results from installing langauge specific configs for pre-commit hooks"""
-
-    num_successful: int
-    num_non_success: int
-    non_success_messages: list[str]
 
 
 class UnexpectedReposResult(pydantic.BaseModel):
@@ -92,6 +85,15 @@ class BuildConfigResult(pydantic.BaseModel):
     config_data: dict
     linter_configs: list[LinterConfig]
     version: str
+
+
+class LinterConfigWriteResult(pydantic.BaseModel):
+    """
+    Result from writing linter config files
+    """
+
+    successful_languages: list[str]
+    error_messages: list[str]
 
 
 class LanguageSupportService:
@@ -132,8 +134,9 @@ class LanguageSupportService:
             SecureliConfig.FOLDER_PATH / ".pre-commit-config.yaml"
         )
 
-        if len(language_config_result.linter_configs) > 0:
-            self._write_pre_commit_configs(language_config_result.linter_configs)
+        linter_config_write_result = self._write_pre_commit_configs(
+            language_config_result.linter_configs
+        )
 
         pre_commit_file_mode = "w" if overwrite_pre_commit else "a"
         with open(path_to_pre_commit_file, pre_commit_file_mode) as f:
@@ -150,6 +153,7 @@ class LanguageSupportService:
         return LanguageMetadata(
             version=language_config_result.version,
             security_hook_id=self.secret_detection_hook_id(languages),
+            linter_config_write_errors=linter_config_write_result.error_messages,
         )
 
     def secret_detection_hook_id(self, languages: list[str]) -> Optional[str]:
@@ -259,7 +263,7 @@ class LanguageSupportService:
     def _write_pre_commit_configs(
         self,
         all_linter_configs: list[LinterConfig],
-    ) -> None:
+    ) -> LinterConfigWriteResult:
         """
         Install any config files for given language to support any pre-commit commands.
         i.e. Javascript ESLint requires a .eslintrc file to sufficiently use plugins and allow
@@ -268,11 +272,24 @@ class LanguageSupportService:
         """
 
         linter_config_data = [
-            linter_data
-            for config in all_linter_configs
+            (linter_data, config.language)
+            for config in all_linter_configs or []
             for linter_data in config.linter_data
         ]
 
-        for config in linter_config_data:
-            with open(Path(SecureliConfig.FOLDER_PATH / config.filename), "w") as f:
-                f.write(yaml.dump(config.settings))
+        error_messages: list[str] = []
+        successful_languages: list[str] = []
+
+        for config, language in linter_config_data:
+            try:
+                with open(Path(SecureliConfig.FOLDER_PATH / config.filename), "w") as f:
+                    f.write(yaml.dump(config.settings))
+                    successful_languages.append(language)
+            except:
+                error_messages.append(
+                    f"Failed to write {config.filename} linter config file for {language}"
+                )
+
+        return LinterConfigWriteResult(
+            successful_languages=successful_languages, error_messages=error_messages
+        )
