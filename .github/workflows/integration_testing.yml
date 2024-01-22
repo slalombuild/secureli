@@ -109,7 +109,9 @@ jobs:
         with:
           python-version: "3.9"
 
-      - name: Install seCureLI from Pypi
+      - name: Run Bats
+        env:
+          BATS_LIBS_ROOT: /usr/local/lib
         run: |
           pip3 install poetry poethepoet secureli
           poetry install
