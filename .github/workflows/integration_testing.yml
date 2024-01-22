@@ -113,6 +113,6 @@ jobs:
         run: |
           pip3 install poetry
           poetry install
-          poe test
+          poetry test
           secureli
-          poe e2e
+          poetry e2e
