@@ -40,29 +40,23 @@ jobs:
       - name: Test with Homebrew
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-      - name: Remove existing Python installs # Removes python 3.11.3 and 3.12 to avoid conflict with homebrew python
-        run: |
-          rm -rf \
-          '/usr/local/bin/2to3' \
-          '/usr/local/bin/2to3-3.11' \
-          '/usr/local/bin/2to3-3.12' \
-          '/usr/local/bin/idle3' \
-          '/usr/local/bin/idle3.11' \
-          '/usr/local/bin/idle3.12' \
-          '/usr/local/bin/pydoc3' \
-          '/usr/local/bin/pydoc3.11' \
-          '/usr/local/bin/pydoc3.12' \
-          '/usr/local/bin/python3' \
-          '/usr/local/bin/python3.11' \
-          '/usr/local/bin/python3.12' \
-          '/usr/local/bin/python3-config' \
-          '/usr/local/bin/python3.11-config' \
-          '/usr/local/bin/python3.12-config'
-
-      - name: Set up seCureLI
+      - name: Preinstall Formula Dependencies
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
         run: |
           brew tap slalombuild/secureli
-          HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install secureli
+          brew install --only-dependencies --display-times --verbose secureli
+        continue-on-error: true
+
+      - name: Set up seCureLI
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+        run: |
+          brew install --display-times --verbose secureli
 
       - name: Checkout test repo
         uses: actions/checkout@v4
