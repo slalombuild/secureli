@@ -112,7 +112,6 @@ jobs:
       - name: Install seCureLI from Pypi
         run: |
           pip3 install poetry
-          poetry shell
           poetry install
           poe test
           secureli
