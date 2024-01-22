@@ -116,4 +116,5 @@ jobs:
           pip3 install poetry poethepoet secureli
           poetry install
           poe test
+          secureli init --yes
           poe e2e
