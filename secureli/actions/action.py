@@ -2,7 +2,8 @@ from abc import ABC
 from enum import Enum
 from pathlib import Path
 from typing import Optional
-from secureli.abstractions.echo import EchoAbstraction, Color
+from secureli.abstractions.echo import EchoAbstraction
+from secureli.models.echo import Color
 from secureli.repositories.secureli_config import (
     SecureliConfig,
     SecureliConfigRepository,
@@ -198,6 +199,7 @@ class Action(ABC):
                 f"{format_sentence_list(config.languages)}.\n"
             ),
             color=Color.CYAN,
+            bold=True,
         )
         return VerifyResult(
             outcome=VerifyOutcome.INSTALL_SUCCEEDED,
@@ -249,7 +251,7 @@ class Action(ABC):
             self.action_deps.echo.print(
                 f"The following language(s) support secrets detection: {format_sentence_list(config.languages)}"
             )
-            self.action_deps.echo.print("running {secret_test_id}.")
+            self.action_deps.echo.print(f"running {secret_test_id}.")
 
             scan_result = self.action_deps.scanner.scan_repo(
                 folder_path, ScanMode.ALL_FILES, specific_test=secret_test_id

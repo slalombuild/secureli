@@ -2,9 +2,9 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from secureli.abstractions.echo import Color
 
 from secureli.actions.action import Action, ActionDependencies, VerifyOutcome
+from secureli.models.echo import Color
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
 from secureli.services.language_analyzer import AnalyzeResult, SkippedFile
 from secureli.services.language_support import LanguageMetadata
@@ -85,6 +85,7 @@ def test_that_initialize_repo_install_flow_selects_both_languages(
     mock_echo.print.assert_called_with(
         "seCureLI has been installed successfully for the following language(s): RadLang and CoolLang.\n",
         color=Color.CYAN,
+        bold=True,
     )
 
 
