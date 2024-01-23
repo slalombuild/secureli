@@ -116,4 +116,5 @@ jobs:
           pip3 install poetry poethepoet
           poetry install
           poe test
+          git reset --hard
           poe e2e
