@@ -113,8 +113,7 @@ jobs:
         env:
           BATS_LIBS_ROOT: /usr/lib
         run: |
-          pip3 install poetry poethepoet secureli
+          pip3 install poetry poethepoet
           poetry install
           poe test
-          secureli init --yes
           poe e2e
