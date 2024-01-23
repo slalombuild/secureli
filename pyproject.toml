@@ -69,8 +69,6 @@ build_command = "pip install poetry && poetry build"
 commit_message = "chore(release): Tag v{version} [skip ci]"
 tag_format = "v{version}"
 
-# Enable in a future PR (https://github.com/slalombuild/secureli/issues/250)
-# Consider enabling in pipeline first with no-op option to validate release name
-# [tools.semantic_release.branches.main]
-# prerelease = true
-# prerelease_token = "alpha"
+[tool.semantic_release.branches.main]
+match = "(main|master)"
+prerelease = false  # Toggle to append `-rc.<N>` (e.g. `-rc.1`). Set `prerelease_token` to change suffix
