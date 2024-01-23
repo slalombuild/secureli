@@ -4,19 +4,9 @@ from typing import IO, Optional
 
 import sys
 import typer
+from secureli.models.echo import Color
 
 from secureli.utilities.logging import EchoLevel
-
-
-class Color(str, Enum):
-    BLACK = "black"
-    RED = "red"
-    GREEN = "green"
-    YELLOW = "yellow"
-    BLUE = "blue"
-    MAGENTA = "magenta"
-    CYAN = "cyan"
-    WHITE = "white"
 
 
 class EchoAbstraction(ABC):
@@ -80,11 +70,11 @@ class EchoAbstraction(ABC):
 
     def debug(self, message: str) -> None:
         """
-        Prints the message to the terminal in light blue and bold
+        Prints the message to the terminal in blue and bold
         :param message: The debug message to print
         """
         if self.debug_enabled:
-            self._echo(f"[DEBUG] {message}", color=Color.CYAN, bold=True)
+            self._echo(f"[DEBUG] {message}", color=Color.BLUE, bold=True)
 
     def info(self, message: str, color: Optional[Color] = None, bold: bool = False):
         """
