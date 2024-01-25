@@ -67,7 +67,7 @@ jobs:
           poetry run poe precommit
           poetry run poe coverage
           poetry run secureli build
-          poe e2e
+          poetry run poe e2e
 
 
   secureli-release-noop:
