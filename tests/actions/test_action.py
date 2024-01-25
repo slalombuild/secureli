@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from secureli.actions.action import Action, ActionDependencies, VerifyOutcome
+from secureli.models.echo import Color
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
 from secureli.services.language_analyzer import AnalyzeResult, SkippedFile
 from secureli.services.language_support import LanguageMetadata
@@ -82,7 +83,9 @@ def test_that_initialize_repo_install_flow_selects_both_languages(
     action.verify_install(test_folder_path, reset=True, always_yes=True)
 
     mock_echo.print.assert_called_with(
-        "seCureLI has been installed successfully (languages = RadLang, CoolLang)"
+        "seCureLI has been installed successfully for the following language(s): RadLang and CoolLang.\n",
+        color=Color.CYAN,
+        bold=True,
     )
 
 
@@ -197,7 +200,7 @@ def test_that_initialize_repo_selects_previously_selected_language(
     action.verify_install(test_folder_path, reset=False, always_yes=True)
 
     mock_echo.print.assert_called_with(
-        "seCureLI is installed and up-to-date (languages = ['PreviousLang'])"
+        "seCureLI is installed and up-to-date for the following language(s): PreviousLang"
     )
 
 
@@ -291,6 +294,24 @@ def test_that_initialize_repo_returns_up_to_date_if_the_process_is_canceled_on_e
 
     result = action.verify_install(test_folder_path, reset=False, always_yes=False)
     assert result.outcome == VerifyOutcome.UP_TO_DATE
+
+
+def test_that_initialize_repo_prints_warnings_for_failed_linter_config_writes(
+    action: Action,
+    mock_language_support: MagicMock,
+    mock_echo: MagicMock,
+):
+    config_write_error = "Failed to write config file for RadLang"
+
+    mock_language_support.apply_support.return_value = LanguageMetadata(
+        version="abc123",
+        security_hook_id="test_hook_id",
+        linter_config_write_errors=[config_write_error],
+    )
+
+    action.verify_install(test_folder_path, reset=True, always_yes=True)
+
+    mock_echo.warning.assert_called_once_with(config_write_error)
 
 
 def test_that_verify_install_returns_failed_result_on_new_install_language_not_supported(
@@ -486,7 +507,7 @@ def test_that_prompt_to_install_asks_add_languages_install_msg(
     action._prompt_to_install(mock_languages, always_yes=False, new_install=False)
 
     mock_echo.confirm.assert_called_once_with(
-        f"seCureLI has not been installed for the following languages: {', '.join(mock_languages)}, install now?",
+        f"seCureLI has not been installed for the following language(s): RadLang and CoolLang, install now?",
         default_response=True,
     )
 

@@ -2,10 +2,8 @@ from abc import ABC
 from enum import Enum
 from pathlib import Path
 from typing import Optional
-from secureli.abstractions.echo import EchoAbstraction, Color
-from secureli.abstractions.pre_commit import (
-    InstallFailedError,
-)
+from secureli.abstractions.echo import EchoAbstraction
+from secureli.models.echo import Color
 from secureli.repositories.secureli_config import (
     SecureliConfig,
     SecureliConfigRepository,
@@ -22,6 +20,7 @@ from secureli.services.scanner import ScannerService, ScanMode
 from secureli.services.updater import UpdaterService
 
 import pydantic
+from secureli.utilities.formatter import format_sentence_list
 
 
 class VerifyOutcome(str, Enum):
@@ -128,7 +127,10 @@ class Action(ABC):
             )
         else:
             self.action_deps.echo.print(
-                f"seCureLI is installed and up-to-date (languages = {config.languages})"
+                (
+                    "seCureLI is installed and up-to-date for the "
+                    f"following language(s): {format_sentence_list(languages)}"
+                )
             )
             return VerifyResult(
                 outcome=VerifyOutcome.UP_TO_DATE,
@@ -179,6 +181,10 @@ class Action(ABC):
             language_config_result,
             new_install,
         )
+
+        for error_msg in metadata.linter_config_write_errors:
+            self.action_deps.echo.warning(error_msg)
+
         config = SecureliConfig(
             languages=detected_languages,
             version_installed=metadata.version,
@@ -188,7 +194,12 @@ class Action(ABC):
         self._run_post_install_scan(folder_path, config, metadata, new_install)
 
         self.action_deps.echo.print(
-            f"seCureLI has been installed successfully (languages = {', '.join(install_languages)})"
+            (
+                "seCureLI has been installed successfully for the following language(s): "
+                f"{format_sentence_list(config.languages)}.\n"
+            ),
+            color=Color.CYAN,
+            bold=True,
         )
         return VerifyResult(
             outcome=VerifyOutcome.INSTALL_SUCCEEDED,
@@ -207,7 +218,10 @@ class Action(ABC):
         """
 
         new_install_message = "seCureLI has not yet been installed, install now?"
-        add_languages_message = f"seCureLI has not been installed for the following languages: {', '.join(languages)}, install now?"
+        add_languages_message = (
+            f"seCureLI has not been installed for the following language(s): "
+            f"{format_sentence_list(languages)}, install now?"
+        )
         return always_yes or self.action_deps.echo.confirm(
             new_install_message if new_install else add_languages_message,
             default_response=True,
@@ -235,8 +249,9 @@ class Action(ABC):
 
         if secret_test_id := metadata.security_hook_id:
             self.action_deps.echo.print(
-                f"{config.languages} supports secrets detection; running {secret_test_id}."
+                f"The following language(s) support secrets detection: {format_sentence_list(config.languages)}"
             )
+            self.action_deps.echo.print(f"running {secret_test_id}.")
 
             scan_result = self.action_deps.scanner.scan_repo(
                 folder_path, ScanMode.ALL_FILES, specific_test=secret_test_id
@@ -268,13 +283,14 @@ class Action(ABC):
         if not analyze_result.language_proportions:
             raise ValueError("No supported languages found in current repository")
 
-        self.action_deps.echo.print("Detected the following languages:")
+        self.action_deps.echo.print(
+            "Detected the following language(s):", color=Color.CYAN, bold=True
+        )
         for language, percentage in analyze_result.language_proportions.items():
             self.action_deps.echo.print(
-                f"- {language}: {percentage:.0%}", color=Color.MAGENTA, bold=True
+                f"- {language}: {percentage:.0%}", color=Color.CYAN, bold=True
             )
         languages = list(analyze_result.language_proportions.keys())
-        self.action_deps.echo.print(f"Overall Detected Languages: {languages}")
 
         return languages
 

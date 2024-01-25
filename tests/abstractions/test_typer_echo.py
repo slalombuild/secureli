@@ -1,8 +1,13 @@
 from pytest_mock import MockerFixture
-from secureli.abstractions.echo import TyperEcho, Color
+from secureli.abstractions.echo import TyperEcho
 from unittest.mock import MagicMock, ANY
 
 import pytest
+from secureli.models.echo import Color
+
+from secureli.utilities.logging import EchoLevel
+
+ECHO_SECURELI_PREFIX = "[seCureLI]"
 
 
 @pytest.fixture()
@@ -18,7 +23,7 @@ def mock_typer_style(mock_echo_text: str, mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
-def mock_typer_confirm(mock_echo_text: str, mocker: MockerFixture) -> MagicMock:
+def mock_typer_confirm(mocker: MockerFixture) -> MagicMock:
     mock_typer_style = mocker.patch("typer.confirm")
     mock_typer_style.return_value = True
     return mock_typer_style
@@ -30,102 +35,173 @@ def mock_typer_echo(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
-def typer_echo(
-    mock_typer_style: MagicMock,
-    mock_typer_echo: MagicMock,
-) -> TyperEcho:
-    return TyperEcho(level="DEBUG")
+def typer_echo(request) -> TyperEcho:
+    return TyperEcho(level=request.param)
 
 
-@pytest.fixture()
-def typer_echo_logging_off(
-    mock_typer_style: MagicMock,
-    mock_typer_echo: MagicMock,
-) -> TyperEcho:
-    return TyperEcho(level="OFF")
-
-
-def test_that_typer_echo_stylizes_message(
+@pytest.mark.parametrize(
+    "typer_echo",
+    [EchoLevel.info, EchoLevel.debug, EchoLevel.error, EchoLevel.warn],
+    indirect=True,
+)
+def test_that_typer_echo_renders_print_messages_correctly(
     typer_echo: TyperEcho,
     mock_echo_text: str,
     mock_typer_style: MagicMock,
     mock_typer_echo: MagicMock,
 ):
-    typer_echo.info(mock_echo_text)
+    typer_echo.print(mock_echo_text, Color.BLACK, bold=True)
 
-    mock_typer_style.assert_called_once()
+    mock_typer_style.assert_called_once_with(
+        f"{ECHO_SECURELI_PREFIX} {mock_echo_text}", fg=Color.BLACK.value, bold=True
+    )
     mock_typer_echo.assert_called_once_with(mock_echo_text, file=ANY)
 
 
-def test_that_typer_echo_stylizes_message_when_printing(
+@pytest.mark.parametrize(
+    "typer_echo",
+    [
+        EchoLevel.debug,
+        EchoLevel.info,
+        EchoLevel.warn,
+        EchoLevel.error,
+    ],
+    indirect=True,
+)
+def test_that_typer_echo_renders_errors_correctly(
     typer_echo: TyperEcho,
     mock_echo_text: str,
     mock_typer_style: MagicMock,
-    mock_typer_echo: MagicMock,
-):
-    typer_echo.print(mock_echo_text)
-
-    mock_typer_style.assert_called_once()
-    mock_typer_echo.assert_called_once_with(mock_echo_text, file=ANY)
-
-
-def test_that_typer_echo_does_not_even_print_when_off(
-    typer_echo_logging_off: TyperEcho,
-    mock_echo_text: str,
-    mock_typer_style: MagicMock,
-    mock_typer_echo: MagicMock,
-):
-    typer_echo_logging_off.print(mock_echo_text)
-
-    mock_typer_style.assert_not_called()
-
-
-def test_that_typer_echo_errors_are_red(
-    typer_echo: TyperEcho,
-    mock_echo_text: str,
-    mock_typer_style: MagicMock,
-    mock_typer_echo: MagicMock,
 ):
     typer_echo.error(mock_echo_text)
 
-    mock_typer_style.assert_called_once_with(ANY, fg="red", bold=ANY)
+    mock_typer_style.assert_called_once_with(
+        f"{ECHO_SECURELI_PREFIX} [ERROR] {mock_echo_text}",
+        fg=Color.RED.value,
+        bold=True,
+    )
 
 
-def test_that_typer_echo_warnings_are_yellow(
+@pytest.mark.parametrize(
+    "typer_echo", [EchoLevel.warn, EchoLevel.info, EchoLevel.debug], indirect=True
+)
+def test_that_typer_echo_renders_warnings_correctly(
     typer_echo: TyperEcho,
     mock_echo_text: str,
     mock_typer_style: MagicMock,
-    mock_typer_echo: MagicMock,
 ):
     typer_echo.warning(mock_echo_text)
 
-    mock_typer_style.assert_called_once_with(ANY, fg="yellow", bold=ANY)
+    mock_typer_style.assert_called_once_with(
+        f"{ECHO_SECURELI_PREFIX} [WARN] {mock_echo_text}",
+        fg=Color.YELLOW.value,
+        bold=False,
+    )
 
 
-def test_that_typer_echo_info_match_color_choice(
+@pytest.mark.parametrize("typer_echo", [EchoLevel.info, EchoLevel.debug], indirect=True)
+def test_that_typer_echo_renders_info_correctly(
     typer_echo: TyperEcho,
     mock_echo_text: str,
     mock_typer_style: MagicMock,
-    mock_typer_echo: MagicMock,
 ):
     typer_echo.info(mock_echo_text, color=Color.MAGENTA, bold=True)
 
-    mock_typer_style.assert_called_once_with(ANY, fg="magenta", bold=True)
+    mock_typer_style.assert_called_once_with(
+        f"{ECHO_SECURELI_PREFIX} [INFO] {mock_echo_text}",
+        fg=Color.MAGENTA.value,
+        bold=True,
+    )
 
 
-def test_that_typer_echo_suppresses_messages_when_off(
-    typer_echo_logging_off: TyperEcho,
+@pytest.mark.parametrize(
+    "typer_echo",
+    [EchoLevel.debug],
+    indirect=True,
+)
+def test_that_typer_echo_renders_debug_messages_correctly(
+    typer_echo: TyperEcho,
     mock_echo_text: str,
     mock_typer_style: MagicMock,
-    mock_typer_echo: MagicMock,
 ):
-    typer_echo_logging_off.info(mock_echo_text)
-    typer_echo_logging_off.warning(mock_echo_text)
-    typer_echo_logging_off.error(mock_echo_text)
+    typer_echo.debug(mock_echo_text)
+    mock_typer_style.assert_called_once_with(
+        f"{ECHO_SECURELI_PREFIX} [DEBUG] {mock_echo_text}", fg=Color.BLUE, bold=True
+    )
+
+
+@pytest.mark.parametrize(
+    "typer_echo",
+    [EchoLevel.off],
+    indirect=True,
+)
+def test_that_typer_echo_suppresses_all_messages_when_off(
+    mock_echo_text: str,
+    mock_typer_style: MagicMock,
+    typer_echo: TyperEcho,
+):
+    typer_echo.info(mock_echo_text)
+    typer_echo.warning(mock_echo_text)
+    typer_echo.error(mock_echo_text)
+    typer_echo.debug(mock_echo_text)
+    typer_echo.print(mock_echo_text)
 
     mock_typer_style.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    "typer_echo",
+    [EchoLevel.off],
+    indirect=True,
+)
+def test_that_typer_echo_suppresses_error_messages(
+    mock_echo_text: str, mock_typer_style: MagicMock, typer_echo: TyperEcho
+):
+    typer_echo.error(mock_echo_text)
+    mock_typer_style.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "typer_echo",
+    [EchoLevel.error, EchoLevel.off],
+    indirect=True,
+)
+def test_that_typer_echo_suppresses_warning_messages(
+    mock_echo_text: str, mock_typer_style: MagicMock, typer_echo: TyperEcho
+):
+    typer_echo.warning(mock_echo_text)
+    mock_typer_style.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "typer_echo",
+    [EchoLevel.warn, EchoLevel.error, EchoLevel.off],
+    indirect=True,
+)
+def test_that_typer_echo_suppresses_info_messages(
+    mock_echo_text: str, mock_typer_style: MagicMock, typer_echo: TyperEcho
+):
+    typer_echo.info(mock_echo_text)
+    mock_typer_style.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "typer_echo",
+    [EchoLevel.info, EchoLevel.warn, EchoLevel.error, EchoLevel.off],
+    indirect=True,
+)
+def test_that_typer_echo_suppresses_debug_messages(
+    mock_echo_text: str, mock_typer_style: MagicMock, typer_echo: TyperEcho
+):
+    typer_echo.debug(mock_echo_text)
+    mock_typer_style.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "typer_echo",
+    [EchoLevel.info],
+    indirect=True,
+)
 def test_that_typer_echo_prompts_user_for_confirmation(
     typer_echo: TyperEcho,
     mock_echo_text: str,

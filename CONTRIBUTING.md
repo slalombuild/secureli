@@ -159,7 +159,6 @@ seCureLI has not been setup yet. Initialize seCureLI now? [Y/n]: Y
 Detected the following languages:
 - Python: 93%
 - YAML: 7%
-Overall Detected Language: Python
 Installing support for Python
 pre-commit installed at .git/hooks/pre-commit
 Python pre-commit checks installed successfully

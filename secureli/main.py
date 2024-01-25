@@ -8,7 +8,7 @@ from secureli.actions.action import VerifyOutcome
 from secureli.actions.scan import ScanMode
 from secureli.actions.setup import SetupAction
 from secureli.container import Container
-from secureli.abstractions.echo import Color
+from secureli.models.echo import Color
 from secureli.models.publish_results import PublishResultsOption
 from secureli.resources import read_resource
 from secureli.settings import Settings
