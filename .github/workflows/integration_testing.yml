@@ -10,90 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # test-windows:
-  #   runs-on: windows-latest
-  #   steps:
-  #     - name: setup python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: "3.10"
-
-  #     - name: Install seCureLI
-  #       # Note that this is a powershell script
-  #       run: |
-  #         pip3 --version
-  #         pip3 install secureli
-  #         git clone https://github.com/pypa/pip pip
-  #         cd pip
-  #         secureli init --yes
-
-  #     - name: seCureLI Scan
-  #       run: |
-  #         cd pip
-  #         $ErrorActionPreference = 'SilentlyContinue'
-  #         secureli scan --mode all-files --yes
-  #         $LastExitCode = 0  # Force exit code to 0 to avoid failing the build since scan returns nonzero exit status
-
-  # test-homebrew-macos:
-  #   runs-on: macos-latest
-  #   steps:
-  #     - name: Test with Homebrew
-  #       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-  #     - name: Preinstall Formula Dependencies
-  #       env:
-  #         HOMEBREW_NO_AUTO_UPDATE: 1
-  #         HOMEBREW_NO_INSTALL_CLEANUP: 1
-  #         HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-  #       run: |
-  #         brew tap slalombuild/secureli
-  #         brew install --only-dependencies --display-times --verbose secureli
-  #       continue-on-error: true
-
-  #     - name: Set up seCureLI
-  #       env:
-  #         HOMEBREW_NO_AUTO_UPDATE: 1
-  #         HOMEBREW_NO_INSTALL_CLEANUP: 1
-  #         HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-  #       run: |
-  #         brew install --display-times --verbose secureli
-
-  #     - name: Checkout test repo
-  #       uses: actions/checkout@v4
-  #       with:
-  #         repository: pypa/pip
-  #         path: pip
-
-  #     - name: Init seCureLI
-  #       run: |
-  #         cd pip
-  #         secureli init --yes
-  #         ! secureli scan --mode all-files --yes
-
-  # test-pypi-macos:
-  #   runs-on: macos-latest
-  #   steps:
-  #     # This step is needed to keep us on python 3.11 for now, since dependency-injector doesn't yet support python 3.12.
-  #     # It can be removed once this PR is merged: https://github.com/ets-labs/python-dependency-injector/pull/765
-  #     - name: Install Python 3.11
-  #       id: setup-python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: "3.11"
-  #     - name: Install seCureLI from Pypi
-  #       run: |
-  #         pip3 --version # Validate python/pip version
-  #         pip3 install secureli
-  #     - name: Scan repo with Pypi seCureLI package
-  #       run: |
-  #         git clone https://github.com/pypa/pip pip
-  #         cd pip
-  #         secureli init --yes
-  #         # In the future, we should use specific exit codes to differentiate between exit reasons
-  #         # For now, we can just check if the command exits with a non-zero status
-  #         ! secureli scan --mode all-files --yes
-
-  test-bats-linux:
+  smoke-testing-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -109,12 +26,11 @@ jobs:
         with:
           python-version: "3.9"
 
-      - name: Run Bats
+      - name: Run Unit & Smoke Tests
         env:
           BATS_LIBS_ROOT: /usr/lib
         run: |
           pip3 install poetry poethepoet
           poetry install
           poe test
-          git reset --hard
           poe e2e
