@@ -36,9 +36,14 @@ jobs:
       - name: Run Unit & Smoke Tests
         env:
           BATS_LIBS_ROOT: /usr/lib
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+          HOMEBREW_NO_INSTALL_FROM_API: 1
         run: |
           pip3 install poetry poethepoet requests jinja2
           poetry install
           poe test
           poe e2e
           python ./scripts/get-secureli-dependencies.py
+          brew install --build-from-source ./Formula/secureli.rb
