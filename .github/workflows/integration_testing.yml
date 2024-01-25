@@ -17,6 +17,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/checkout@v4
+        with:
+          repository: slalombuild/homebrew-secureli
+          path: homebrew-secureli
+          ref: main
+          fetch-depth: 0
+
       - name: Setup Bats and bats libs
         uses: bats-core/bats-action@1.5.4
 
@@ -30,7 +37,8 @@ jobs:
         env:
           BATS_LIBS_ROOT: /usr/lib
         run: |
-          pip3 install poetry poethepoet
+          pip3 install poetry poethepoet requests jinja2
           poetry install
           poe test
           poe e2e
+          python ./scripts/get-secureli-dependencies.py
