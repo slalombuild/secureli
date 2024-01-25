@@ -63,6 +63,8 @@ jobs:
         uses: bats-core/bats-action@1.5.4
 
       - name: Run Tests
+        env:
+          BATS_LIBS_ROOT: /usr/lib
         run: |
           poetry run poe precommit
           poetry run poe coverage
