@@ -18,6 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Poetry
+        run: pip install poetry
+
       - name: Set up Python 3.9
         id: setup-python
         uses: actions/setup-python@v4
@@ -27,7 +30,6 @@ jobs:
 
       - name: Set Up Project
         run: |
-          pip install poetry
           poetry install
 
       - name: Run Tests
@@ -49,6 +51,9 @@ jobs:
       - name: Validate Branch name
         run: ./scripts/get-current-branch.sh
 
+      - name: Set up Poetry
+        run: pip install poetry
+
       - name: Set up Python 3.9
         id: setup-python
         uses: actions/setup-python@v4
@@ -58,7 +63,6 @@ jobs:
 
       - name: Set Up Project
         run: |
-          pip install poetry
           poetry install
 
       - name: Install BATS for e2e tests
