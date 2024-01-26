@@ -22,14 +22,14 @@ jobs:
         id: cache-pip-repo-windows
         uses: actions/cache@v3
         with:
-          path: ~/pip
+          path: pip
           key: ${{ runner.os }}-repo-pip
 
       - uses: actions/checkout@v4
         if: steps.cache-pip-repo-windows.outputs.cache-hit != 'true'
         with:
           repository: pypa/pip
-          path: ~/pip
+          path: pip
           fetch-depth: 0
 
       - name: Install seCureLI
@@ -75,14 +75,14 @@ jobs:
         id: cache-pip-repo-mac
         uses: actions/cache@v3
         with:
-          path: ~/pip
+          path: pip
           key: ${{ runner.os }}-repo-pip
 
       - uses: actions/checkout@v4
         if: steps.cache-pip-repo-mac.outputs.cache-hit != 'true'
         with:
           repository: pypa/pip
-          path: ~/pip
+          path: pip
           fetch-depth: 0
 
       - name: Init seCureLI
@@ -106,14 +106,14 @@ jobs:
         id: cache-pip-repo-mac
         uses: actions/cache@v3
         with:
-          path: ~/pip
+          path: pip
           key: ${{ runner.os }}-repo-pip
 
       - uses: actions/checkout@v4
         if: steps.cache-pip-repo-mac.outputs.cache-hit != 'true'
         with:
           repository: pypa/pip
-          path: ~/pip
+          path: pip
           fetch-depth: 0
 
       - name: Install seCureLI from Pypi
