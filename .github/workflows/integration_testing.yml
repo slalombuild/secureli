@@ -20,7 +20,7 @@ jobs:
 
       - name: Cache pip repo
         id: cache-pip-repo-windows
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: pip
           key: ${{ runner.os }}-repo-pip
@@ -53,6 +53,13 @@ jobs:
       - name: Test with Homebrew
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+      - name: Cache homebrew
+        id: cache-homebrew-mac
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/Homebrew
+          key: ${{ runner.os }}-homebrew-cache
+
       - name: Preinstall Formula Dependencies
         env:
           HOMEBREW_NO_AUTO_UPDATE: 1
@@ -73,7 +80,7 @@ jobs:
 
       - name: Cache pip repo
         id: cache-pip-repo-mac
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: pip
           key: ${{ runner.os }}-repo-pip
@@ -104,7 +111,7 @@ jobs:
 
       - name: Cache pip repo
         id: cache-pip-repo-mac
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: pip
           key: ${{ runner.os }}-repo-pip
