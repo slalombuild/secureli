@@ -80,7 +80,7 @@ jobs:
 
   build-homebrew:
     name: Homebrew
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -94,7 +94,7 @@ jobs:
           fetch-depth: 0
 
       - name: Cache pip repo
-        id: cache-pip-repo-linux
+        id: cache-pip-repo-mac
         uses: actions/cache@v4
         with:
           path: pip
