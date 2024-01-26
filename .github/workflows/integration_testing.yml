@@ -18,12 +18,25 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Cache pip repo
+        id: cache-pip-repo-windows
+        uses: actions/cache@v4
+        with:
+          path: pip
+          key: ${{ runner.os }}-repo-pip
+
+      - uses: actions/checkout@v4
+        if: steps.cache-pip-repo-windows.outputs.cache-hit != 'true'
+        with:
+          repository: pypa/pip
+          path: pip
+          fetch-depth: 0
+
       - name: Install seCureLI
         # Note that this is a powershell script
         run: |
           pip3 --version
           pip3 install secureli
-          git clone https://github.com/pypa/pip pip
           cd pip
           secureli init --yes
 
@@ -39,6 +52,13 @@ jobs:
     steps:
       - name: Test with Homebrew
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+      - name: Cache homebrew
+        id: cache-homebrew-mac
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/Homebrew
+          key: ${{ runner.os }}-homebrew-cache
 
       - name: Preinstall Formula Dependencies
         env:
@@ -58,11 +78,19 @@ jobs:
         run: |
           brew install --display-times --verbose secureli
 
-      - name: Checkout test repo
-        uses: actions/checkout@v4
+      - name: Cache pip repo
+        id: cache-pip-repo-mac
+        uses: actions/cache@v4
+        with:
+          path: pip
+          key: ${{ runner.os }}-repo-pip
+
+      - uses: actions/checkout@v4
+        if: steps.cache-pip-repo-mac.outputs.cache-hit != 'true'
         with:
           repository: pypa/pip
           path: pip
+          fetch-depth: 0
 
       - name: Init seCureLI
         run: |
@@ -80,13 +108,28 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
+
+      - name: Cache pip repo
+        id: cache-pip-repo-mac
+        uses: actions/cache@v4
+        with:
+          path: pip
+          key: ${{ runner.os }}-repo-pip
+
+      - uses: actions/checkout@v4
+        if: steps.cache-pip-repo-mac.outputs.cache-hit != 'true'
+        with:
+          repository: pypa/pip
+          path: pip
+          fetch-depth: 0
+
       - name: Install seCureLI from Pypi
         run: |
           pip3 --version # Validate python/pip version
           pip3 install secureli
+
       - name: Scan repo with Pypi seCureLI package
         run: |
-          git clone https://github.com/pypa/pip pip
           cd pip
           secureli init --yes
           # In the future, we should use specific exit codes to differentiate between exit reasons
