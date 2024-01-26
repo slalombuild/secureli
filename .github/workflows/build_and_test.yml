@@ -107,8 +107,8 @@ jobs:
           path: pip
           fetch-depth: 0
 
-      - name: Set up Pip packages
-        run: pip install poetry requests jinja2
+      - name: Set up Poetry
+        run: pip install poetry
 
       - name: Set up Python 3.9
         id: setup-python
@@ -128,6 +128,7 @@ jobs:
           HOMEBREW_NO_INSTALL_CLEANUP: 1
           HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
         run: |
+          pip install requests jinja2
           python ./scripts/get-secureli-dependencies.py
           brew install --build-from-source --verbose ./homebrew-secureli/Formula/secureli.rb
           which secureli
