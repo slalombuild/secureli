@@ -130,6 +130,7 @@ jobs:
         run: |
           pip install requests jinja2
           python ./scripts/get-secureli-dependencies.py
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           brew install --build-from-source --verbose ./homebrew-secureli/Formula/secureli.rb
           which secureli
           secureli init --yes
