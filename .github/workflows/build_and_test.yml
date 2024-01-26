@@ -78,6 +78,61 @@ jobs:
           poetry run poe e2e
 
 
+  build-homebrew:
+    name: Homebrew
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/checkout@v4
+        with:
+          repository: slalombuild/homebrew-secureli
+          path: homebrew-secureli
+          ref: main
+          fetch-depth: 0
+
+      - name: Cache pip repo
+        id: cache-pip-repo-linux
+        uses: actions/cache@v4
+        with:
+          path: pip
+          key: ${{ runner.os }}-repo-pip
+
+      - uses: actions/checkout@v4
+        if: steps.cache-pip-repo-mac.outputs.cache-hit != 'true'
+        with:
+          repository: pypa/pip
+          path: pip
+          fetch-depth: 0
+
+      - name: Set up Pip packages
+        run: pip install poetry requests jinja2
+
+      - name: Set up Python 3.9
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+          cache: 'poetry'
+
+      - name: Set Up Project
+        run: |
+          poetry install
+
+      - name: Build Homebrew
+        env:
+          HOMEBREW_NO_INSTALL_FROM_API: 1
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+        run: |
+          python ./scripts/get-secureli-dependencies.py
+          brew install --build-from-source --verbose ./homebrew-secureli/Formula/secureli.rb
+          which secureli
+          secureli init --yes
+
   secureli-release-noop:
     name: Release Test
     needs: [ build-linux, build-windows ]
