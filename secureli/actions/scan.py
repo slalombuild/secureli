@@ -49,7 +49,7 @@ class ScanAction(Action):
         """
         Queries repositories referenced by pre-commit hooks to check
         if we have the latest revisions listed in the .pre-commit-config.yaml file
-        :param folder_path: The folder path containing the .pre-commit-config.yaml file
+        :param folder_path: The folder path containing the .secureli/ folder
         """
 
         self.action_deps.echo.info("Checking for pre-commit hook updates...")

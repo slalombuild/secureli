@@ -105,6 +105,8 @@ class PreCommitAbstraction:
         subprocess_args = [
             "pre-commit",
             "run",
+            "--config",
+            ".secureli/.pre-commit-config.yaml",
             "--color",
             "always",
         ]
@@ -187,6 +189,8 @@ class PreCommitAbstraction:
         subprocess_args = [
             "pre-commit",
             "autoupdate",
+            "--config",
+            ".secureli/.pre-commit-config.yaml",
         ]
         if bleeding_edge:
             subprocess_args.append("--bleeding-edge")
@@ -228,7 +232,14 @@ class PreCommitAbstraction:
         :param folder_path: Indicates the git folder against which you run secureli
         :return: ExecuteResult, indicating success or failure.
         """
-        subprocess_args = ["pre-commit", "install-hooks", "--color", "always"]
+        subprocess_args = [
+            "pre-commit",
+            "install-hooks",
+            "--config",
+            ".secureli/.pre-commit-config.yaml",
+            "--color",
+            "always",
+        ]
 
         completed_process = subprocess.run(
             subprocess_args, stdout=subprocess.PIPE, cwd=folder_path
@@ -249,7 +260,14 @@ class PreCommitAbstraction:
         :param folder_path: Indicates the git folder against which you run secureli
         :return: ExecuteResult, indicating success or failure.
         """
-        subprocess_args = ["pre-commit", "gc", "--color", "always"]
+        subprocess_args = [
+            "pre-commit",
+            "gc",
+            "--config",
+            ".secureli/.pre-commit-config.yaml",
+            "--color",
+            "always",
+        ]
 
         completed_process = subprocess.run(
             subprocess_args, stdout=subprocess.PIPE, cwd=folder_path
@@ -267,7 +285,7 @@ class PreCommitAbstraction:
         Gets the contents of the .pre-commit-config file and returns it as a dictionary
         :return: Dictionary containing the contents of the .pre-commit-config.yaml file
         """
-        path_to_config = folder_path / ".pre-commit-config.yaml"
+        path_to_config = folder_path / ".secureli/.pre-commit-config.yaml"
         with open(path_to_config, "r") as f:
             # For some reason, the mocking causes an infinite loop when we try to use yaml.safe_load()
             # directly on the file-like object f. Reading the contents of the file into a string as a workaround.

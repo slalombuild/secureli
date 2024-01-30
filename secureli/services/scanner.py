@@ -94,7 +94,7 @@ class ScannerService:
         """
         Parses the output from a scan and returns a list of Failure objects representing any
         hook rule failures during a scan.
-        :param folder_path: folder containing .pre-commit-config.yaml, usually repository root
+        :param folder_path: folder containing .secureli folder, usually repository root
         :param output: Raw output from a scan.
         :return: ScanOuput object representing a list of hook rule Failure objects.
         """

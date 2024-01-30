@@ -131,7 +131,7 @@ class LanguageSupportService:
         """
 
         path_to_pre_commit_file = Path(
-            SecureliConfig.FOLDER_PATH / ".pre-commit-config.yaml"
+            SecureliConfig.FOLDER_PATH / ".secureli/.pre-commit-config.yaml"
         )
 
         linter_config_write_result = self._write_pre_commit_configs(
@@ -210,12 +210,11 @@ class LanguageSupportService:
         """
         config = self._build_pre_commit_config(languages, set(languages)).config_data
 
-        def create_repo(raw_repo: dict) -> Repo:
-            return Repo(
-                repo=raw_repo.get("repo", "unknown"),
-                revision=raw_repo.get("rev", "unknown"),
-                hooks=[hook.get("id", "unknown") for hook in raw_repo.get("hooks", [])],
-            )
+        create_repo: Callable[[Repo], Repo] = lambda raw_repo: Repo(
+            repo=raw_repo.get("repo", "unknown"),
+            revision=raw_repo.get("rev", "unknown"),
+            hooks=[hook.get("id", "unknown") for hook in raw_repo.get("hooks", [])],
+        )
 
         repos = [create_repo(raw_repo) for raw_repo in config.get("repos", [])]
         return HookConfiguration(repos=repos)
