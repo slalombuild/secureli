@@ -22,9 +22,9 @@ def mock_subprocess(mocker: MockerFixture) -> MagicMock:
 def mock_configparser(mocker: MockerFixture) -> MagicMock:
     mock_configparser = mocker.patch("secureli.utilities.git_meta.configparser")
     mock_configparser_instance = MagicMock()
-    mock_configparser_instance[
-        'remote "origin"'
-    ].get.return_value = "https://fake-build.com/git/repo"
+    mock_configparser_instance['remote "origin"'].get.return_value = (
+        "https://fake-build.com/git/repo"
+    )
     mock_configparser.ConfigParser.return_value = mock_configparser_instance
     return mock_configparser_instance
 
