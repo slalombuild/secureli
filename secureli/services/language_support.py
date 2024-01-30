@@ -241,11 +241,16 @@ class LanguageSupportService:
             result = self.language_config.get_language_config(language, include_linter)
             if result.config_data:
                 successful_languages.append(language)
-                linter_configs.append(
-                    LinterConfig(
-                        language=language, linter_data=result.linter_config.linter_data
+                (
+                    linter_configs.append(
+                        LinterConfig(
+                            language=language,
+                            linter_data=result.linter_config.linter_data,
+                        )
                     )
-                ) if result.linter_config.successful else None
+                    if result.linter_config.successful
+                    else None
+                )
                 data = yaml.safe_load(result.config_data)
                 config_data += data["repos"] or []
 
