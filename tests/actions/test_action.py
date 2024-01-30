@@ -2,6 +2,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from secureli.abstractions.pre_commit import InstallResult
 
 from secureli.actions.action import Action, ActionDependencies, VerifyOutcome
 from secureli.models.echo import Color
@@ -146,6 +147,7 @@ def test_that_initialize_repo_install_flow_warns_about_skipped_files(
     action: Action,
     mock_language_analyzer: MagicMock,
     mock_echo: MagicMock,
+    mock_updater: MagicMock,
 ):
     mock_language_analyzer.analyze.return_value = AnalyzeResult(
         language_proportions={
@@ -161,6 +163,10 @@ def test_that_initialize_repo_install_flow_warns_about_skipped_files(
                 file_path=Path("./file2.huge"), error_message="What a huge file!"
             ),
         ],
+    )
+
+    mock_updater.pre_commit.install.return_value = InstallResult(
+        successful=True, backup_hook_path=None
     )
 
     action.verify_install(test_folder_path, reset=True, always_yes=True)
@@ -300,6 +306,7 @@ def test_that_initialize_repo_prints_warnings_for_failed_linter_config_writes(
     action: Action,
     mock_language_support: MagicMock,
     mock_echo: MagicMock,
+    mock_updater: MagicMock,
 ):
     config_write_error = "Failed to write config file for RadLang"
 
@@ -307,6 +314,10 @@ def test_that_initialize_repo_prints_warnings_for_failed_linter_config_writes(
         version="abc123",
         security_hook_id="test_hook_id",
         linter_config_write_errors=[config_write_error],
+    )
+
+    mock_updater.pre_commit.install.return_value = InstallResult(
+        successful=True, backup_hook_path=None
     )
 
     action.verify_install(test_folder_path, reset=True, always_yes=True)
@@ -392,6 +403,38 @@ def test_that_verify_install_returns_success_result_newly_detected_language_inst
     )
 
     assert verify_result.outcome == VerifyOutcome.INSTALL_SUCCEEDED
+
+
+def test_that_initialize_repo_install_flow_warns_about_overwriting_pre_commit_file(
+    action: Action,
+    mock_language_analyzer: MagicMock,
+    mock_echo: MagicMock,
+    mock_updater: MagicMock,
+):
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={
+            "RadLang": 0.75,
+        },
+        skipped_files=[],
+    )
+
+    install_result = InstallResult(
+        successful=True, backup_hook_path="pre-commit.backup"
+    )
+
+    mock_updater.pre_commit.install.return_value = install_result
+
+    action.verify_install(test_folder_path, reset=True, always_yes=True)
+
+    mock_echo.warning.assert_called_once_with(
+        (
+            (
+                "An existing pre-commit hook file has been detected at /.git/hooks/pre-commit\n"
+                "A backup file has been created and the existing file has been overwritten\n"
+                f"Backup file: {install_result.backup_hook_path}"
+            )
+        )
+    )
 
 
 def test_that_update_secureli_handles_declined_update(

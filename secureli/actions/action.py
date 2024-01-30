@@ -244,8 +244,18 @@ class Action(ABC):
         """
 
         if new_install:
-            # Create seCureLI pre-commit hook with invocation of `secureli scan`
-            self.action_deps.updater.pre_commit.install(folder_path)
+            pre_commit_install_result = self.action_deps.updater.pre_commit.install(
+                folder_path
+            )
+
+            if pre_commit_install_result.backup_hook_path != None:
+                self.action_deps.echo.warning(
+                    (
+                        "An existing pre-commit hook file has been detected at /.git/hooks/pre-commit\n"
+                        "A backup file has been created and the existing file has been overwritten\n"
+                        f"Backup file: {pre_commit_install_result.backup_hook_path}"
+                    )
+                )
 
         if secret_test_id := metadata.security_hook_id:
             self.action_deps.echo.print(
