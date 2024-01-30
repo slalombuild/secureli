@@ -25,7 +25,7 @@ init = ["install", "secureli_init"]
 secureli_init = "secureli init -y"
 install = "poetry install"
 lint = "black --check ."
-precommit = "pre-commit run -a"
+precommit = "pre-commit run --config .secureli/.pre-commit-config.yaml --all-files"
 test = ["init", "lint", "coverage_run", "coverage_report"]
 e2e = "bats --verbose-run tests/end-to-end/test.bats"
 
