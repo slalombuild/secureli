@@ -16,5 +16,5 @@ jobs:
       - uses: morrisoncole/pr-lint-action@v1.7.0
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          title-regex: "(chore|style|test|feat|fix|docs): .+"
+          title-regex: "(chore|style|test|feat|fix|docs|ci): .+"
           on-failed-regex-fail-action: true

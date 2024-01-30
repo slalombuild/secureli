@@ -1,0 +1,14 @@
+repos:
+  - repo: local
+    hooks:
+      # Note: The dotnet format pre-commit setup combines poorly to be tightly coupled with
+      # a pre-release version of .net that is old and no one has installed. dotnet format has
+      # since become a part of .net! So we can use dotnet format already installed on your
+      # simply. This runs the risk that different folks will run different versions, but
+      # this is better than nothing.
+      # see https://github.com/dotnet/format/issues/1350 and the resolution PR at the bottom.
+      - id: dotnet-format
+        name: dotnet-format
+        language: system
+        entry: dotnet format --include
+        types: ["c#"]

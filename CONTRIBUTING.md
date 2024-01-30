@@ -12,8 +12,12 @@ Like this:
 `chore: my PR title`
 
 Valid prefixes are defined in the [angular documentation](https://github.com/angular/angular/blob/main/CONTRIBUTING.md#commit)
-_Important: Use "feat" to have a release automatically published. "fix,perf,docs,chore,chore(release)" only creates a patch
-version which does not get automatically released._
+
+| :memo:        | Note       |
+|---------------|:-----------|
+
+> _Use "feat" to cut a minor release automatically. "fix", "perf", or "chore(release)" will create a patch release.
+ Note that "build", "chore", "ci", "docs", "style", "refactor", and "test" do not create a release._
 
 # Environment Requirements
 
@@ -29,6 +33,7 @@ seCureLI has Slalom-maintained templates for security management of the followin
 - C#
 - Swift
 - Golang
+- Kotlin
 
 ## Python 3.9.9
 
@@ -154,7 +159,6 @@ seCureLI has not been setup yet. Initialize seCureLI now? [Y/n]: Y
 Detected the following languages:
 - Python: 93%
 - YAML: 7%
-Overall Detected Language: Python
 Installing support for Python
 pre-commit installed at .git/hooks/pre-commit
 Python pre-commit checks installed successfully
@@ -289,6 +293,7 @@ A special thanks to everyone that has contributed to seCureLI so far:
 - Korey Earl
 - Martin Gallegos
 - Ryan Graue
+- Tyler Durkota
 - Jordan Hill
 - Kira Hollerman
 - Myung Kim
@@ -299,3 +304,4 @@ A special thanks to everyone that has contributed to seCureLI so far:
 - Jeff Schumacher
 - Caleb Tonn
 - Josh Werner
+- Kevin Orlando

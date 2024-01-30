@@ -1,6 +1,10 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "secureli"
-version = "0.16.0"
+version = "0.24.0"
 description = "Secure Project Manager"
 authors = ["Caleb Tonn <caleb.tonn@slalom.com>"]
 license = "Apache-2.0"
@@ -23,12 +27,16 @@ install = "poetry install"
 lint = "black --check ."
 precommit = "pre-commit run -a"
 test = ["init", "lint", "coverage_run", "coverage_report"]
-e2e = "bats tests/end-to-end/test.bats"
+e2e = "bats --verbose-run tests/end-to-end/test.bats"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+# Until `python-dependency-injector` supports python 3.12, restrict to python 3.11 and lower
+python = ">= 3.9, < 3.12"
 typer = {version = ">=0.6.1,<0.10.0", extras = ["all"]}
 pygments = "^2.13.0"
+# Uncomment the following line to enable python 3.12 support prior to dependency-injector officially supporting it
+# Remove once this PR is merged: https://github.com/ets-labs/python-dependency-injector/pull/765
+# dependency-injector = { git = "https://github.com/ets-labs/python-dependency-injector.git", branch = "feature/python-3.12" , extras = ["yaml"]}
 dependency-injector = {version = "^4.40.0", extras = ["yaml"]}
 pydantic = "^1.10.2"
 jinja2 = "^3.1.2"
@@ -50,20 +58,19 @@ identify = "^2.5.7"
 poethepoet = ">=0.16.4,<0.25.0"
 python-semantic-release = ">=8.0.0"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
 [tool.semantic_release]
+# Documentation for these options: https://python-semantic-release.readthedocs.io/en/latest/configuration.html
 version_toml = ["pyproject.toml:tool.poetry.version"]
 major_on_zero = true
 branch = "main"
-upload_to_PyPI = false
 upload_to_vcs_release = true
-upload_to_repository = false
-prerelease = true
-parser_angular_default_level_bump = "patch"
-patch_tags = "fix,perf,docs,chore,chore(release)"
+patch_tags = ["fix", "perf", "chore(release)"]
 build_command = "pip install poetry && poetry build"
 commit_message = "chore(release): Tag v{version} [skip ci]"
 tag_format = "v{version}"
+
+# Enable in a future PR (https://github.com/slalombuild/secureli/issues/250)
+# Consider enabling in pipeline first with no-op option to validate release name
+# [tools.semantic_release.branches.main]
+# prerelease = true
+# prerelease_token = "alpha"
