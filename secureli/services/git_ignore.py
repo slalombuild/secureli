@@ -16,7 +16,7 @@ class GitIgnoreService:
     """
 
     header = "# Secureli-generated files (do not modify):"
-    ignore_entries = [".secureli"]
+    ignore_entries = [".secureli/local"]
     footer = "# End Secureli-generated files"
 
     def ignore_secureli_files(self):

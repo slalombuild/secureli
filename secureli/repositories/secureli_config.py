@@ -37,7 +37,7 @@ class SecureliConfigRepository:
         Save the specified configuration to the .secureli folder
         :param secureli_config: The populated configuration to save
         """
-        secureli_folder_path = self._initialize_secureli_directory()
+        secureli_folder_path = self._initialize_secureli_local_directory()
         secureli_config_path = secureli_folder_path / "repo-config.yaml"
         with open(secureli_config_path, "w") as f:
             yaml.dump(secureli_config.dict(), f)
@@ -47,7 +47,7 @@ class SecureliConfigRepository:
         Load the seCureLI config from the expected configuration file path or return a new
         configuration object, capable of being modified and saved via the `save` method
         """
-        secureli_folder_path = self._initialize_secureli_directory()
+        secureli_folder_path = self._initialize_secureli_local_directory()
         secureli_config_path = secureli_folder_path / "repo-config.yaml"
 
         if not secureli_config_path.exists():
@@ -61,7 +61,7 @@ class SecureliConfigRepository:
         """
         Check secureli config and verify that it matches most current schema.
         """
-        secureli_folder_path = self._initialize_secureli_directory()
+        secureli_folder_path = self._initialize_secureli_local_directory()
         secureli_config_path = secureli_folder_path / "repo-config.yaml"
         if not secureli_config_path.exists():
             return VerifyConfigOutcome.MISSING
@@ -86,8 +86,8 @@ class SecureliConfigRepository:
         """
         Update any older config version to match most current config.
         """
-        secureli_folder_path = self._initialize_secureli_directory()
-        secureli_config_path = secureli_folder_path / "repo-config.yaml"
+        secureli_local_folder_path = self._initialize_secureli_local_directory()
+        secureli_config_path = secureli_local_folder_path / "repo-config.yaml"
         if not secureli_config_path.exists():
             return SecureliConfig()
 
@@ -103,12 +103,12 @@ class SecureliConfigRepository:
             version_installed=old_config.version_installed,
         )
 
-    def _initialize_secureli_directory(self):
+    def _initialize_secureli_local_directory(self):
         """
-        Creates the .secureli folder within the current directory if needed.
+        Creates the .secureli/local folder within the current directory if needed.
         :return: The folder path of the .secureli folder that either exists or was just created.
         """
 
-        secureli_folder_path = Path(FOLDER_PATH) / ".secureli"
-        secureli_folder_path.mkdir(parents=True, exist_ok=True)
-        return secureli_folder_path
+        secureli_local_folder_path = Path(FOLDER_PATH) / ".secureli/local"
+        secureli_local_folder_path.mkdir(parents=True, exist_ok=True)
+        return secureli_local_folder_path
