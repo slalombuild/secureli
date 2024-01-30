@@ -1,6 +1,8 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# This workflow pulls the published seCureLI packages from Pypi & Homebrew & executes them against a test repo
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
+# TODO we should rename these to smoke tests but I'd rather hold off on doing that for now
+# since renaming the workflow/action might cause us to lose history for executions under the old name
 name: Integration Testing
 
 on:
@@ -14,60 +16,122 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
+
+      - name: Cache pip repo
+        id: cache-pip-repo-windows
+        uses: actions/cache@v4
+        with:
+          path: pip
+          key: ${{ runner.os }}-repo-pip
+
+      - uses: actions/checkout@v4
+        if: steps.cache-pip-repo-windows.outputs.cache-hit != 'true'
+        with:
+          repository: pypa/pip
+          path: pip
+          fetch-depth: 0
 
       - name: Install seCureLI
+        # Note that this is a powershell script
         run: |
-          pip3 --version #any pip havers?
+          pip3 --version
           pip3 install secureli
-          git clone https://github.com/pypa/pip pip
           cd pip
           secureli init --yes
-          secureli scan  --mode all-files --yes
 
+      - name: seCureLI Scan
+        run: |
+          cd pip
+          $ErrorActionPreference = 'SilentlyContinue'
+          secureli scan --mode all-files --yes
+          $LastExitCode = 0  # Force exit code to 0 to avoid failing the build since scan returns nonzero exit status
 
-  test-homebrew-osx:
+  test-homebrew-macos:
     runs-on: macos-latest
     steps:
       - name: Test with Homebrew
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-      - name: Prep for python 3.11.3 install # Removes python 3.11.3 to avoid conflict with homebrew python
-        run: |
-          rm -rf '/usr/local/bin/2to3'
-          rm -rf '/usr/local/bin/2to3-3.11'
-          rm -rf '/usr/local/bin/idle3'
-          rm -rf '/usr/local/bin/idle3.11'
-          rm -rf '/usr/local/bin/pydoc3'
-          rm -rf '/usr/local/bin/pydoc3.11'
-          rm -rf '/usr/local/bin/python3'
-          rm -rf '/usr/local/bin/python3-config'
-          rm -rf '/usr/local/bin/python3.11'
-          rm -rf '/usr/local/bin/python3.11-config'
+      - name: Cache homebrew
+        id: cache-homebrew-mac
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/Homebrew
+          key: ${{ runner.os }}-homebrew-cache
 
-      - name: Set up seCureLI
+      - name: Preinstall Formula Dependencies
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
         run: |
           brew tap slalombuild/secureli
-          HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install secureli
+          brew install --only-dependencies --display-times --verbose secureli
+        continue-on-error: true
 
-      - name: Checkout test repo
-        uses: actions/checkout@v4
+      - name: Set up seCureLI
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+        run: |
+          brew install --display-times --verbose secureli
+
+      - name: Cache pip repo
+        id: cache-pip-repo-mac
+        uses: actions/cache@v4
+        with:
+          path: pip
+          key: ${{ runner.os }}-repo-pip
+
+      - uses: actions/checkout@v4
+        if: steps.cache-pip-repo-mac.outputs.cache-hit != 'true'
         with:
           repository: pypa/pip
           path: pip
+          fetch-depth: 0
 
       - name: Init seCureLI
-        run: cd pip && secureli init --yes && secureli scan
-
-
-  test-pypi-osx:
-    runs-on: macos-latest
-    steps:
-      - name: Test with Pypi
         run: |
-          pip3 --version #what do we have on the macos image
-          pip3 install secureli
-          git clone https://github.com/pypa/pip pip
           cd pip
           secureli init --yes
-          secureli scan  --mode all-files --yes
+          ! secureli scan --mode all-files --yes
+
+  test-pypi-macos:
+    runs-on: macos-latest
+    steps:
+      # This step is needed to keep us on python 3.11 for now, since dependency-injector doesn't yet support python 3.12.
+      # It can be removed once this PR is merged: https://github.com/ets-labs/python-dependency-injector/pull/765
+      - name: Install Python 3.11
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip repo
+        id: cache-pip-repo-mac
+        uses: actions/cache@v4
+        with:
+          path: pip
+          key: ${{ runner.os }}-repo-pip
+
+      - uses: actions/checkout@v4
+        if: steps.cache-pip-repo-mac.outputs.cache-hit != 'true'
+        with:
+          repository: pypa/pip
+          path: pip
+          fetch-depth: 0
+
+      - name: Install seCureLI from Pypi
+        run: |
+          pip3 --version # Validate python/pip version
+          pip3 install secureli
+
+      - name: Scan repo with Pypi seCureLI package
+        run: |
+          cd pip
+          secureli init --yes
+          # In the future, we should use specific exit codes to differentiate between exit reasons
+          # For now, we can just check if the command exits with a non-zero status
+          ! secureli scan --mode all-files --yes

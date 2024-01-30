@@ -1,8 +1,9 @@
 from pathlib import Path
-from typing import Callable, Optional, Any
+from typing import Callable, Iterable, Optional, Any
 
 import pydantic
 import yaml
+from secureli.abstractions.echo import EchoAbstraction
 
 import secureli.repositories.secureli_config as SecureliConfig
 from secureli.abstractions.pre_commit import PreCommitAbstraction
@@ -20,12 +21,14 @@ supported_languages = [
     "JavaScript",
     "Go",
     "Swift",
+    "Kotlin",
 ]
 
 
 class LanguageMetadata(pydantic.BaseModel):
     version: str
     security_hook_id: Optional[str]
+    linter_config_write_errors: Optional[list[str]] = []
 
 
 class ValidateConfigResult(pydantic.BaseModel):
@@ -51,14 +54,6 @@ class HookConfiguration(pydantic.BaseModel):
     repos: list[Repo]
 
 
-class LanguageLinterWriteResult(pydantic.BaseModel):
-    """Results from installing langauge specific configs for pre-commit hooks"""
-
-    num_successful: int
-    num_non_success: int
-    non_success_messages: list[str]
-
-
 class UnexpectedReposResult(pydantic.BaseModel):
     """
     The result of checking for unexpected repos in config
@@ -68,9 +63,18 @@ class UnexpectedReposResult(pydantic.BaseModel):
     unexpected_repos: Optional[list[str]] = []
 
 
+class LinterConfigData(pydantic.BaseModel):
+    """
+    Represents the structure of a linter config file
+    """
+
+    filename: str
+    settings: Any
+
+
 class LinterConfig(pydantic.BaseModel):
     language: str
-    linter_data: list[Any]
+    linter_data: list[LinterConfigData]
 
 
 class BuildConfigResult(pydantic.BaseModel):
@@ -81,6 +85,15 @@ class BuildConfigResult(pydantic.BaseModel):
     config_data: dict
     linter_configs: list[LinterConfig]
     version: str
+
+
+class LinterConfigWriteResult(pydantic.BaseModel):
+    """
+    Result from writing linter config files
+    """
+
+    successful_languages: list[str]
+    error_messages: list[str]
 
 
 class LanguageSupportService:
@@ -101,24 +114,38 @@ class LanguageSupportService:
         self.language_config = language_config
         self.data_loader = data_loader
 
-    def apply_support(self, languages: list[str]) -> LanguageMetadata:
+    def apply_support(
+        self,
+        languages: list[str],
+        language_config_result: BuildConfigResult,
+        overwrite_pre_commit: bool,
+    ) -> LanguageMetadata:
         """
-        Applies Secure Build support for the provided language
+        Applies Secure Build support for the provided languages
         :param languages: list of languages to provide support for
+        :param language_config_result: resulting config from language hook detection
+        :param overwrite_pre_commit: flag to determine if config should overwrite or append to config file
         :raises LanguageNotSupportedError if support for the language is not provided
         :return: Metadata including version of the language configuration that was just installed
         as well as a secret-detection hook ID, if present.
         """
 
-        path_to_pre_commit_file = SecureliConfig.FOLDER_PATH / ".pre-commit-config.yaml"
-        # Raises a LanguageNotSupportedError if language doesn't resolve to a yaml file
-        language_config_result = self._build_pre_commit_config(languages)
+        path_to_pre_commit_file = Path(
+            SecureliConfig.FOLDER_PATH / ".pre-commit-config.yaml"
+        )
 
-        if len(language_config_result.linter_configs) > 0:
-            self._write_pre_commit_configs(language_config_result.linter_configs)
+        linter_config_write_result = self._write_pre_commit_configs(
+            language_config_result.linter_configs
+        )
 
-        with open(path_to_pre_commit_file, "w") as f:
-            f.write(yaml.dump(language_config_result.config_data))
+        pre_commit_file_mode = "w" if overwrite_pre_commit else "a"
+        with open(path_to_pre_commit_file, pre_commit_file_mode) as f:
+            data = (
+                language_config_result.config_data
+                if overwrite_pre_commit
+                else language_config_result.config_data["repos"]
+            )
+            f.write(yaml.dump(data))
 
         # Add .secureli/ to the gitignore folder if needed
         self.git_ignore.ignore_secureli_files()
@@ -126,6 +153,7 @@ class LanguageSupportService:
         return LanguageMetadata(
             version=language_config_result.version,
             security_hook_id=self.secret_detection_hook_id(languages),
+            linter_config_write_errors=linter_config_write_result.error_messages,
         )
 
     def secret_detection_hook_id(self, languages: list[str]) -> Optional[str]:
@@ -136,9 +164,12 @@ class LanguageSupportService:
         :param languages: list of languages to check support for
         :return: The hook ID to use for secrets analysis if supported, otherwise None.
         """
-        language_config = self._build_pre_commit_config(languages)
+        # lint_languages param can be an empty set since we only need secrets detection hooks
+        language_config = self._build_pre_commit_config(languages, [])
         config = language_config.config_data
-        secrets_detecting_repos_data = self.data_loader("secrets_detecting_repos.yaml")
+        secrets_detecting_repos_data = self.data_loader(
+            "pre-commit/secrets_detecting_repos.yaml"
+        )
         secrets_detecting_repos = yaml.safe_load(secrets_detecting_repos_data)
 
         # Make sure the repos and configuration don't care about case sensitivity
@@ -177,7 +208,7 @@ class LanguageSupportService:
         :param languages: list of languages to get config for.
         :return: A serializable Configuration model
         """
-        config = self._build_pre_commit_config(languages).config_data
+        config = self._build_pre_commit_config(languages, set(languages)).config_data
 
         def create_repo(raw_repo: dict) -> Repo:
             return Repo(
@@ -189,21 +220,25 @@ class LanguageSupportService:
         repos = [create_repo(raw_repo) for raw_repo in config.get("repos", [])]
         return HookConfiguration(repos=repos)
 
-    def _build_pre_commit_config(self, languages: list[str]) -> BuildConfigResult:
+    def _build_pre_commit_config(
+        self, languages: list[str], lint_languages: Iterable[str]
+    ) -> BuildConfigResult:
         """
         Builds the final .pre-commit-config.yaml from all supported repo languages. Also returns any and all
         linter configuration data.
         :param languages: list of languages to get calculated configuration for.
+        :param lint_languages: list of languages to add lint pre-commit hooks for.
         :return: BuildConfigResult
         """
         config_data = []
-        successful_languages = []
+        successful_languages: list[str] = []
         linter_configs: list[LinterConfig] = []
+        config_languages = [*languages, "base"]
+        config_lint_languages = [*lint_languages, "base"]
 
-        languages.append("base")
-
-        for language in languages:
-            result = self.language_config.get_language_config(language)
+        for language in config_languages:
+            include_linter = language in config_lint_languages
+            result = self.language_config.get_language_config(language, include_linter)
             if result.config_data:
                 successful_languages.append(language)
                 linter_configs.append(
@@ -212,10 +247,8 @@ class LanguageSupportService:
                     )
                 ) if result.linter_config.successful else None
                 data = yaml.safe_load(result.config_data)
-                for config in data["repos"]:
-                    config_data.append(config)
+                config_data += data["repos"] or []
 
-        languages.remove("base")
         config = {"repos": config_data}
         version = hash_config(yaml.dump(config))
 
@@ -227,41 +260,36 @@ class LanguageSupportService:
             linter_configs=linter_configs,
         )
 
-    @staticmethod
     def _write_pre_commit_configs(
+        self,
         all_linter_configs: list[LinterConfig],
-    ) -> LanguageLinterWriteResult:
+    ) -> LinterConfigWriteResult:
         """
         Install any config files for given language to support any pre-commit commands.
         i.e. Javascript ESLint requires a .eslintrc file to sufficiently use plugins and allow
         for further customization for repo's flavor of Javascript
-        :return: LanguageLinterWriteResult
+        :param all_linter_configs: the applicable linter configs to create config files for in the repo
         """
 
-        num_configs_success = 0
-        num_configs_non_success = 0
-        non_success_messages = list[str]()
+        linter_config_data = [
+            (linter_data, config.language)
+            for config in all_linter_configs or []
+            for linter_data in config.linter_data
+        ]
 
-        # parse through languages for their linter config if any.
-        for language_linter_configs in all_linter_configs:
-            # parse though each config for the given language.
-            for config in language_linter_configs.linter_data:
-                try:
-                    config_name = list(config.keys())[0]
-                    # generate relative file name and path.
-                    config_file_name = f"{slugify(language_linter_configs.language)}.{config_name}.yaml"
-                    path_to_config_file = (
-                        SecureliConfig.FOLDER_PATH / ".secureli/{config_file_name}"
-                    )
-                    with open(path_to_config_file, "w") as f:
-                        f.write(yaml.dump(config[config_name]))
-                    num_configs_success += 1
-                except Exception as e:
-                    num_configs_non_success += 1
-                    non_success_messages.append(f"Unable to install config: {e}")
+        error_messages: list[str] = []
+        successful_languages: list[str] = []
 
-        return LanguageLinterWriteResult(
-            num_successful=num_configs_success,
-            num_non_success=num_configs_non_success,
-            non_success_messages=non_success_messages,
+        for config, language in linter_config_data:
+            try:
+                with open(Path(SecureliConfig.FOLDER_PATH / config.filename), "w") as f:
+                    f.write(yaml.dump(config.settings))
+                    successful_languages.append(language)
+            except:
+                error_messages.append(
+                    f"Failed to write {config.filename} linter config file for {language}"
+                )
+
+        return LinterConfigWriteResult(
+            successful_languages=successful_languages, error_messages=error_messages
         )

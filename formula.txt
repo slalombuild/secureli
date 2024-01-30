@@ -8,7 +8,6 @@ class Secureli < Formula
     license "Apache-2.0"
 
     depends_on "pre-commit"
-
     depends_on "python@3.9"
 
     {% for package in secureliPackageDependencies %}

@@ -1,0 +1,5 @@
+repos:
+  - repo: https://github.com/slalombuild/pre-commit-mirror-checkstyle
+    rev: v0.1.1
+    hooks:
+      - id: checkstyle-java

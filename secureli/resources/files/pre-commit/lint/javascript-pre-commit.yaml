@@ -1,0 +1,20 @@
+repos:
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: "v8.42.0"
+    hooks:
+      - id: eslint
+        files: \.[j]sx?$ # *.js and *.jsx
+        types: [file]
+        args: ["--config", "javascript.eslintrc.yaml", "--fix"]
+        additional_dependencies:
+          - eslint@8.42.0
+          - eslint-plugin-prettier@4.2.1
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: "v2.7.1"
+    hooks:
+      - id: prettier
+        args:
+          - --single-quote
+          - --trailing-comma
+          - all
+        types_or: [css, javascript]

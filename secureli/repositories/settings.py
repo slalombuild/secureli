@@ -1,9 +1,10 @@
-from enum import Enum
 from pathlib import Path
 from typing import Optional
+from pydantic import BaseModel, BaseSettings, Field
+from secureli.utilities.logging import EchoLevel
 
 import yaml
-from pydantic import BaseModel, BaseSettings, Field
+
 
 default_ignored_extensions = [
     # Images
@@ -68,25 +69,12 @@ class RepoFilesSettings(BaseSettings):
     exclude_file_patterns: list[str] = Field(default=[])
 
 
-class EchoLevel(str, Enum):
-    debug = "DEBUG"
-    info = "INFO"
-    warn = "WARN"
-    error = "ERROR"
-
-    def __str__(self) -> str:
-        return self.value
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
-
 class EchoSettings(BaseSettings):
     """
     Settings that affect how seCureLI provides information to the user.
     """
 
-    level: EchoLevel = Field(default=EchoLevel.error)
+    level: EchoLevel = Field(default=EchoLevel.warn)
 
 
 class LanguageSupportSettings(BaseSettings):
@@ -97,7 +85,7 @@ class LanguageSupportSettings(BaseSettings):
     command_timeout_seconds: int = Field(default=300)
 
 
-class PreCommitHook(BaseSettings):
+class PreCommitHook(BaseModel):
     """
     Hook settings for pre-commit.
     """
@@ -108,19 +96,24 @@ class PreCommitHook(BaseSettings):
     exclude_file_patterns: Optional[list[str]] = Field(default=[])
 
 
-class PreCommitRepo(BaseSettings):
+class PreCommitRepo(BaseModel):
     """
     Repo settings for pre-commit.
     """
 
-    url: str
+    url: str = Field(alias="repo")
+    rev: str
     hooks: list[PreCommitHook] = Field(default=[])
     suppressed_hook_ids: list[str] = Field(default=[])
 
 
-class PreCommitSettings(BaseSettings):
+class PreCommitSettings(BaseModel):
     """
     Various adjustments that affect how seCureLI configures the pre-commit system.
+
+    Extends schema for .pre-commit-config.yaml file.
+    See for details: https://pre-commit.com/#pre-commit-configyaml---top-level
+
     """
 
     repos: list[PreCommitRepo] = Field(default=[])
@@ -132,8 +125,8 @@ class SecureliFile(BaseModel):
     Represents the contents of the .secureli.yaml file
     """
 
-    repo_files: Optional[RepoFilesSettings]
-    echo: Optional[EchoSettings]
+    repo_files: Optional[RepoFilesSettings] = None
+    echo: Optional[EchoSettings] = None
     language_support: Optional[LanguageSupportSettings] = Field(default=None)
 
 
