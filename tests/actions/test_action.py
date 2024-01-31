@@ -253,7 +253,7 @@ def test_that_initialize_repo_updates_repo_config_if_old_schema(
     assert result.outcome == VerifyOutcome.UP_TO_DATE
 
 
-def test_that_initialize_repo_reports_errors_when_schema_upgdate_fails(
+def test_that_initialize_repo_reports_errors_when_schema_update_fails(
     action: Action,
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
@@ -565,3 +565,53 @@ def test_that_prompt_to_install_does_not_prompt_if_always_yes(
 
     assert result == True
     mock_echo.confirm.not_called()
+
+
+def test_that_post_install_scan_creates_pre_commit_on_new_install(
+    action: Action, mock_updater: MagicMock
+):
+    action._run_post_install_scan(
+        "test/path", SecureliConfig(), LanguageMetadata(version="0.03"), True
+    )
+
+    mock_updater.pre_commit.install.assert_called_once()
+
+
+def test_that_post_install_scan_ignores_creating_pre_commit_on_existing_install(
+    action: Action, mock_updater: MagicMock
+):
+    action._run_post_install_scan(
+        "test/path", SecureliConfig(), LanguageMetadata(version="0.03"), False
+    )
+
+    mock_updater.pre_commit.install.assert_not_called()
+
+
+def test_that_post_install_scan_scans_repo(
+    action: Action, mock_scanner: MagicMock, mock_echo: MagicMock
+):
+    action._run_post_install_scan(
+        "test/path",
+        SecureliConfig(),
+        LanguageMetadata(version="0.03", security_hook_id="secrets-hook"),
+        False,
+    )
+
+    mock_scanner.scan_repo.assert_called_once()
+    mock_echo.warning.assert_not_called()
+
+
+def test_that_post_install_scan_does_not_scan_repo_when_no_security_hook_id(
+    action: Action, mock_scanner: MagicMock, mock_echo: MagicMock
+):
+    action._run_post_install_scan(
+        "test/path",
+        SecureliConfig(languages=["RadLang"]),
+        LanguageMetadata(version="0.03"),
+        False,
+    )
+
+    mock_scanner.scan_repo.assert_not_called()
+    mock_echo.warning.assert_called_once_with(
+        "RadLang does not support secrets detection, skipping"
+    )

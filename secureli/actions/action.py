@@ -271,7 +271,7 @@ class Action(ABC):
 
         else:
             self.action_deps.echo.warning(
-                f"{config.languages} does not support secrets detection, skipping"
+                f"{format_sentence_list(config.languages)} does not support secrets detection, skipping"
             )
 
     def _detect_languages(self, folder_path: Path) -> list[str]:
