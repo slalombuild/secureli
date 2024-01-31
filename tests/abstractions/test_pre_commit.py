@@ -1,3 +1,5 @@
+import datetime
+import shutil
 import unittest.mock as um
 from pathlib import Path
 from subprocess import CompletedProcess
@@ -7,6 +9,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from secureli.abstractions.pre_commit import (
+    InstallResult,
     PreCommitAbstraction,
 )
 from secureli.repositories.settings import (
@@ -279,13 +282,45 @@ def test_that_pre_commit_install_creates_pre_commit_hook_for_secureli(
         um.patch.object(Path, "exists") as mock_exists,
         um.patch.object(Path, "chmod") as mock_chmod,
         um.patch.object(Path, "stat"),
+        um.patch.object(Path, "is_file") as mock_is_file,
+        um.patch.object(shutil, "copy2") as mock_copy,
     ):
         mock_exists.return_value = True
+        mock_is_file.return_value = False
 
-        pre_commit.install(test_folder_path)
+        mock_is_file.return_value = False
 
+        result = pre_commit.install(test_folder_path)
+
+        assert result == InstallResult(successful=True, backup_hook_path=None)
         mock_open.assert_called_once()
         mock_chmod.assert_called_once()
+        mock_copy.assert_not_called()
+
+
+def test_that_pre_commit_install_creates_backup_file_when_already_exists(
+    pre_commit: PreCommitAbstraction,
+):
+    mock_backup_datetime = datetime.datetime(2024, 1, 1, 6, 30, 45)
+    with (
+        um.patch("builtins.open", um.mock_open()),
+        um.patch.object(Path, "is_file") as mock_is_file,
+        um.patch.object(Path, "chmod"),
+        um.patch.object(Path, "stat"),
+        um.patch.object(shutil, "copy2") as mock_copy,
+        um.patch("datetime.datetime") as mock_dt,
+    ):
+        mock_is_file.return_value = True
+        mock_dt.now.return_value = mock_backup_datetime
+
+        result = pre_commit.install(test_folder_path)
+
+        assert result.successful == True
+        assert (
+            "/.git/hooks/pre-commit.backup.20240101T063045" in result.backup_hook_path
+        )
+        mock_is_file.assert_called_once()
+        mock_copy.assert_called_once()
 
 
 def test_pre_commit_config_file_is_deserialized_correctly(
