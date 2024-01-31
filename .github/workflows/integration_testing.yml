@@ -105,7 +105,7 @@ jobs:
       # It can be removed once this PR is merged: https://github.com/ets-labs/python-dependency-injector/pull/765
       - name: Install Python 3.11
         id: setup-python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
