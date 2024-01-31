@@ -85,6 +85,7 @@ class PreCommitAbstraction:
         backup_hook_path: str = None
 
         if pre_commit_hook.is_file():
+            # strip out certain chars from the ISO8601 timestamp for inclusion in file name
             timestamp = re.sub(r"[.:-]+", "", datetime.datetime.now().isoformat())
             backup_hook_path = f"{pre_commit_hook}.backup.{timestamp}"
             shutil.copy2(
