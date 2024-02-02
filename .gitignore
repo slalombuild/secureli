@@ -244,5 +244,5 @@ fabric.properties
 *.drawio.dtmp
 
 # Secureli-generated files (do not modify):
-.secureli/local
+.secureli
 # End Secureli-generated files

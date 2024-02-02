@@ -132,7 +132,7 @@ class LoggingService:
 
     def _log(self, log_entry: LogEntry):
         """Commit a log entry to the branch log file"""
-        log_folder_path = Path(SecureliConfig.FOLDER_PATH / ".secureli/local/logs")
+        log_folder_path = Path(SecureliConfig.FOLDER_PATH / ".secureli/logs")
         path_to_log = log_folder_path / f"{current_branch_name()}"
 
         # Do not simply mkdir the log folder path, in case the branch name contains

@@ -12,7 +12,7 @@ from secureli.services.language_support import HookConfiguration
 @pytest.fixture()
 def mock_path(mocker: MockerFixture) -> MagicMock:
     mock_file_path = MagicMock()
-    mock_file_path.return_value = Path(".secureli/local/logs/fancy-branch")
+    mock_file_path.return_value = Path(".secureli/logs/fancy-branch")
 
     mock_path_instance = MagicMock()
     mock_path_instance.__truediv__.return_value = mock_file_path
