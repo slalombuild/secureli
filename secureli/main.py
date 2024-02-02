@@ -10,7 +10,6 @@ from secureli.actions.setup import SetupAction
 from secureli.container import Container
 from secureli.models.echo import Color
 from secureli.models.publish_results import PublishResultsOption
-from secureli.repositories.settings import PreCommitHook
 from secureli.resources import read_resource
 from secureli.settings import Settings
 import secureli.repositories.secureli_config as SecureliConfig
