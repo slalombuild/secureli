@@ -10,6 +10,7 @@ from secureli.actions.setup import SetupAction
 from secureli.container import Container
 from secureli.models.echo import Color
 from secureli.models.publish_results import PublishResultsOption
+from secureli.repositories.settings import PreCommitHook
 from secureli.resources import read_resource
 from secureli.settings import Settings
 import secureli.repositories.secureli_config as SecureliConfig
@@ -28,13 +29,20 @@ container.config.from_pydantic(Settings())
 def version_callback(value: bool):
     if value:
         typer.echo(secureli_version())
-        typer.echo("\nHooks:")
+        typer.echo("\nHook Versions:")
+        typer.echo("--------------")
         config = container.pre_commit_abstraction().get_pre_commit_config(Path("."))
 
-        for repo_config in config.repos:
-            hook_version = f"{repo_config.rev.lstrip('v')}"
-            hooks = ", ".join(hook.id for hook in repo_config.hooks)
-            typer.echo(f"{hook_version:<10} {hooks}")
+        all_repos = [
+            (hook.id, repo.rev.lstrip("v"))
+            for repo in config.repos
+            for hook in repo.hooks
+        ]
+
+        sorted_repos = sorted(all_repos, key=lambda x: x[0])
+
+        for hook_id, version in sorted_repos:
+            typer.echo(f"{hook_id:<30} {version}")
 
         raise typer.Exit()
 
