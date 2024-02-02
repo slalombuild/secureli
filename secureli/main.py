@@ -28,6 +28,21 @@ container.config.from_pydantic(Settings())
 def version_callback(value: bool):
     if value:
         typer.echo(secureli_version())
+        typer.echo("\nHook Versions:")
+        typer.echo("--------------")
+        config = container.pre_commit_abstraction().get_pre_commit_config(Path("."))
+
+        all_repos = [
+            (hook.id, repo.rev.lstrip("v"))
+            for repo in config.repos
+            for hook in repo.hooks
+        ]
+
+        sorted_repos = sorted(all_repos, key=lambda x: x[0])
+
+        for hook_id, version in sorted_repos:
+            typer.echo(f"{hook_id:<30} {version}")
+
         raise typer.Exit()
 
 
