@@ -130,8 +130,8 @@ class LanguageSupportService:
         as well as a secret-detection hook ID, if present.
         """
 
-        path_to_pre_commit_file = Path(
-            SecureliConfig.FOLDER_PATH / ".secureli/.pre-commit-config.yaml"
+        path_to_pre_commit_file: Path = self.pre_commit_hook.get_pre_commit_config_path(
+            SecureliConfig.FOLDER_PATH
         )
 
         linter_config_write_result = self._write_pre_commit_configs(

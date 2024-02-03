@@ -4,10 +4,12 @@ from pathlib import Path
 # A cleaner approach would be to update pre-commit
 # by implementing a dry-run option for the `autoupdate` command
 from pre_commit.commands.autoupdate import RevInfo as HookRepoRevInfo
-from typing import Any, Optional
+from typing import Optional
+from secureli.abstractions.echo import EchoAbstraction
 
 import pydantic
 import re
+import shutil
 import stat
 import subprocess
 import yaml
@@ -69,8 +71,11 @@ class PreCommitAbstraction:
     def __init__(
         self,
         command_timeout_seconds: int,
+        echo: EchoAbstraction,
     ):
         self.command_timeout_seconds = command_timeout_seconds
+        self.CONFIG_FILE_NAME = ".pre-commit-config.yaml"
+        self.echo = echo
 
     def install(self, folder_path: Path):
         """
@@ -106,7 +111,7 @@ class PreCommitAbstraction:
             "pre-commit",
             "run",
             "--config",
-            ".secureli/.pre-commit-config.yaml",
+            self.get_pre_commit_config_path(folder_path),
             "--color",
             "always",
         ]
@@ -190,7 +195,7 @@ class PreCommitAbstraction:
             "pre-commit",
             "autoupdate",
             "--config",
-            ".secureli/.pre-commit-config.yaml",
+            self.get_pre_commit_config_path(folder_path),
         ]
         if bleeding_edge:
             subprocess_args.append("--bleeding-edge")
@@ -236,7 +241,7 @@ class PreCommitAbstraction:
             "pre-commit",
             "install-hooks",
             "--config",
-            ".secureli/.pre-commit-config.yaml",
+            self.get_pre_commit_config_path(folder_path),
             "--color",
             "always",
         ]
@@ -264,7 +269,7 @@ class PreCommitAbstraction:
             "pre-commit",
             "gc",
             "--config",
-            ".secureli/.pre-commit-config.yaml",
+            self.get_pre_commit_config_path(folder_path),
             "--color",
             "always",
         ]
@@ -280,12 +285,42 @@ class PreCommitAbstraction:
         else:
             return ExecuteResult(successful=True, output=output)
 
+    def get_pre_commit_config_path(self, folder_path: Path) -> Path:
+        """
+        Returns the file path to .pre-commit-config.yaml
+        """
+        # The original location of .pre-commit-config.yaml was in the root of the repo,
+        # but that could conflict with existing configuration (if the repo was already using pre-commit).
+        # To keep seCureLI's configuration separate, we've migrated it to the .secureli/ folder.
+        # However, for now we still check the old path to avoid breaking existing
+
+        ordered_config_paths = [
+            folder_path / ".secureli" / self.CONFIG_FILE_NAME,
+            folder_path / self.CONFIG_FILE_NAME,
+        ]
+        try:
+            return next(
+                (
+                    config_path
+                    for config_path in ordered_config_paths
+                    if config_path.exists()
+                )
+            )
+        except StopIteration:
+            raise FileNotFoundError(
+                f"Could not find pre-commit hooks in .secureli/{self.CONFIG_FILE_NAME}"
+            )
+
     def get_pre_commit_config(self, folder_path: Path):
         """
         Gets the contents of the .pre-commit-config file and returns it as a dictionary
         :return: Dictionary containing the contents of the .pre-commit-config.yaml file
         """
-        path_to_config = folder_path / ".secureli/.pre-commit-config.yaml"
+
+        config_file_path: Path = self.get_pre_commit_config_path(folder_path)
+        return self._read_pre_commit_config(config_file_path)
+
+    def _read_pre_commit_config(self, path_to_config: Path):
         with open(path_to_config, "r") as f:
             # For some reason, the mocking causes an infinite loop when we try to use yaml.safe_load()
             # directly on the file-like object f. Reading the contents of the file into a string as a workaround.
@@ -293,3 +328,14 @@ class PreCommitAbstraction:
             contents = f.read()
             yaml_values = yaml.safe_load(contents)
             return PreCommitSettings(**yaml_values)
+
+    def migrate_config_file(self, folder_path):
+        """
+        Feel free to delete this method after an appropriate period of time (a few months?)
+        """
+        existing_config_file_path = self.get_pre_commit_config_path(folder_path)
+        new_config_file_path = folder_path / ".secureli" / self.CONFIG_FILE_NAME
+        self.echo.info(
+            f"Moving {existing_config_file_path} to {new_config_file_path}..."
+        )
+        shutil.move(existing_config_file_path, new_config_file_path)

@@ -365,3 +365,36 @@ class Action(ABC):
             return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
         except:
             return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
+
+    def _update_secureli_pre_commit_config_location(
+        self, folder_path: Path, always_yes: bool
+    ) -> VerifyResult:
+        """
+        In order to provide an upgrade path for existing users of secureli,
+        we will prompt users to move their .pre-commit-config.yaml into the .secureli/ directory.
+        I would consider this particular implementation to be technical debt but it is consistent with
+        an existing pattern for upgrading the secureli config file schema.
+        Once this has existed for awhile, we could remove this function altogether since
+        we make no promises of about backward compatibility with our pre-release versions.
+        Long term, I think there are better ways to implement one-time upgrade migrations
+        to avoid breaking backward compatibility.
+        """
+        self.action_deps.echo.print(
+            "seCureLI's .pre-commit-config.yaml is in a deprecated location."
+        )
+        response = always_yes or self.action_deps.echo.confirm(
+            "Would you like it automatically moved to the .secureli/ directory?",
+            default_response=True,
+        )
+        if not response:
+            self.action_deps.echo.error("User canceled update process")
+            return VerifyResult(
+                outcome=VerifyOutcome.UPDATE_CANCELED,
+            )
+
+        try:
+            self.action_deps.scanner.pre_commit.migrate_config_file(folder_path)
+
+            return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
+        except:
+            return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)

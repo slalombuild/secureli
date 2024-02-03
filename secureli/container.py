@@ -82,6 +82,7 @@ class Container(containers.DeclarativeContainer):
     pre_commit_abstraction = providers.Factory(
         PreCommitAbstraction,
         command_timeout_seconds=config.language_support.command_timeout_seconds,
+        echo=echo,
     )
 
     # Services
