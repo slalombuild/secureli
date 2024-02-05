@@ -1,10 +1,12 @@
+from secureli.consts.logging import (
+    TELEMETRY_ENDPOINT_ENV_VAR_NAME,
+    TELEMETRY_KEY_ENV_VAR_NAME,
+)
 from secureli.models.publish_results import PublishLogResult
 from secureli.models.result import Result
 from secureli.repositories.settings import TelemetrySettings
 from secureli.settings import Settings
 from secureli.utilities.usage_stats import (
-    TELEMETRY_ENDPOINT_ENV_VAR_NAME,
-    TELEMETRY_KEY_ENV_VAR_NAME,
     post_log,
     convert_failures_to_failure_count,
 )
@@ -90,7 +92,6 @@ def test_post_log_http_error(mock_requests):
     mock_requests.side_effect = Exception("test exception")
 
     result = post_log("test_log_data", Settings())
-    print(result)
 
     mock_requests.assert_called_once_with(
         url="testendpoint", headers={"Api-Key": "testkey"}, data="test_log_data"
