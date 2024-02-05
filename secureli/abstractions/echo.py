@@ -57,6 +57,16 @@ class EchoAbstraction(ABC):
         """
         pass
 
+    @abstractmethod
+    def prompt(self, message: str, default_response: Optional[str] = None) -> str:
+        """
+        Prompts the user to enter a value
+        :param message: The message to display to the user during the prompt
+        :param default_response: Whether to default the response to a value. If
+        None, then re-prompt until the user accepts it.
+        :return: The value that has been entered by the user
+        """
+
     def print(self, message: str, color: Optional[Color] = None, bold: bool = False):
         """
         Print the provided info message to the terminal with the associated color and weight. Prints
@@ -124,3 +134,10 @@ class TyperEcho(EchoAbstraction):
 
     def confirm(self, message: str, default_response: Optional[bool] = False) -> bool:
         return typer.confirm(message, default=default_response, show_default=True)
+
+    def prompt(self, message: str, default_response: Optional[str] = None) -> str:
+        return typer.prompt(
+            text=message,
+            default=default_response,
+            show_default=True if default_response else False,
+        )

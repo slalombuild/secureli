@@ -3,6 +3,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional
 from secureli.abstractions.echo import EchoAbstraction
+from secureli.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
 from secureli.models.echo import Color
 from secureli.repositories.secureli_config import (
     SecureliConfig,
@@ -153,6 +154,7 @@ class Action(ABC):
         :return: The new SecureliConfig after install or None if installation did not complete
         """
 
+        # pre-install
         new_install = len(detected_languages) == len(install_languages)
 
         should_install = self._prompt_to_install(
@@ -168,6 +170,9 @@ class Action(ABC):
             self.action_deps.echo.warning("Newly detected languages were not installed")
             return VerifyResult(outcome=VerifyOutcome.UP_TO_DATE)
 
+        settings = self.action_deps.settings.load(folder_path)
+
+        # install
         lint_languages = self._prompt_get_lint_config_languages(
             install_languages, always_yes
         )
@@ -191,7 +196,12 @@ class Action(ABC):
         )
         self.action_deps.secureli_config.save(config)
 
+        settings.telemetry.api_url = self._prompt_get_telemetry_api_url(always_yes)
+
+        # post-install
         self._run_post_install_scan(folder_path, config, metadata, new_install)
+
+        self.action_deps.settings.save(settings)
 
         self.action_deps.echo.print(
             (
@@ -225,6 +235,16 @@ class Action(ABC):
         return always_yes or self.action_deps.echo.confirm(
             new_install_message if new_install else add_languages_message,
             default_response=True,
+        )
+
+    def _prompt_get_telemetry_api_url(self, always_yes: bool) -> str:
+        add_telemetry_message = "Configure endpoint for telemetry logs"
+        return (
+            TELEMETRY_DEFAULT_ENDPOINT
+            if always_yes
+            else self.action_deps.echo.prompt(
+                add_telemetry_message, TELEMETRY_DEFAULT_ENDPOINT
+            )
         )
 
     def _run_post_install_scan(

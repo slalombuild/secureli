@@ -1,4 +1,6 @@
+from pathlib import Path
 from unittest.mock import MagicMock
+import unittest.mock as um
 
 import pytest
 from pytest_mock import MockerFixture
@@ -60,12 +62,18 @@ def test_that_git_ignore_creates_file_if_missing(
 ):
     mock_path.exists.return_value = False
 
-    git_ignore.ignore_secureli_files()
+    with um.patch.object(Path, "exists") as mock_exists:
+        mock_exists.return_value = False
 
-    mock_open.return_value.write.assert_called_once()
+        git_ignore.ignore_secureli_files()
 
-    args, _ = mock_open.return_value.write.call_args_list[0]
-    assert args[0].find(".secureli") != -1
+        mock_open.return_value.write.assert_called_once()
+
+        args, _ = mock_open.return_value.write.call_args_list[0]
+        assert args[0].find("# existing contents") == -1
+        assert args[0].find(".secureli") != -1
+        assert args[0].find(git_ignore.header) != -1
+        assert args[0].find(git_ignore.footer) != -1
 
 
 def test_that_git_ignore_appends_to_existing_file_if_block_is_missing(

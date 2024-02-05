@@ -19,6 +19,7 @@ from secureli.services.scanner import (
     ScanMode,
     ScannerService,
 )
+from secureli.settings import Settings
 from secureli.utilities.usage_stats import post_log, convert_failures_to_failure_count
 
 ONE_WEEK_IN_SECONDS: int = 7 * 24 * 60 * 60
@@ -78,6 +79,7 @@ class ScanAction(Action):
         publish_results_condition: PublishResultsOption,
         action_successful: bool,
         log_str: str,
+        settings: Settings,
     ):
         """
         Publish the results of the scan to the configured observability platform
@@ -89,7 +91,7 @@ class ScanAction(Action):
             publish_results_condition == PublishResultsOption.ON_FAIL
             and not action_successful
         ):
-            result = post_log(log_str)
+            result = post_log(log_str, settings)
             self.echo.debug(result.result_message)
 
             if result.result == Result.SUCCESS:
@@ -116,6 +118,7 @@ class ScanAction(Action):
         Otherwise, scans with all hooks.
         """
         verify_result = self.verify_install(folder_path, False, always_yes)
+        settings = self.action_deps.settings.load(folder_path)
 
         # Check if pre-commit hooks are up-to-date
         secureli_config = self.action_deps.secureli_config.load()
@@ -156,6 +159,7 @@ class ScanAction(Action):
             publish_results_condition,
             action_successful=scan_result.successful,
             log_str=log_data.json(exclude_none=True),
+            settings=settings,
         )
         if scan_result.successful:
             self.echo.print("Scan executed successfully and detected no issues!")

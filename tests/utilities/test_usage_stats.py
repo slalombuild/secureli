@@ -1,6 +1,13 @@
 from secureli.models.publish_results import PublishLogResult
 from secureli.models.result import Result
-from secureli.utilities.usage_stats import post_log, convert_failures_to_failure_count
+from secureli.repositories.settings import TelemetrySettings
+from secureli.settings import Settings
+from secureli.utilities.usage_stats import (
+    TELEMETRY_ENDPOINT_ENV_VAR_NAME,
+    TELEMETRY_KEY_ENV_VAR_NAME,
+    post_log,
+    convert_failures_to_failure_count,
+)
 from secureli.services.scanner import Failure
 from unittest import mock
 from unittest.mock import Mock, patch
@@ -30,40 +37,64 @@ def test_that_convert_failures_to_failure_count_returns_correctly_when_no_failur
 
 
 @mock.patch.dict(
-    os.environ, {"API_KEY": "", "API_ENDPOINT": "testendpoint"}, clear=True
+    os.environ,
+    {
+        f"{TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "testendpoint",
+        f"{TELEMETRY_KEY_ENV_VAR_NAME}": "",
+    },
+    clear=True,
 )
-def test_post_log_with_no_api_key():
-    result = post_log("testing")
+@patch("requests.post")
+def test_post_log_with_no_api_key(mock_requests):
+    result = post_log("testing", Settings())
+
+    mock_requests.assert_not_called()
 
     assert result == PublishLogResult(
         result=Result.FAILURE,
-        result_message="API_ENDPOINT or API_KEY not found in environment variables",
+        result_message="SECURELI_LOGGING_API_ENDPOINT or SECURELI_LOGGING_API_KEY not found in environment variables",
     )
 
 
 # pragma: allowlist nextline secret
-@mock.patch.dict(os.environ, {"API_KEY": "testkey", "API_ENDPOINT": ""}, clear=True)
-def test_post_log_with_no_api_endpoint():
-    result = post_log("testing")
+@mock.patch.dict(
+    os.environ,
+    {
+        f"{TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "",
+        f"{TELEMETRY_KEY_ENV_VAR_NAME}": "testkey",
+    },
+    clear=True,
+)
+@patch("requests.post")
+def test_post_log_with_no_api_endpoint(mock_requests):
+    result = post_log("testing", Settings())
+
+    mock_requests.assert_not_called()
 
     assert result == PublishLogResult(
         result=Result.FAILURE,
-        result_message="API_ENDPOINT or API_KEY not found in environment variables",
+        result_message="SECURELI_LOGGING_API_ENDPOINT or SECURELI_LOGGING_API_KEY not found in environment variables",
     )
 
 
 @mock.patch.dict(
     os.environ,
-    {"API_KEY": "testkey", "API_ENDPOINT": "testendpoint"},  # pragma: allowlist secret
+    {
+        f"{TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "testendpoint",
+        f"{TELEMETRY_KEY_ENV_VAR_NAME}": "testkey",
+    },  # pragma: allowlist secret
     clear=True,
 )
 @patch("requests.post")
 def test_post_log_http_error(mock_requests):
     mock_requests.side_effect = Exception("test exception")
 
-    result = post_log("test_log_data")
+    result = post_log("test_log_data", Settings())
+    print(result)
 
-    mock_requests.assert_called_once()
+    mock_requests.assert_called_once_with(
+        url="testendpoint", headers={"Api-Key": "testkey"}, data="test_log_data"
+    )
     assert result == PublishLogResult(
         result=Result.FAILURE,
         result_message='Error posting log to testendpoint: "test exception"',
@@ -72,16 +103,45 @@ def test_post_log_http_error(mock_requests):
 
 @mock.patch.dict(
     os.environ,
-    {"API_KEY": "testkey", "API_ENDPOINT": "testendpoint"},  # pragma: allowlist secret
+    {
+        f"{TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "testendpoint",
+        f"{TELEMETRY_KEY_ENV_VAR_NAME}": "testkey",
+    },  # pragma: allowlist secret
     clear=True,
 )
 @patch("requests.post")
 def test_post_log_happy_path(mock_requests):
     mock_requests.return_value = Mock(status_code=202, text="sample-response")
 
-    result = post_log("test_log_data")
+    result = post_log("test_log_data", Settings())
 
-    mock_requests.assert_called_once()
+    mock_requests.assert_called_once_with(
+        url="testendpoint", headers={"Api-Key": "testkey"}, data="test_log_data"
+    )
+    assert result == PublishLogResult(
+        result=Result.SUCCESS, result_message="sample-response"
+    )
+
+
+@mock.patch.dict(
+    os.environ,
+    {
+        f"{TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "",
+        f"{TELEMETRY_KEY_ENV_VAR_NAME}": "testkey",
+    },  # pragma: allowlist secret
+    clear=True,
+)
+@patch("requests.post")
+def test_post_log_uses_settings_endpoint_if_no_env_endpoint(mock_requests):
+    mock_requests.return_value = Mock(status_code=202, text="sample-response")
+
+    result = post_log(
+        "test_log_data", Settings(telemetry=TelemetrySettings(api_url="testendpoint"))
+    )
+
+    mock_requests.assert_called_once_with(
+        url="testendpoint", headers={"Api-Key": "testkey"}, data="test_log_data"
+    )
     assert result == PublishLogResult(
         result=Result.SUCCESS, result_message="sample-response"
     )

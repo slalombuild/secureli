@@ -2,6 +2,7 @@ from pathlib import Path
 from secureli.abstractions.pre_commit import RevisionPair
 from secureli.actions.action import ActionDependencies, VerifyOutcome
 from secureli.actions.scan import ScanAction
+from secureli.models.exit_codes import ExitCode
 from secureli.models.publish_results import PublishResultsOption
 from secureli.models.result import Result
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
@@ -15,13 +16,15 @@ from secureli.repositories.settings import (
 )
 from secureli.services.language_analyzer import AnalyzeResult
 from secureli.services.logging import LogAction
-from secureli.services.scanner import ScanMode, ScanResult, Failure
+from secureli.services.scanner import ScanMode, ScanResult
 from unittest import mock
 from unittest.mock import MagicMock
 from pytest_mock import MockerFixture
 
 import os
 import pytest
+
+from secureli.settings import Settings
 
 test_folder_path = Path("does-not-matter")
 
@@ -132,19 +135,23 @@ def mock_post_log(mocker: MockerFixture) -> MagicMock:
     return mocker.patch("secureli.actions.scan.post_log")
 
 
-# @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
-# def test_that_scan_repo_errors_if_not_successful(
-#     scan_action: ScanAction,
-#     mock_scanner: MagicMock,
-#     mock_echo: MagicMock,
-# ):
-#     mock_scanner.scan_repo.return_value = ScanResult(
-#         successful=False, output="Bad Error", failures=[]
-#     )
-#
-#     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
-#
-#     mock_echo.print.assert_called_with("Bad Error")
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
+def test_that_scan_repo_errors_if_not_successful(
+    scan_action: ScanAction,
+    mock_scanner: MagicMock,
+    mock_secureli_config: MagicMock,
+):
+    mock_scanner.scan_repo.return_value = ScanResult(
+        successful=False, output="Bad Error", failures=[]
+    )
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang"], version_installed="abc123"
+    )
+
+    with pytest.raises(SystemExit) as sys_ext_info:
+        scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
+
+    assert sys_ext_info.value.code is ExitCode.SCAN_ISSUES_DETECTED.value
 
 
 @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
@@ -206,26 +213,6 @@ def test_that_scan_repo_does_not_scan_if_not_installed(
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
 
     mock_scanner.scan_repo.assert_not_called()
-
-
-@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
-def test_that_scan_repo_does_not_add_ignore_if_always_yes_is_true(
-    scan_action: ScanAction,
-    mock_scanner: MagicMock,
-    mock_settings_repository: MagicMock,
-    mock_default_settings: MagicMock,
-    mock_pass_install_verification: MagicMock,
-):
-    mock_failure = Failure(
-        repo="some-repo", id="some-hook-id", file="some-failed-file.py"
-    )
-    mock_scanner.scan_repo.return_value = ScanResult(
-        successful=True, output="some-output", failures=[mock_failure]
-    )
-
-    scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, True)
-
-    mock_settings_repository.save.assert_not_called()
 
 
 def test_that_scan_checks_for_updates(
@@ -306,16 +293,29 @@ def test_publish_results_always(scan_action: ScanAction, mock_post_log: MagicMoc
     mock_post_log.return_value.result = Result.SUCCESS
     mock_post_log.return_value.result_message = "Success"
 
-    scan_action.publish_results(PublishResultsOption.ALWAYS, True, "log_str")
+    settings = Settings()
 
-    mock_post_log.assert_called_once_with("log_str")
+    scan_action.publish_results(
+        PublishResultsOption.ALWAYS,
+        action_successful=True,
+        log_str="log_str",
+        settings=settings,
+    )
+
+    mock_post_log.assert_called_once_with("log_str", settings)
     scan_action.logging.success.assert_called_once_with(LogAction.publish)
 
 
 def test_publish_results_on_fail_and_action_successful(
     scan_action: ScanAction, mock_post_log: MagicMock
 ):
-    scan_action.publish_results(PublishResultsOption.ON_FAIL, True, "log_str")
+    settings = Settings()
+    scan_action.publish_results(
+        publish_results_condition=PublishResultsOption.ON_FAIL,
+        action_successful=True,
+        log_str="log_str",
+        settings=settings,
+    )
 
     mock_post_log.assert_not_called()
     scan_action.logging.success.assert_not_called()
@@ -326,8 +326,14 @@ def test_publish_results_on_fail_and_action_not_successful(
 ):
     mock_post_log.return_value.result = Result.FAILURE
     mock_post_log.return_value.result_message = "Failure"
+    settings = Settings()
 
-    scan_action.publish_results(PublishResultsOption.ON_FAIL, False, "log_str")
+    scan_action.publish_results(
+        publish_results_condition=PublishResultsOption.ON_FAIL,
+        action_successful=False,
+        log_str="log_str",
+        settings=settings,
+    )
 
-    mock_post_log.assert_called_once_with("log_str")
+    mock_post_log.assert_called_once_with("log_str", settings)
     scan_action.logging.failure.assert_called_once_with(LogAction.publish, "Failure")
