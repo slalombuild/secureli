@@ -48,7 +48,7 @@ def test_that_convert_failures_to_failure_count_returns_correctly_when_no_failur
 )
 @patch("requests.post")
 def test_post_log_with_no_api_key(mock_requests):
-    result = post_log("testing", Settings(telemetry=TelemetrySettings(api_url=None)))
+    result = post_log("testing", Settings())
 
     mock_requests.assert_not_called()
 
@@ -69,7 +69,7 @@ def test_post_log_with_no_api_key(mock_requests):
 )
 @patch("requests.post")
 def test_post_log_with_no_api_endpoint(mock_requests):
-    result = post_log("testing", Settings())
+    result = post_log("testing", Settings(telemetry=TelemetrySettings(api_url=None)))
 
     mock_requests.assert_not_called()
 
