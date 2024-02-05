@@ -34,14 +34,9 @@ def post_log(log_data: str, settings: Settings) -> PublishLogResult:
     :param log_data: a string to be sent to backend instrumentation
     """
 
-    print(settings)
-
     api_endpoint = (
         os.getenv(TELEMETRY_ENDPOINT_ENV_VAR_NAME) or settings.telemetry.api_url
     )
-
-    print(api_endpoint)
-
     api_key = os.getenv(TELEMETRY_KEY_ENV_VAR_NAME)
 
     if not api_endpoint or not api_key:

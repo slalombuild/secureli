@@ -299,28 +299,23 @@ def test_publish_results_always(scan_action: ScanAction, mock_post_log: MagicMoc
     mock_post_log.return_value.result = Result.SUCCESS
     mock_post_log.return_value.result_message = "Success"
 
-    settings = Settings()
-
     scan_action.publish_results(
         PublishResultsOption.ALWAYS,
         action_successful=True,
         log_str="log_str",
-        settings=settings,
     )
 
-    mock_post_log.assert_called_once_with("log_str", settings)
+    mock_post_log.assert_called_once_with("log_str", Settings())
     scan_action.logging.success.assert_called_once_with(LogAction.publish)
 
 
 def test_publish_results_on_fail_and_action_successful(
     scan_action: ScanAction, mock_post_log: MagicMock
 ):
-    settings = Settings()
     scan_action.publish_results(
         publish_results_condition=PublishResultsOption.ON_FAIL,
         action_successful=True,
         log_str="log_str",
-        settings=settings,
     )
 
     mock_post_log.assert_not_called()
@@ -332,14 +327,12 @@ def test_publish_results_on_fail_and_action_not_successful(
 ):
     mock_post_log.return_value.result = Result.FAILURE
     mock_post_log.return_value.result_message = "Failure"
-    settings = Settings()
 
     scan_action.publish_results(
         publish_results_condition=PublishResultsOption.ON_FAIL,
         action_successful=False,
         log_str="log_str",
-        settings=settings,
     )
 
-    mock_post_log.assert_called_once_with("log_str", settings)
+    mock_post_log.assert_called_once_with("log_str", Settings())
     scan_action.logging.failure.assert_called_once_with(LogAction.publish, "Failure")
