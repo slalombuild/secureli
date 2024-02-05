@@ -136,9 +136,9 @@ seCureLI is configurable via a .secureli.yaml file present in the root of your l
 
 ### telemetry
 
-| Key       | Description                                                                                                                                                                        |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `api_url` | The url endpoint to post telemetry logs to. This setting in an alternative to setting the url as an environment variable. The environment variable will preceed this setting value |
+| Key       | Description                                                                                                                                                                              |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `api_url` | The url endpoint to post telemetry logs to. This value is an alternative to setting the url as an environment variable. Note: The environment variable will precede this setting value |
 
 ## Using Observability Platform to Show Secret Detection Statistics
 
@@ -149,7 +149,7 @@ Should you need seCureLI to work with other platforms, please create a new issue
 
 - Assuming, seCureLI has been setup and installed, sign up to New Relic Log Platform https://docs.newrelic.com/docs/logs/log-api/introduction-log-api/
 - Retrieve API_KEY and API_ENDPOINT from New Relic. API_ENDPOINT for New Relic should be https://log-api.newrelic.com/log/v1
-- On your development machine, setup environment variable with variable name SECURELI_LOGGING_API_KEY and SECURELI_LOGGING_API_ENDPOINT. The endpoint can alternatively be added to the .secureli.yaml file.
+- On your development machine, setup environment variable with variable name SECURELI_LOGGING_API_KEY and SECURELI_LOGGING_API_ENDPOINT. The endpoint can alternatively be added and commited to source control via the .secureli.yaml file.
 - Once the above setup is complete, everytime seCureLI triggered, it should send a usage log to New Relic
 - In New Relic, you can create a dashboard of metric to see the number of times secret was caught using query such as
 

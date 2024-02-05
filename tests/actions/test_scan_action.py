@@ -140,12 +140,18 @@ def test_that_scan_repo_errors_if_not_successful(
     scan_action: ScanAction,
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
+    mock_language_analyzer: MagicMock,
 ):
+    mock_language = "RadLang"
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={f"{mock_language}": 1.0},
+        skipped_files=[],
+    )
     mock_scanner.scan_repo.return_value = ScanResult(
         successful=False, output="Bad Error", failures=[]
     )
     mock_secureli_config.load.return_value = SecureliConfig(
-        languages=["RadLang"], version_installed="abc123"
+        languages=[mock_language], version_installed="abc123"
     )
 
     with pytest.raises(SystemExit) as sys_ext_info:

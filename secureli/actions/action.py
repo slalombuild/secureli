@@ -10,7 +10,7 @@ from secureli.repositories.secureli_config import (
     SecureliConfigRepository,
     VerifyConfigOutcome,
 )
-from secureli.repositories.settings import SecureliRepository
+from secureli.repositories.settings import SecureliRepository, TelemetrySettings
 from secureli.services.language_analyzer import LanguageAnalyzerService, AnalyzeResult
 from secureli.services.language_config import LanguageNotSupportedError
 from secureli.services.language_support import (
@@ -196,12 +196,13 @@ class Action(ABC):
         )
         self.action_deps.secureli_config.save(config)
 
-        settings.telemetry.api_url = self._prompt_get_telemetry_api_url(always_yes)
+        settings.telemetry = TelemetrySettings(
+            api_url=self._prompt_get_telemetry_api_url(always_yes)
+        )
+        self.action_deps.settings.save(settings)
 
         # post-install
         self._run_post_install_scan(folder_path, config, metadata, new_install)
-
-        self.action_deps.settings.save(settings)
 
         self.action_deps.echo.print(
             (
