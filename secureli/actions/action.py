@@ -264,7 +264,9 @@ class Action(ABC):
             self.action_deps.echo.print(f"running {secret_test_id}.")
 
             scan_result = self.action_deps.scanner.scan_repo(
-                folder_path, ScanMode.ALL_FILES, specific_test=secret_test_id
+                folder_path,
+                ScanMode.ALL_FILES,
+                specific_test=secret_test_id,
             )
 
             self.action_deps.echo.print(f"{scan_result.output}")

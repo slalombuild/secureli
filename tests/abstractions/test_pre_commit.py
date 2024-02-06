@@ -129,6 +129,37 @@ def test_that_pre_commit_executes_a_single_hook_if_specified(
     assert mock_subprocess.run.call_args_list[0].args[0][-1] == "detect-secrets"
 
 
+def test_that_pre_commit_executes_hooks_on_specified_files(
+    pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
+):
+
+    files = ["test_file.py", "test-file.js"]
+    mock_subprocess.return_value = CompletedProcess(args=[], returncode=0)
+    pre_commit.execute_hooks(
+        test_folder_path,
+        hook_id="detect-secrets",
+        files=files,
+    )
+
+    sub_process_args: [str] = mock_subprocess.run.call_args_list[0].args[0]
+    files_arg_idx = sub_process_args.index("--files")
+
+    assert " ".join(files) == sub_process_args[files_arg_idx + 1]
+
+
+def test_that_pre_commit_does_not_execute_hooks_on_specified_files_if_not_included(
+    pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
+):
+
+    mock_subprocess.return_value = CompletedProcess(args=[], returncode=0)
+    pre_commit.execute_hooks(
+        test_folder_path,
+        hook_id="detect-secrets",
+    )
+    sub_process_args: [str] = mock_subprocess.run.call_args_list[0].args[0]
+    assert "--files" not in sub_process_args
+
+
 ##### autoupdate_hooks #####
 def test_that_pre_commit_autoupdate_hooks_executes_successfully(
     pre_commit: PreCommitAbstraction,

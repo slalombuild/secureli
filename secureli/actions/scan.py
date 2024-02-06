@@ -104,6 +104,7 @@ class ScanAction(Action):
         always_yes: bool,
         publish_results_condition: PublishResultsOption = PublishResultsOption.NEVER,
         specific_test: Optional[str] = None,
+        files: Optional[str] = None,
     ):
         """
         Scans the given directory, or offers to go through initialization if that has not
@@ -128,7 +129,9 @@ class ScanAction(Action):
         if verify_result.outcome in self.halting_outcomes:
             return
 
-        scan_result = self.scanner.scan_repo(folder_path, scan_mode, specific_test)
+        scan_result = self.scanner.scan_repo(
+            folder_path, scan_mode, specific_test, files=files
+        )
 
         details = scan_result.output or "Unknown output during scan"
         self.echo.print(details)
