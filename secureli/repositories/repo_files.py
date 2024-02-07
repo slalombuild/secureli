@@ -93,6 +93,8 @@ class RepoFilesRepository:
                 data = file_handle.read()
                 encoding = chardet.detect(data)["encoding"]
 
+                # If resulting encoding is None, then it is binary
+                # Any file with zero size will be read as binary, so only skip binary files with size.
                 if encoding is None and file_size > 0:
                     raise ValueError(f"File at path {file_path} is a binary file")
 
