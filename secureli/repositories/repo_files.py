@@ -5,6 +5,16 @@ import chardet
 from secureli.utilities.patterns import combine_patterns
 
 
+class BinaryFileError(ValueError):
+    """
+    The loaded file was a binary and cannot be scanned.
+    """
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
 class RepoFilesRepository:
     """
     Loads files in a given repository, or raises ValueError if the provided path is not a git repo
@@ -96,9 +106,11 @@ class RepoFilesRepository:
                 # If resulting encoding is None, then it is binary
                 # Any file with zero size will be read as binary, so only skip binary files with size.
                 if encoding is None and file_size > 0:
-                    raise ValueError(f"File at path {file_path} is a binary file")
+                    raise BinaryFileError(f"File at path {file_path} is a binary file")
 
                 return data.decode("utf-8")
+        except BinaryFileError as e:
+            raise e
         except IOError:
             pass
         except ValueError:

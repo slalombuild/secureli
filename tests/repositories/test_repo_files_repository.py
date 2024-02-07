@@ -202,5 +202,7 @@ def test_that_load_file_raises_value_error_for_binary_file_with_size(
     repo_files_repository: RepoFilesRepository,
     binary_file_with_size_file_path: MagicMock,
 ):
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="File at path folder/file.txt is a binary file"
+    ):
         repo_files_repository.load_file(binary_file_with_size_file_path)
