@@ -79,14 +79,14 @@ def mock_open_resource_with_binary_file(mocker: MockerFixture) -> MagicMock:
 
 @pytest.fixture()
 def mock_open_resource_with_io_error(mocker: MockerFixture) -> MagicMock:
-    mock_open_with_error = mocker.mock_open(read_data=b"sample_data")
+    mock_open_with_error = mocker.mock_open(read_data="sample_data")
     mock_open_with_error.side_effect = IOError("Generic I/O error")
     return mocker.patch("builtins.open", mock_open_with_error)
 
 
 @pytest.fixture()
 def mock_open_resource_with_value_error(mocker: MockerFixture) -> MagicMock:
-    mock_open_with_error = mocker.mock_open(read_data=b"sample_data")
+    mock_open_with_error = mocker.mock_open(read_data="sample_data")
     mock_open_with_error.side_effect = ValueError("Generic value error")
     return mocker.patch("builtins.open", mock_open_with_error)
 
