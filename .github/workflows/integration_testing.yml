@@ -44,7 +44,7 @@ jobs:
         run: |
           cd pip
           $ErrorActionPreference = 'SilentlyContinue'
-          secureli scan --mode all-files --yes
+          secureli scan --mode all-files
           $LastExitCode = 0  # Force exit code to 0 to avoid failing the build since scan returns nonzero exit status
 
   test-homebrew-macos:
@@ -96,7 +96,7 @@ jobs:
         run: |
           cd pip
           secureli init --yes
-          ! secureli scan --mode all-files --yes
+          ! secureli scan --mode all-files
 
   test-pypi-macos:
     runs-on: macos-latest
@@ -134,4 +134,4 @@ jobs:
           secureli init --yes
           # In the future, we should use specific exit codes to differentiate between exit reasons
           # For now, we can just check if the command exits with a non-zero status
-          ! secureli scan --mode all-files --yes
+          ! secureli scan --mode all-files
