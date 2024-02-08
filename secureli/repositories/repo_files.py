@@ -1,7 +1,18 @@
 from pathlib import Path
 import re
+import chardet
 
 from secureli.utilities.patterns import combine_patterns
+
+
+class BinaryFileError(ValueError):
+    """
+    The loaded file was a binary and cannot be scanned.
+    """
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
 
 
 class RepoFilesRepository:
@@ -82,13 +93,24 @@ class RepoFilesRepository:
         if not file_path.exists() or not file_path.is_file():
             raise ValueError(f"File at path {file_path} did not exist")
 
-        if file_path.stat().st_size > self.max_file_size:
+        file_size = file_path.stat().st_size
+
+        if file_size > self.max_file_size:
             raise ValueError(f"File at path {file_path} was too big to scan")
 
         try:
-            with open(file_path, "r", encoding="utf8") as file_handle:
-                text = file_handle.read()
-                return text
+            with open(file_path, "rb") as file_handle:
+                data = file_handle.read()
+                encoding = chardet.detect(data)["encoding"]
+
+                # If resulting encoding is None, then it is binary
+                # Any file with zero size will be read as binary, so only skip binary files with size.
+                if encoding is None and file_size > 0:
+                    raise BinaryFileError(f"File at path {file_path} is a binary file")
+
+                return data.decode("utf-8")
+        except BinaryFileError as e:
+            raise e
         except IOError:
             pass
         except ValueError:
