@@ -67,10 +67,15 @@ jobs:
 
       - name: Install BATS for e2e tests
         uses: bats-core/bats-action@1.5.4
+        with:
+          support-path: ${{ github.workspace }}/bats-core/bats-support
+          assert-path: ${{ github.workspace }}/bats-core/bats-assert
+          detik-path: ${{ github.workspace }}/bats-core/bats-detik
+          file-path: ${{ github.workspace }}/bats-core/bats-file
 
       - name: Run Tests
         env:
-          BATS_LIBS_ROOT: /usr/lib
+          BATS_LIBS_ROOT: ${{ github.workspace }}/bats-core
         run: |
           poetry run poe precommit
           poetry run poe coverage
