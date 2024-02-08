@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "secureli"
-version = "0.26.1"
+version = "0.27.0"
 description = "Secure Project Manager"
 authors = ["Caleb Tonn <caleb.tonn@slalom.com>"]
 license = "Apache-2.0"
@@ -45,6 +45,7 @@ cfgv = "^3.3.1"
 pre-commit = ">=2.20,<4.0"
 requests = "^2.31.0"
 pyyaml = ">=6.0.1"
+chardet = "^5.2.0"
 
 [tool.pytest.ini_options]
 addopts = "-p no:cacheprovider"

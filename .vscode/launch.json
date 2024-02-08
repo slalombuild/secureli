@@ -3,7 +3,7 @@
     "configurations": [
         {
             "name": "Python: secureli --version",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/secureli/main.py",
             "cwd": "${workspaceFolder}",
@@ -14,7 +14,7 @@
         },
         {
             "name": "Python: secureli --help",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/secureli/main.py",
             "cwd": "${workspaceFolder}",
@@ -25,7 +25,7 @@
         },
         {
             "name": "Python: secureli init",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/secureli/main.py",
             "cwd": "${workspaceFolder}",
@@ -36,7 +36,7 @@
         },
         {
             "name": "Python: secureli scan",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/secureli/main.py",
             "cwd": "${workspaceFolder}",
@@ -47,7 +47,7 @@
         },
         {
             "name": "Python: secureli update",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/secureli/main.py",
             "cwd": "${workspaceFolder}",
