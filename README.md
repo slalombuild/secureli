@@ -41,22 +41,23 @@ pip install secureli
 Once installed you can see the latest documentation for seCureLI by entering the following on a command prompt:
 
 ```bash
-% secureli --help
+$ secureli --help
 ```
 
 You will see a list of commands and descriptions of each. You can also pull up documentation for each command with the same pattern. For example:
 
 ```bash
-% secureli init --help
+$ secureli init --help
 
  Usage: secureli init [OPTIONS]
 
  Detect languages and initialize pre-commit hooks and linters for the project
 
 ╭─ Options ──────────────────────────────────────────────────────────────────────────────────────╮
-│ --reset  -r        Disregard the installed configuration, if any, and treat as a new install   │
-│ --yes    -y        Say 'yes' to every prompt automatically without input                       │
-│ --help             Show this message and exit.                                                 │
+│ --reset       -r      Disregard the installed configuration, if any, and treat as a new install   │
+│ --yes         -y      Say 'yes' to every prompt automatically without input                       │
+│ --directory .,-d PATH Run secureli against a specific directory [default: .]
+│ --help                Show this message and exit.                                                 │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
@@ -66,6 +67,7 @@ When invoking these commands, you can combine the short versions into a single f
 % secureli init --reset --yes
 % secureli init -ry
 ```
+
 ## Init
 
 After seCureLI is installed, you can use it to configure your local git repository with a set of pre-commit hooks appropriate for your repo, based on the languages found in your repo's source code files.
@@ -76,7 +78,7 @@ All you need to do is run:
 % secureli init
 ```
 
-Running `secureli init` will allow seCureLI to detect the languages in your repo, install pre-commit, install all the appropriate pre-commit hooks for your local repo, and run a scan for secrets in your local repo.
+Running `secureli init` will allow seCureLI to detect the languages in your repo, install pre-commit, install all the appropriate pre-commit hooks for your local repo, run a scan for secrets in your local repo, and update the installed hooks.
 
 # Upgrade
 
@@ -87,6 +89,7 @@ If you installed seCureLI using Homebrew, you can use the standard homebrew upda
 ```commandline
 brew update
 ```
+
 ## Upgrading via pip
 
 If you installed seCureLI using pip, you can use the following command to upgrade to the latest version of seCureLI.
@@ -94,6 +97,7 @@ If you installed seCureLI using pip, you can use the following command to upgrad
 ```commandline
 pip install --upgrade secureli
 ```
+
 ## Upgrading pre-commit hooks for repo
 
 In order to upgrade to the latest released version of each pre-commit hook configured for your repo, use the following command.
@@ -111,7 +115,7 @@ seCureLI is configurable via a .secureli.yaml file present in the root of your l
 ### top level
 
 | Key                | Description                                                                                                        |
-|--------------------|--------------------------------------------------------------------------------------------------------------------|
+| ------------------ | ------------------------------------------------------------------------------------------------------------------ |
 | `repo_files`       | Affects how seCureLI will interpret the repository, both for language analysis and as it executes various linters. |
 | `echo`             | Adjusts how seCureLI will print information to the user.                                                           |
 | `language_support` | Affects seCureLI's language analysis and support phase.                                                            |
@@ -119,21 +123,20 @@ seCureLI is configurable via a .secureli.yaml file present in the root of your l
 ### repo_files
 
 | Key                       | Description                                                                                                                                                                                                                                                             |
-|---------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `max_file_size`           | A number in bytes. Files over this size will not be considered during language analysis, for speed purposes. Default: 100000                                                                                                                                            |
 | `ignored_file_extensions` | Which file extensions not to consider during language analysis.                                                                                                                                                                                                         |
 | `exclude_file_patterns`   | Which file patterns to ignore during language analysis and code analysis execution. Use a typical file pattern you might find in a .gitignore file, such as `*.py` or `tests/`. Certain patterns you will have to wrap in double-quotes for the entry to be valid YAML. |
 
 ### echo
 
-| Key     | Description                                                                                                                                        |
-|---------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| `level` | The log level to display to the user. Defaults to ERROR, which includes `error` and `print` messages, without including warnings or info messages. |
-
+| Key     | Description                                                                                                                                                 |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `level` | The log level to display to the user. Defaults to ERROR, which includes `error` and `print` messages. Available log levels are DEBUG, INFO, WARN, and ERROR |
 
 ## Using Observability Platform to Show Secret Detection Statistics
 
-seCureLI can send secret detection events to an observability platform, such as New Relic.  Other platforms may also work, but have not been tested.
+seCureLI can send secret detection events to an observability platform, such as New Relic. Other platforms may also work, but have not been tested.
 Should you need seCureLI to work with other platforms, please create a new issue in github, or contribute to the open source project.
 
 ### Steps for New Relic
@@ -150,7 +153,7 @@ FROM Log Select sum(failure_count_details.detect_secrets) as 'Caught Secret Coun
 
 ## License
 
-Copyright 2023 Slalom, Inc.
+Copyright 2024 Slalom, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
