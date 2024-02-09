@@ -24,4 +24,4 @@ RUN brew install secureli
 RUN git clone https://github.com/pypa/pip pip
 WORKDIR pip
 RUN secureli init --yes
-RUN secureli scan --yes --mode all-files
+RUN secureli scan --mode all-files

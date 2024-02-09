@@ -17,4 +17,4 @@ RUN pip3 --version && pip3 install secureli --break-system-packages
 RUN git clone https://github.com/pypa/pip pip
 WORKDIR pip
 RUN secureli init --yes
-RUN secureli scan  --mode all-files --yes
+RUN secureli scan  --mode all-files

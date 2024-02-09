@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import MagicMock
 from typer.testing import CliRunner
 
@@ -7,6 +8,8 @@ from secureli.actions.action import VerifyOutcome, VerifyResult
 
 import secureli.container
 import secureli.main
+from secureli.models.publish_results import PublishResultsOption
+from secureli.services.scanner import ScanMode
 from secureli.utilities.secureli_meta import secureli_version
 
 
@@ -106,3 +109,35 @@ def test_that_unsuccessful_init_does_not_run_update(
     secureli.main.init()
 
     mock_container.update_action.return_value.update_hooks.assert_not_called()
+
+
+def test_that_scan_implements_file_arg(mock_container: MagicMock):
+    result = CliRunner().invoke(secureli.main.app, ["scan", "--file", "test.py"])
+    assert result.exit_code is 0
+    assert result.stdout == ""
+    mock_container.init_resources.assert_called_once()
+    mock_container.scan_action.return_value.scan_repo.assert_called_once_with(
+        folder_path=Path("."),
+        scan_mode=ScanMode.STAGED_ONLY,
+        always_yes=False,
+        publish_results_condition=PublishResultsOption.NEVER,
+        specific_test=None,
+        files=["test.py"],
+    )
+
+
+def test_that_scan_implements_multiple_file_args(mock_container: MagicMock):
+    result = CliRunner().invoke(
+        secureli.main.app, ["scan", "--file", "test.py", "--file", "test2.py"]
+    )
+    assert result.exit_code is 0
+    assert result.stdout == ""
+    mock_container.init_resources.assert_called_once()
+    mock_container.scan_action.return_value.scan_repo.assert_called_once_with(
+        folder_path=Path("."),
+        scan_mode=ScanMode.STAGED_ONLY,
+        always_yes=False,
+        publish_results_condition=PublishResultsOption.NEVER,
+        specific_test=None,
+        files=["test.py", "test2.py"],
+    )

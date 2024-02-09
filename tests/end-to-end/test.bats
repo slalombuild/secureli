@@ -10,6 +10,6 @@ setup() {
 }
 
 @test "can run secureli scan" {
-    run python secureli/main.py scan -y -m all-files
+    run python secureli/main.py scan -m all-files
     assert_output --partial 'Detected the following language(s):'
 }
