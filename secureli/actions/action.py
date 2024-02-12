@@ -94,6 +94,17 @@ class Action(ABC):
                     outcome=update_config.outcome,
                 )
 
+        if not self.action_deps.scanner.pre_commit.get_preferred_pre_commit_config_path(
+            folder_path
+        ).exists():
+            update_result: VerifyResult = (
+                self._update_secureli_pre_commit_config_location(
+                    folder_path, always_yes
+                )
+            )
+            if update_result.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
+                return update_result
+
         config = SecureliConfig() if reset else self.action_deps.secureli_config.load()
 
         try:
@@ -386,15 +397,12 @@ class Action(ABC):
             "Would you like it automatically moved to the .secureli/ directory?",
             default_response=True,
         )
-        if not response:
-            self.action_deps.echo.error("User canceled update process")
-            return VerifyResult(
-                outcome=VerifyOutcome.UPDATE_CANCELED,
-            )
-
-        try:
-            self.action_deps.scanner.pre_commit.migrate_config_file(folder_path)
-
-            return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
-        except:
-            return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
+        if response:
+            try:
+                self.action_deps.scanner.pre_commit.migrate_config_file(folder_path)
+                return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
+            except:
+                return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
+        else:
+            self.action_deps.echo.warning(".pre-commit-config.yaml migration declined")
+            return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)

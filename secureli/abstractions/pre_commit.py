@@ -285,17 +285,22 @@ class PreCommitAbstraction:
         else:
             return ExecuteResult(successful=True, output=output)
 
+    def get_preferred_pre_commit_config_path(self, folder_path) -> Path:
+        """
+        Returns the expected/non-deprecated path for .pre-commit-config.yaml.
+        If the file has not yet been migrated, it may not be located at this path.
+        """
+        return folder_path / ".secureli" / self.CONFIG_FILE_NAME
+
     def get_pre_commit_config_path(self, folder_path: Path) -> Path:
-        """
-        Returns the file path to .pre-commit-config.yaml
-        """
+        """Returns the file path to .pre-commit-config.yaml"""
         # The original location of .pre-commit-config.yaml was in the root of the repo,
         # but that could conflict with existing configuration (if the repo was already using pre-commit).
         # To keep seCureLI's configuration separate, we've migrated it to the .secureli/ folder.
         # However, for now we still check the old path to avoid breaking existing
 
         ordered_config_paths = [
-            folder_path / ".secureli" / self.CONFIG_FILE_NAME,
+            self.get_preferred_pre_commit_config_path(folder_path),
             folder_path / self.CONFIG_FILE_NAME,
         ]
         try:
