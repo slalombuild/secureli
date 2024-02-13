@@ -109,7 +109,11 @@ class PreCommitAbstraction:
         return InstallResult(successful=True, backup_hook_path=backup_hook_path)
 
     def execute_hooks(
-        self, folder_path: Path, all_files: bool = False, hook_id: Optional[str] = None
+        self,
+        folder_path: Path,
+        all_files: bool = False,
+        hook_id: Optional[str] = None,
+        files: Optional[str] = None,
     ) -> ExecuteResult:
         """
         Execute the configured hooks against the repository, either against your staged changes
@@ -118,6 +122,7 @@ class PreCommitAbstraction:
         :param all_files: True if we want to scan all files, default to false, which only
         scans our staged changes we're about to commit
         :param hook_id: A specific hook to run. If None, all hooks will be run
+        :files: An optional list of files to execute hooks on
         :return: ExecuteResult, indicating success or failure.
         """
         # always log colors so that we can print them out later, which does not happen by default
@@ -133,6 +138,10 @@ class PreCommitAbstraction:
 
         if hook_id:
             subprocess_args.append(hook_id)
+
+        if files:
+            subprocess_args.append("--files")
+            subprocess_args.append(" ".join(files))
 
         completed_process = subprocess.run(
             subprocess_args, stdout=subprocess.PIPE, cwd=folder_path

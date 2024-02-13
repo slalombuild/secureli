@@ -41,22 +41,23 @@ pip install secureli
 Once installed you can see the latest documentation for seCureLI by entering the following on a command prompt:
 
 ```bash
-% secureli --help
+$ secureli --help
 ```
 
 You will see a list of commands and descriptions of each. You can also pull up documentation for each command with the same pattern. For example:
 
 ```bash
-% secureli init --help
+$ secureli init --help
 
  Usage: secureli init [OPTIONS]
 
  Detect languages and initialize pre-commit hooks and linters for the project
 
 ╭─ Options ──────────────────────────────────────────────────────────────────────────────────────╮
-│ --reset  -r        Disregard the installed configuration, if any, and treat as a new install   │
-│ --yes    -y        Say 'yes' to every prompt automatically without input                       │
-│ --help             Show this message and exit.                                                 │
+│ --reset       -r      Disregard the installed configuration, if any, and treat as a new install   │
+│ --yes         -y      Say 'yes' to every prompt automatically without input                       │
+│ --directory .,-d PATH Run secureli against a specific directory [default: .]
+│ --help                Show this message and exit.                                                 │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
@@ -77,7 +78,7 @@ All you need to do is run:
 % secureli init
 ```
 
-Running `secureli init` will allow seCureLI to detect the languages in your repo, install pre-commit, install all the appropriate pre-commit hooks for your local repo, and run a scan for secrets in your local repo.
+Running `secureli init` will allow seCureLI to detect the languages in your repo, install pre-commit, install all the appropriate pre-commit hooks for your local repo, run a scan for secrets in your local repo, and update the installed hooks.
 
 # Upgrade
 
@@ -159,7 +160,7 @@ FROM Log Select sum(failure_count_details.detect_secrets) as 'Caught Secret Coun
 
 ## License
 
-Copyright 2023 Slalom, Inc.
+Copyright 2024 Slalom, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
