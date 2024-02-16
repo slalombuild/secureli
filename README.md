@@ -119,6 +119,7 @@ seCureLI is configurable via a .secureli.yaml file present in the root of your l
 | `repo_files`       | Affects how seCureLI will interpret the repository, both for language analysis and as it executes various linters. |
 | `echo`             | Adjusts how seCureLI will print information to the user.                                                           |
 | `language_support` | Affects seCureLI's language analysis and support phase.                                                            |
+| `telemetry`        | Includes options for seCureLI telemetry/api logging                                                                |
 
 ### repo_files
 
@@ -130,9 +131,15 @@ seCureLI is configurable via a .secureli.yaml file present in the root of your l
 
 ### echo
 
-| Key     | Description                                                                                                                                                 |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `level` | The log level to display to the user. Defaults to ERROR, which includes `error` and `print` messages. Available log levels are DEBUG, INFO, WARN, and ERROR |
+| Key     | Description                                                                                                                                        |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `level` | The log level to display to the user. Defaults to ERROR, which includes `error` and `print` messages, without including warnings or info messages. |
+
+### telemetry
+
+| Key       | Description                                                                                                                                                                              |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `api_url` | The url endpoint to post telemetry logs to. This value is an alternative to setting the url as an environment variable. Note: The environment variable will precede this setting value |
 
 ## Using Observability Platform to Show Secret Detection Statistics
 
@@ -143,7 +150,7 @@ Should you need seCureLI to work with other platforms, please create a new issue
 
 - Assuming, seCureLI has been setup and installed, sign up to New Relic Log Platform https://docs.newrelic.com/docs/logs/log-api/introduction-log-api/
 - Retrieve API_KEY and API_ENDPOINT from New Relic. API_ENDPOINT for New Relic should be https://log-api.newrelic.com/log/v1
-- On your development machine, setup environment variable with variable name API_KEY and API_ENDPOINT
+- On your development machine, setup environment variable with variable name SECURELI_LOGGING_API_KEY and SECURELI_LOGGING_API_ENDPOINT. The endpoint can alternatively be added and commited to source control via the .secureli.yaml file.
 - Once the above setup is complete, everytime seCureLI triggered, it should send a usage log to New Relic
 - In New Relic, you can create a dashboard of metric to see the number of times secret was caught using query such as
 

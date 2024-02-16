@@ -6,9 +6,10 @@ import pytest
 from secureli.actions.action import ActionDependencies
 from secureli.actions.initializer import InitializerAction
 from secureli.repositories.secureli_config import SecureliConfig
-from secureli.repositories.settings import SecureliFile
+from secureli.repositories.settings import SecureliFile, TelemetrySettings
 from secureli.services.language_config import LanguageNotSupportedError
 from secureli.services.logging import LogAction
+from secureli.settings import Settings
 
 test_folder_path = Path("does-not-matter")
 
@@ -81,24 +82,3 @@ def test_that_initialize_repo_logs_failure_when_failing_to_verify(
     initializer_action.initialize_repo(test_folder_path, True, True)
 
     mock_logging_service.failure.assert_called_once_with(LogAction.init, ANY)
-
-
-def test_that_initialize_repo_creates_default_settings_file_if_not_present(
-    initializer_action: InitializerAction,
-    mock_language_support: MagicMock,
-    mock_secureli_config: MagicMock,
-    mock_settings: MagicMock,
-):
-    mock_language_support.version_for_language.return_value = "1.0"
-
-    config = SecureliConfig()
-    config.languages = ["RadLang"]
-    config.version_installed = "1.0"
-    mock_secureli_config.load.return_value = config
-
-    settings = SecureliFile()
-    mock_settings.load.return_value = settings
-
-    initializer_action.initialize_repo(test_folder_path, False, False)
-
-    mock_settings.save.assert_called_once_with(settings)

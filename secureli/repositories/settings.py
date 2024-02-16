@@ -85,6 +85,14 @@ class LanguageSupportSettings(BaseSettings):
     command_timeout_seconds: int = Field(default=300)
 
 
+class TelemetrySettings(BaseSettings):
+    """
+    Settings for telemetry/logging i.e. New Relic logs
+    """
+
+    api_url: Optional[str] = None
+
+
 class PreCommitHook(BaseModel):
     """
     Hook settings for pre-commit.
@@ -128,6 +136,7 @@ class SecureliFile(BaseModel):
     repo_files: Optional[RepoFilesSettings] = None
     echo: Optional[EchoSettings] = None
     language_support: Optional[LanguageSupportSettings] = Field(default=None)
+    telemetry: Optional[TelemetrySettings] = None
 
 
 class SecureliRepository:
