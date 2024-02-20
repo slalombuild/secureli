@@ -3,6 +3,11 @@ from pathlib import Path
 import pytest
 
 from secureli.abstractions.pre_commit import ExecuteResult
+from secureli.repositories.settings import (
+    PreCommitHook,
+    PreCommitRepo,
+    PreCommitSettings,
+)
 from secureli.services.scanner import ScannerService, ScanMode, OutputParseErrors
 from pytest_mock import MockerFixture
 
@@ -177,3 +182,47 @@ def test_that_scanner_service_handles_error_in_missing_repo(
     scan_result = scanner_service.scan_repo(test_folder_path, ScanMode.ALL_FILES)
 
     assert scan_result.failures[1].repo == OutputParseErrors.REPO_NOT_FOUND
+
+
+def test_that_find_repo_from_id_finds_matching_hooks(scanner_service: ScannerService):
+    mock_hook_id = "find_secrets"
+    expected_repo = "mock_repo"
+    result = scanner_service._find_repo_from_id(
+        mock_hook_id,
+        PreCommitSettings(
+            repos=[
+                PreCommitRepo(
+                    repo=expected_repo,
+                    rev="",
+                    url="test-url",
+                    hooks=[PreCommitHook(id=mock_hook_id)],
+                    suppressed_hook_ids=[],
+                )
+            ],
+            suppressed_repos=[],
+        ),
+    )
+
+    assert result is expected_repo
+
+
+def test_that_find_repo_from_id_does_not_have_matching_hook_id(
+    scanner_service: ScannerService,
+):
+    result = scanner_service._find_repo_from_id(
+        "test-hook-id",
+        PreCommitSettings(
+            repos=[
+                PreCommitRepo(
+                    repo="mock-repo",
+                    rev="",
+                    url="test-url",
+                    hooks=[PreCommitHook(id="other_hook_id")],
+                    suppressed_hook_ids=[],
+                )
+            ],
+            suppressed_repos=[],
+        ),
+    )
+
+    assert result is OutputParseErrors.REPO_NOT_FOUND

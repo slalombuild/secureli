@@ -67,6 +67,7 @@ class ScannerService:
         folder_path: Path,
         scan_mode: ScanMode,
         specific_test: Optional[str] = None,
+        files: Optional[str] = None,
     ) -> ScanResult:
         """
         Scans the repo according to the repo's seCureLI config
@@ -78,7 +79,7 @@ class ScannerService:
         """
         all_files = True if scan_mode == ScanMode.ALL_FILES else False
         execute_result = self.pre_commit.execute_hooks(
-            folder_path, all_files, hook_id=specific_test
+            folder_path, all_files, hook_id=specific_test, files=files
         )
         parsed_output = self._parse_scan_ouput(
             folder_path, output=execute_result.output

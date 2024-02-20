@@ -67,7 +67,14 @@ def good_folder_path() -> MagicMock:
 
 @pytest.fixture()
 def mock_open_resource(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch("builtins.open", mocker.mock_open(read_data="sample_data"))
+    return mocker.patch("builtins.open", mocker.mock_open(read_data=b"sample_data"))
+
+
+@pytest.fixture()
+def mock_open_resource_with_binary_file(mocker: MockerFixture) -> MagicMock:
+    mocker.patch("builtins.open", mocker.mock_open(read_data=b"\x80\x81\x82\x83"))
+    mocker.patch("os.path.getsize", return_value=128)
+    return mocker
 
 
 @pytest.fixture()
@@ -111,6 +118,12 @@ def io_error_occurs_file_path(mock_open_resource_with_io_error) -> MagicMock:
 
 @pytest.fixture()
 def value_error_occurs_file_path(mock_open_resource_with_value_error) -> MagicMock:
+    mock_file_path = always_exists_path("folder/file.txt")
+    return mock_file_path
+
+
+@pytest.fixture()
+def binary_file_with_size_file_path(mock_open_resource_with_binary_file) -> MagicMock:
     mock_file_path = always_exists_path("folder/file.txt")
     return mock_file_path
 
@@ -183,3 +196,13 @@ def test_that_load_file_raises_value_error_for_file_if_value_error_occurs(
 ):
     with pytest.raises(ValueError):
         repo_files_repository.load_file(value_error_occurs_file_path)
+
+
+def test_that_load_file_raises_value_error_for_binary_file_with_size(
+    repo_files_repository: RepoFilesRepository,
+    binary_file_with_size_file_path: MagicMock,
+):
+    with pytest.raises(
+        ValueError, match="File at path folder/file.txt is a binary file"
+    ):
+        repo_files_repository.load_file(binary_file_with_size_file_path)

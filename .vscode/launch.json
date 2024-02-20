@@ -1,0 +1,60 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: secureli --version",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/secureli/main.py",
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["--version"]
+        },
+        {
+            "name": "Python: secureli --help",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/secureli/main.py",
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["--help"]
+        },
+        {
+            "name": "Python: secureli init",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/secureli/main.py",
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["init"]
+        },
+        {
+            "name": "Python: secureli scan",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/secureli/main.py",
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["scan"]
+        },
+        {
+            "name": "Python: secureli update",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/secureli/main.py",
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["update"]
+        }
+    ]
+}

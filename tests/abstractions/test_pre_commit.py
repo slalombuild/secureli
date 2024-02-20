@@ -1,3 +1,5 @@
+import datetime
+import shutil
 import unittest.mock as um
 from pathlib import Path
 from subprocess import CompletedProcess
@@ -7,6 +9,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from secureli.abstractions.pre_commit import (
+    InstallResult,
     PreCommitAbstraction,
 )
 from secureli.repositories.settings import (
@@ -137,6 +140,37 @@ def test_that_pre_commit_executes_a_single_hook_if_specified(
         pre_commit.execute_hooks(test_folder_path, hook_id="detect-secrets")
 
         assert mock_subprocess.run.call_args_list[0].args[0][-1] == "detect-secrets"
+
+
+def test_that_pre_commit_executes_hooks_on_specified_files(
+    pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
+):
+
+    files = ["test_file.py", "test-file.js"]
+    mock_subprocess.return_value = CompletedProcess(args=[], returncode=0)
+    pre_commit.execute_hooks(
+        test_folder_path,
+        hook_id="detect-secrets",
+        files=files,
+    )
+
+    sub_process_args: [str] = mock_subprocess.run.call_args_list[0].args[0]
+    files_arg_idx = sub_process_args.index("--files")
+
+    assert " ".join(files) == sub_process_args[files_arg_idx + 1]
+
+
+def test_that_pre_commit_does_not_execute_hooks_on_specified_files_if_not_included(
+    pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
+):
+
+    mock_subprocess.return_value = CompletedProcess(args=[], returncode=0)
+    pre_commit.execute_hooks(
+        test_folder_path,
+        hook_id="detect-secrets",
+    )
+    sub_process_args: [str] = mock_subprocess.run.call_args_list[0].args[0]
+    assert "--files" not in sub_process_args
 
 
 ##### autoupdate_hooks #####
@@ -323,13 +357,45 @@ def test_that_pre_commit_install_creates_pre_commit_hook_for_secureli(
         um.patch.object(Path, "exists") as mock_exists,
         um.patch.object(Path, "chmod") as mock_chmod,
         um.patch.object(Path, "stat"),
+        um.patch.object(Path, "is_file") as mock_is_file,
+        um.patch.object(shutil, "copy2") as mock_copy,
     ):
         mock_exists.return_value = True
+        mock_is_file.return_value = False
 
-        pre_commit.install(test_folder_path)
+        mock_is_file.return_value = False
 
+        result = pre_commit.install(test_folder_path)
+
+        assert result == InstallResult(successful=True, backup_hook_path=None)
         mock_open.assert_called_once()
         mock_chmod.assert_called_once()
+        mock_copy.assert_not_called()
+
+
+def test_that_pre_commit_install_creates_backup_file_when_already_exists(
+    pre_commit: PreCommitAbstraction,
+):
+    mock_backup_datetime = datetime.datetime(2024, 1, 1, 6, 30, 45)
+    with (
+        um.patch("builtins.open", um.mock_open()),
+        um.patch.object(Path, "is_file") as mock_is_file,
+        um.patch.object(Path, "chmod"),
+        um.patch.object(Path, "stat"),
+        um.patch.object(shutil, "copy2") as mock_copy,
+        um.patch("datetime.datetime") as mock_dt,
+    ):
+        mock_is_file.return_value = True
+        mock_dt.now.return_value = mock_backup_datetime
+
+        result = pre_commit.install(test_folder_path)
+
+        assert result.successful == True
+        assert (
+            "/.git/hooks/pre-commit.backup.20240101T063045" in result.backup_hook_path
+        )
+        mock_is_file.assert_called_once()
+        mock_copy.assert_called_once()
 
 
 def test_pre_commit_config_file_is_deserialized_correctly(

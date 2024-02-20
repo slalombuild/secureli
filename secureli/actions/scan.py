@@ -19,6 +19,7 @@ from secureli.services.scanner import (
     ScanMode,
     ScannerService,
 )
+from secureli.settings import Settings
 from secureli.utilities.usage_stats import post_log, convert_failures_to_failure_count
 
 ONE_WEEK_IN_SECONDS: int = 7 * 24 * 60 * 60
@@ -89,7 +90,7 @@ class ScanAction(Action):
             publish_results_condition == PublishResultsOption.ON_FAIL
             and not action_successful
         ):
-            result = post_log(log_str)
+            result = post_log(log_str, Settings())
             self.echo.debug(result.result_message)
 
             if result.result == Result.SUCCESS:
@@ -104,6 +105,7 @@ class ScanAction(Action):
         always_yes: bool,
         publish_results_condition: PublishResultsOption = PublishResultsOption.NEVER,
         specific_test: Optional[str] = None,
+        files: Optional[str] = None,
     ):
         """
         Scans the given directory, or offers to go through initialization if that has not
@@ -128,7 +130,9 @@ class ScanAction(Action):
         if verify_result.outcome in self.halting_outcomes:
             return
 
-        scan_result = self.scanner.scan_repo(folder_path, scan_mode, specific_test)
+        scan_result = self.scanner.scan_repo(
+            folder_path, scan_mode, specific_test, files=files
+        )
 
         details = scan_result.output or "Unknown output during scan"
         self.echo.print(details)

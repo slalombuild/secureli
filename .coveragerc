@@ -3,7 +3,7 @@ branch = True
 source = secureli
 
 [report]
-fail_under = 99
+fail_under = 100
 show_missing = true
 omit =
     tests/*

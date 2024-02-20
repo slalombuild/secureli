@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from typing_extensions import Annotated
 import typer
 from typer import Option
@@ -28,6 +28,21 @@ container.config.from_pydantic(Settings())
 def version_callback(value: bool):
     if value:
         typer.echo(secureli_version())
+        typer.echo("\nHook Versions:")
+        typer.echo("--------------")
+        config = container.pre_commit_abstraction().get_pre_commit_config(Path("."))
+
+        all_repos = [
+            (hook.id, repo.rev.lstrip("v"))
+            for repo in config.repos
+            for hook in repo.hooks
+        ]
+
+        sorted_repos = sorted(all_repos, key=lambda x: x[0])
+
+        for hook_id, version in sorted_repos:
+            typer.echo(f"{hook_id:<30} {version}")
+
         raise typer.Exit()
 
 
@@ -91,12 +106,6 @@ def init(
 
 @app.command()
 def scan(
-    yes: bool = Option(
-        False,
-        "--yes",
-        "-y",
-        help="Say 'yes' to every prompt automatically without input",
-    ),
     mode: ScanMode = Option(
         ScanMode.STAGED_ONLY,
         "--mode",
@@ -122,6 +131,15 @@ def scan(
             help="Run secureli against a specific directory",
         ),
     ] = Path("."),
+    files: List[str] = Option(
+        None,
+        "--file",
+        "-f",
+        help="""
+            Run secureli scan against a specific file/folder.
+            This can be included multiple times to scan multiple files e.g '--file file1 --file file2'
+        """,
+    ),
 ):
     """
     Performs an explicit check of the repository to detect security issues without remote logging.
@@ -133,6 +151,7 @@ def scan(
         always_yes=False,
         publish_results_condition=publish_results,
         specific_test=specific_test,
+        files=files,
     )
 
 
