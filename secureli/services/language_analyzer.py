@@ -1,29 +1,10 @@
 from collections import defaultdict
 from pathlib import Path
 
-import pydantic
-
 from secureli.abstractions.lexer_guesser import LexerGuesser
 from secureli.repositories.repo_files import RepoFilesRepository
 from secureli.services.language_support import supported_languages
-
-
-class SkippedFile(pydantic.BaseModel):
-    """
-    A file skipped by the analysis phase.
-    """
-
-    file_path: Path
-    error_message: str
-
-
-class AnalyzeResult(pydantic.BaseModel):
-    """
-    The result of the analysis phase.
-    """
-
-    language_proportions: dict[str, float]
-    skipped_files: list[SkippedFile]
+from secureli.shared.models.language import AnalyzeResult, SkippedFile
 
 
 class LanguageAnalyzerService:

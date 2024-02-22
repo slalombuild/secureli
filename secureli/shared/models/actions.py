@@ -4,7 +4,7 @@ from typing import Optional
 import pydantic
 
 from secureli.repositories.secureli_config import SecureliConfig
-from secureli.services.language_analyzer import AnalyzeResult
+from secureli.shared.models.language import AnalyzeResult
 
 
 class VerifyOutcome(str, Enum):

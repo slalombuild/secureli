@@ -2,8 +2,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from secureli.services.language_config import (
-    LanguageConfigService,
+from secureli.services.language_config import LanguageConfigService
+from secureli.shared.models.language import (
     LanguageNotSupportedError,
     LoadLinterConfigsResult,
 )

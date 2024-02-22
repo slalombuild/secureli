@@ -10,6 +10,11 @@ from secureli.abstractions.pre_commit import PreCommitAbstraction
 from secureli.resources.slugify import slugify
 from secureli.services.git_ignore import GitIgnoreService
 from secureli.services.language_config import LanguageConfigService
+from secureli.shared.models.language import (
+    BuildConfigResult,
+    LinterConfig,
+    LinterConfigWriteResult,
+)
 from secureli.utilities.hash import hash_config
 
 supported_languages = [
@@ -61,39 +66,6 @@ class UnexpectedReposResult(pydantic.BaseModel):
 
     missing_repos: Optional[list[str]] = []
     unexpected_repos: Optional[list[str]] = []
-
-
-class LinterConfigData(pydantic.BaseModel):
-    """
-    Represents the structure of a linter config file
-    """
-
-    filename: str
-    settings: Any
-
-
-class LinterConfig(pydantic.BaseModel):
-    language: str
-    linter_data: list[LinterConfigData]
-
-
-class BuildConfigResult(pydantic.BaseModel):
-    """Result about building config for all laguages"""
-
-    successful: bool
-    languages_added: list[str]
-    config_data: dict
-    linter_configs: list[LinterConfig]
-    version: str
-
-
-class LinterConfigWriteResult(pydantic.BaseModel):
-    """
-    Result from writing linter config files
-    """
-
-    successful_languages: list[str]
-    error_messages: list[str]
 
 
 class LanguageSupportService:

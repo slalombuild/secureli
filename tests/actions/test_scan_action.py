@@ -14,7 +14,6 @@ from secureli.repositories.settings import (
     EchoSettings,
     EchoLevel,
 )
-from secureli.services.language_analyzer import AnalyzeResult
 from secureli.services.logging import LogAction
 from secureli.services.scanner import ScanMode, ScanResult
 from unittest import mock
@@ -26,6 +25,7 @@ import pytest
 
 from secureli.settings import Settings
 from secureli.shared.models.actions import VerifyOutcome
+from secureli.shared.models.language import AnalyzeResult
 
 test_folder_path = Path("does-not-matter")
 

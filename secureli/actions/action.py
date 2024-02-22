@@ -10,7 +10,6 @@ from secureli.repositories.secureli_config import (
 )
 from secureli.repositories.settings import SecureliRepository, TelemetrySettings
 from secureli.services.language_analyzer import LanguageAnalyzerService
-from secureli.services.language_config import LanguageNotSupportedError
 from secureli.services.language_support import (
     LanguageMetadata,
     LanguageSupportService,
@@ -19,6 +18,7 @@ from secureli.services.scanner import ScannerService, ScanMode
 from secureli.services.updater import UpdaterService
 
 from secureli.shared.models.actions import VerifyOutcome, VerifyResult
+from secureli.shared.models.language import LanguageNotSupportedError
 from secureli.utilities.formatter import format_sentence_list
 
 

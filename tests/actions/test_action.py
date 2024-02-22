@@ -8,12 +8,12 @@ from secureli.actions.action import Action, ActionDependencies
 from secureli.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
 from secureli.models.echo import Color
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
-from secureli.services.language_analyzer import AnalyzeResult, SkippedFile
 from secureli.services.language_support import LanguageMetadata
 from secureli.services.scanner import ScanResult, Failure
 from secureli.services.updater import UpdateResult
 from secureli.settings import Settings
 from secureli.shared.models.actions import VerifyOutcome
+from secureli.shared.models.language import AnalyzeResult, SkippedFile
 
 test_folder_path = Path("does-not-matter")
 

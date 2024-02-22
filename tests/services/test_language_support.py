@@ -7,15 +7,15 @@ from pytest_mock import MockerFixture
 from secureli.abstractions.pre_commit import (
     InstallResult,
 )
+from secureli.services.language_config import LanguageConfigService
 from secureli.services.language_support import (
     LanguageSupportService,
+)
+from secureli.shared.models.language import (
+    LanguagePreCommitResult,
     LinterConfig,
     LinterConfigData,
     LinterConfigWriteResult,
-)
-from secureli.services.language_config import (
-    LanguageConfigService,
-    LanguagePreCommitResult,
     LoadLinterConfigsResult,
 )
 
