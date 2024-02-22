@@ -1,6 +1,6 @@
 from pathlib import Path
 from secureli.abstractions.pre_commit import RevisionPair
-from secureli.actions.action import ActionDependencies, VerifyOutcome
+from secureli.actions.action import ActionDependencies
 from secureli.actions.scan import ScanAction
 from secureli.models.exit_codes import ExitCode
 from secureli.models.publish_results import PublishResultsOption
@@ -25,6 +25,7 @@ import os
 import pytest
 
 from secureli.settings import Settings
+from secureli.shared.models.actions import VerifyOutcome
 
 test_folder_path = Path("does-not-matter")
 

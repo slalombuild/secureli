@@ -1,7 +1,5 @@
 from abc import ABC
-from enum import Enum
 from pathlib import Path
-from typing import Optional
 from secureli.abstractions.echo import EchoAbstraction
 from secureli.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
 from secureli.models.echo import Color
@@ -11,7 +9,7 @@ from secureli.repositories.secureli_config import (
     VerifyConfigOutcome,
 )
 from secureli.repositories.settings import SecureliRepository, TelemetrySettings
-from secureli.services.language_analyzer import LanguageAnalyzerService, AnalyzeResult
+from secureli.services.language_analyzer import LanguageAnalyzerService
 from secureli.services.language_config import LanguageNotSupportedError
 from secureli.services.language_support import (
     LanguageMetadata,
@@ -20,29 +18,8 @@ from secureli.services.language_support import (
 from secureli.services.scanner import ScannerService, ScanMode
 from secureli.services.updater import UpdaterService
 
-import pydantic
+from secureli.shared.models.actions import VerifyOutcome, VerifyResult
 from secureli.utilities.formatter import format_sentence_list
-
-
-class VerifyOutcome(str, Enum):
-    INSTALL_CANCELED = "install-canceled"
-    INSTALL_FAILED = "install-failed"
-    INSTALL_SUCCEEDED = "install-succeeded"
-    UPDATE_CANCELED = "update-canceled"
-    UPDATE_SUCCEEDED = "update-succeeded"
-    UPDATE_FAILED = "update-failed"
-    UP_TO_DATE = "up-to-date"
-
-
-class VerifyResult(pydantic.BaseModel):
-    """
-    The outcomes of performing verification. Actions can use these results
-    to decide whether to proceed with their post-initialization actions or not.
-    """
-
-    outcome: VerifyOutcome
-    config: Optional[SecureliConfig] = None
-    analyze_result: Optional[AnalyzeResult] = None
 
 
 class ActionDependencies:

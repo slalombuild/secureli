@@ -4,12 +4,12 @@ from typer.testing import CliRunner
 
 import pytest
 from pytest_mock import MockerFixture
-from secureli.actions.action import VerifyOutcome, VerifyResult
 
 import secureli.container
 import secureli.main
 from secureli.models.publish_results import PublishResultsOption
 from secureli.services.scanner import ScanMode
+from secureli.shared.models.actions import VerifyOutcome, VerifyResult
 from secureli.utilities.secureli_meta import secureli_version
 
 
