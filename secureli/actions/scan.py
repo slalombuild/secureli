@@ -19,6 +19,7 @@ from secureli.services.scanner import (
     ScanMode,
     ScannerService,
 )
+from secureli.settings import Settings
 from secureli.utilities.usage_stats import post_log, convert_failures_to_failure_count
 
 ONE_WEEK_IN_SECONDS: int = 7 * 24 * 60 * 60
@@ -89,7 +90,7 @@ class ScanAction(Action):
             publish_results_condition == PublishResultsOption.ON_FAIL
             and not action_successful
         ):
-            result = post_log(log_str)
+            result = post_log(log_str, Settings())
             self.echo.debug(result.result_message)
 
             if result.result == Result.SUCCESS:

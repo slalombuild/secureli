@@ -5,12 +5,14 @@ import pytest
 from secureli.abstractions.pre_commit import InstallResult
 
 from secureli.actions.action import Action, ActionDependencies, VerifyOutcome
+from secureli.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
 from secureli.models.echo import Color
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
 from secureli.services.language_analyzer import AnalyzeResult, SkippedFile
 from secureli.services.language_support import LanguageMetadata
 from secureli.services.scanner import ScanResult, Failure
 from secureli.services.updater import UpdateResult
+from secureli.settings import Settings
 
 test_folder_path = Path("does-not-matter")
 
@@ -35,6 +37,7 @@ def action_deps(
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
+    mock_settings: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -42,7 +45,7 @@ def action_deps(
         mock_language_support,
         mock_scanner,
         mock_secureli_config,
-        None,
+        mock_settings,
         mock_updater,
     )
 
@@ -448,26 +451,29 @@ def test_that_update_secureli_handles_declined_update(
 
 
 def test_that_update_secureli_handles_failed_update(
-    action: Action,
-    mock_updater: MagicMock,
+    action: Action, mock_updater: MagicMock, mock_echo: MagicMock
 ):
     mock_updater.update.return_value = UpdateResult(
         successful=False, outcome=VerifyOutcome.UPDATE_FAILED
     )
     update_result = action._update_secureli(always_yes=False)
 
+    mock_echo.print.assert_not_called()
     assert update_result.outcome == VerifyOutcome.UPDATE_FAILED
 
 
 def test_that_update_secureli_handles_successful_update(
-    action: Action,
-    mock_updater: MagicMock,
+    action: Action, mock_updater: MagicMock, mock_echo: MagicMock
 ):
+    mock_update_result_output = "mock_output"
     mock_updater.update.return_value = UpdateResult(
-        successful=True, outcome=VerifyOutcome.UPDATE_SUCCEEDED
+        successful=True,
+        outcome=VerifyOutcome.UPDATE_SUCCEEDED,
+        output=mock_update_result_output,
     )
     update_result = action._update_secureli(always_yes=False)
 
+    mock_echo.print.assert_called_once_with(mock_update_result_output)
     assert update_result.outcome == VerifyOutcome.UPDATE_SUCCEEDED
 
 
@@ -615,3 +621,32 @@ def test_that_post_install_scan_does_not_scan_repo_when_no_security_hook_id(
     mock_echo.warning.assert_called_once_with(
         "RadLang does not support secrets detection, skipping"
     )
+
+
+def test_that_install_saves_settings(
+    action: Action, mock_language_analyzer: MagicMock, mock_settings: MagicMock
+):
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"PreviousLang": 1.0},
+        skipped_files=[],
+    )
+    action._install_secureli("test/path", ["RadLang"], [], True)
+
+
+def test_that_prompt_get_telemetry_api_url_returns_default_endpoint_when_always_yes(
+    action: Action,
+):
+    result = action._prompt_get_telemetry_api_url(True)
+
+    assert result is TELEMETRY_DEFAULT_ENDPOINT
+
+
+def test_that_prompt_get_telemetry_api_url_returns_prompt_response(
+    action: Action, mock_echo: MagicMock
+):
+    mock_api_endpoint = "test-endpoint"
+    mock_echo.prompt.return_value = mock_api_endpoint
+
+    result = action._prompt_get_telemetry_api_url(False)
+
+    assert result is mock_api_endpoint

@@ -30,6 +30,13 @@ def mock_typer_confirm(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
+def mock_typer_prompt(mocker: MockerFixture) -> MagicMock:
+    mock_typer_style = mocker.patch("typer.prompt")
+    mock_typer_style.return_value = "prompt value"
+    return mock_typer_style
+
+
+@pytest.fixture()
 def mock_typer_echo(mocker: MockerFixture) -> MagicMock:
     return mocker.patch("typer.echo")
 
@@ -210,3 +217,26 @@ def test_that_typer_echo_prompts_user_for_confirmation(
     typer_echo.confirm(mock_echo_text)
 
     mock_typer_confirm.assert_called_once()
+
+
+def test_that_typer_echo_implements_prompt_with_default(mock_typer_prompt: MagicMock):
+    typer_echo = TyperEcho(level=EchoLevel.info)
+    message = "test message"
+    default_response = "default user response"
+    typer_echo.prompt(message=message, default_response=default_response)
+
+    mock_typer_prompt.assert_called_once_with(
+        text=message, default=default_response, show_default=True
+    )
+
+
+def test_that_typer_echo_implements_prompt_without_default(
+    mock_typer_prompt: MagicMock,
+):
+    typer_echo = TyperEcho(level=EchoLevel.info)
+    message = "test message"
+    typer_echo.prompt(message=message)
+
+    mock_typer_prompt.assert_called_once_with(
+        text=message, default=None, show_default=False
+    )
