@@ -311,5 +311,4 @@ class PreCommitAbstraction:
         :return: boolean - True if config exists and False if not
         """
         path_to_config = folder_path / ".pre-commit-config.yaml"
-        path_exists = path_to_config.exists()
-        return path_exists
+        return path_to_config.exists()
