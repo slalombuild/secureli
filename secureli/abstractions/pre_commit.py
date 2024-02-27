@@ -304,3 +304,12 @@ class PreCommitAbstraction:
             contents = f.read()
             yaml_values = yaml.safe_load(contents)
             return PreCommitSettings(**yaml_values)
+
+    def pre_commit_config_exists(self, folder_path: Path) -> bool:
+        """
+        Checks if the .pre-commit-config file exists and returns a boolean
+        :return: boolean - True if config exists and False if not
+        """
+        path_to_config = folder_path / ".pre-commit-config.yaml"
+        path_exists = path_to_config.exists()
+        return path_exists
