@@ -5,9 +5,8 @@ import pytest
 
 from secureli.actions.action import ActionDependencies
 from secureli.actions.initializer import InitializerAction
-from secureli.services.logging import LogAction
-from secureli.settings import Settings
 from secureli.shared.models.language import LanguageNotSupportedError
+from secureli.shared.models.logging import LogAction
 
 test_folder_path = Path("does-not-matter")
 

@@ -8,12 +8,12 @@ from secureli.actions.action import Action, ActionDependencies
 from secureli.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
 from secureli.models.echo import Color
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
-from secureli.services.language_support import LanguageMetadata
-from secureli.services.scanner import ScanResult, Failure
+from secureli.services.scanner import ScanResult
 from secureli.services.updater import UpdateResult
 from secureli.settings import Settings
 from secureli.shared.models.actions import VerifyOutcome
-from secureli.shared.models.language import AnalyzeResult, SkippedFile
+from secureli.shared.models.language import AnalyzeResult, LanguageMetadata, SkippedFile
+from secureli.shared.models.scan import ScanFailure
 
 test_folder_path = Path("does-not-matter")
 
@@ -118,7 +118,7 @@ def test_that_initialize_repo_install_flow_displays_security_analysis_results(
     mock_scanner.scan_repo.return_value = ScanResult(
         successful=False,
         output="Detect secrets...Failed",
-        failures=[Failure(repo="repo", id="id", file="file")],
+        failures=[ScanFailure(repo="repo", id="id", file="file")],
     )
     action.verify_install(test_folder_path, reset=True, always_yes=True)
 

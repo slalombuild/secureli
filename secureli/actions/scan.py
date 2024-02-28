@@ -12,13 +12,14 @@ from secureli.actions.action import (
 from secureli.models.exit_codes import ExitCode
 from secureli.models.publish_results import PublishResultsOption
 from secureli.models.result import Result
-from secureli.services.logging import LoggingService, LogAction
+from secureli.services.logging import LoggingService
 from secureli.services.scanner import (
-    ScanMode,
     ScannerService,
 )
 from secureli.settings import Settings
 from secureli.shared.models.actions import VerifyOutcome, VerifyResult
+from secureli.shared.models.logging import LogAction
+from secureli.shared.models.scan import ScanMode
 from secureli.utilities.usage_stats import post_log, convert_failures_to_failure_count
 
 ONE_WEEK_IN_SECONDS: int = 7 * 24 * 60 * 60

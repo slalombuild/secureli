@@ -1,9 +1,10 @@
 from typing import Optional
 from pathlib import Path
 from secureli.abstractions.echo import EchoAbstraction
-from secureli.services.logging import LoggingService, LogAction
+from secureli.services.logging import LoggingService
 from secureli.services.updater import UpdaterService
 from secureli.actions.action import Action, ActionDependencies
+from secureli.shared.models.logging import LogAction
 
 
 class UpdateAction(Action):

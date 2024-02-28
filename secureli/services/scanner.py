@@ -7,15 +7,7 @@ import re
 
 from secureli.abstractions.pre_commit import PreCommitAbstraction
 from secureli.repositories.settings import PreCommitSettings
-
-
-class ScanMode(str, Enum):
-    """
-    Which scan mode to run as when we perform scanning.
-    """
-
-    STAGED_ONLY = "staged-only"
-    ALL_FILES = "all-files"
+from secureli.shared.models.scan import ScanFailure, ScanMode
 
 
 class OutputParseErrors(str, Enum):
@@ -26,16 +18,6 @@ class OutputParseErrors(str, Enum):
     REPO_NOT_FOUND = "repo-not-found"
 
 
-class Failure(pydantic.BaseModel):
-    """
-    Represents the details of a failed rule from a scan
-    """
-
-    repo: str
-    id: str
-    file: str
-
-
 class ScanResult(pydantic.BaseModel):
     """
     The results of calling scan_repo
@@ -43,7 +25,7 @@ class ScanResult(pydantic.BaseModel):
 
     successful: bool
     output: Optional[str] = None
-    failures: list[Failure]
+    failures: list[ScanFailure]
 
 
 class ScanOuput(pydantic.BaseModel):
@@ -51,7 +33,7 @@ class ScanOuput(pydantic.BaseModel):
     Represents the parsed output from a scan
     """
 
-    failures: list[Failure]
+    failures: list[ScanFailure]
 
 
 class ScannerService:
@@ -128,7 +110,7 @@ class ScannerService:
             files = self._find_file_names(failure_output_list=failure_output_list)
 
             for file in files:
-                failures.append(Failure(id=id, file=file, repo=repo))
+                failures.append(ScanFailure(id=id, file=file, repo=repo))
 
         return ScanOuput(failures=failures)
 

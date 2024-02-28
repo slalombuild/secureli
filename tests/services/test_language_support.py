@@ -11,10 +11,9 @@ from secureli.services.language_config import LanguageConfigService
 from secureli.services.language_support import (
     LanguageSupportService,
 )
+from secureli.shared.models.config import LinterConfig, LinterConfigData
 from secureli.shared.models.language import (
     LanguagePreCommitResult,
-    LinterConfig,
-    LinterConfigData,
     LinterConfigWriteResult,
     LoadLinterConfigsResult,
 )

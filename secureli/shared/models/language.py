@@ -1,6 +1,8 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 import pydantic
+
+from secureli.shared.models.config import LinterConfig
 
 
 class SkippedFile(pydantic.BaseModel):
@@ -45,20 +47,6 @@ class LanguagePreCommitResult(pydantic.BaseModel):
     linter_config: LoadLinterConfigsResult
 
 
-class LinterConfigData(pydantic.BaseModel):
-    """
-    Represents the structure of a linter config file
-    """
-
-    filename: str
-    settings: Any
-
-
-class LinterConfig(pydantic.BaseModel):
-    language: str
-    linter_data: list[LinterConfigData]
-
-
 class BuildConfigResult(pydantic.BaseModel):
     """Result about building config for all laguages"""
 
@@ -76,3 +64,9 @@ class LinterConfigWriteResult(pydantic.BaseModel):
 
     successful_languages: list[str]
     error_messages: list[str]
+
+
+class LanguageMetadata(pydantic.BaseModel):
+    version: str
+    security_hook_id: Optional[str]
+    linter_config_write_errors: Optional[list[str]] = []

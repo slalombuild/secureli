@@ -8,8 +8,8 @@ from pytest_mock import MockerFixture
 import secureli.container
 import secureli.main
 from secureli.models.publish_results import PublishResultsOption
-from secureli.services.scanner import ScanMode
 from secureli.shared.models.actions import VerifyOutcome, VerifyResult
+from secureli.shared.models.scan import ScanMode
 from secureli.utilities.secureli_meta import secureli_version
 
 

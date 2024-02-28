@@ -10,62 +10,13 @@ from secureli.abstractions.pre_commit import PreCommitAbstraction
 from secureli.resources.slugify import slugify
 from secureli.services.git_ignore import GitIgnoreService
 from secureli.services.language_config import LanguageConfigService
+from secureli.shared.models.config import HookConfiguration, LinterConfig, Repo
 from secureli.shared.models.language import (
     BuildConfigResult,
-    LinterConfig,
+    LanguageMetadata,
     LinterConfigWriteResult,
 )
 from secureli.utilities.hash import hash_config
-
-supported_languages = [
-    "C#",
-    "Python",
-    "Java",
-    "Terraform",
-    "TypeScript",
-    "JavaScript",
-    "Go",
-    "Swift",
-    "Kotlin",
-]
-
-
-class LanguageMetadata(pydantic.BaseModel):
-    version: str
-    security_hook_id: Optional[str]
-    linter_config_write_errors: Optional[list[str]] = []
-
-
-class ValidateConfigResult(pydantic.BaseModel):
-    """
-    The results of calling validate_config
-    """
-
-    successful: bool
-    output: str
-
-
-class Repo(pydantic.BaseModel):
-    """A repository containing pre-commit hooks"""
-
-    repo: str
-    revision: str
-    hooks: list[str]
-
-
-class HookConfiguration(pydantic.BaseModel):
-    """A simplified pre-commit configuration representation for logging purposes"""
-
-    repos: list[Repo]
-
-
-class UnexpectedReposResult(pydantic.BaseModel):
-    """
-    The result of checking for unexpected repos in config
-    """
-
-    missing_repos: Optional[list[str]] = []
-    unexpected_repos: Optional[list[str]] = []
 
 
 class LanguageSupportService:

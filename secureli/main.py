@@ -5,7 +5,6 @@ import typer
 from typer import Option
 from secureli.actions.action import VerifyOutcome
 
-from secureli.actions.scan import ScanMode
 from secureli.actions.setup import SetupAction
 from secureli.container import Container
 from secureli.models.echo import Color
@@ -13,6 +12,7 @@ from secureli.models.publish_results import PublishResultsOption
 from secureli.resources import read_resource
 from secureli.settings import Settings
 import secureli.repositories.secureli_config as SecureliConfig
+from secureli.shared.models.scan import ScanMode
 from secureli.utilities.secureli_meta import secureli_version
 
 # Create SetupAction outside of DI, as it's not yet available.

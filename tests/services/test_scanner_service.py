@@ -8,8 +8,10 @@ from secureli.repositories.settings import (
     PreCommitRepo,
     PreCommitSettings,
 )
-from secureli.services.scanner import ScannerService, ScanMode, OutputParseErrors
+from secureli.services.scanner import ScannerService, OutputParseErrors
 from pytest_mock import MockerFixture
+
+from secureli.shared.models.scan import ScanMode
 
 test_folder_path = Path(".")
 

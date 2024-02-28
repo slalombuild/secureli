@@ -1,5 +1,6 @@
 from secureli.abstractions.echo import EchoAbstraction, Color
-from secureli.services.logging import LoggingService, LogAction
+from secureli.services.logging import LoggingService
+from secureli.shared.models.logging import LogAction
 
 
 class BuildAction:

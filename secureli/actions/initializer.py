@@ -2,7 +2,8 @@ from pathlib import Path
 
 from secureli.actions.scan import ScanAction
 from secureli.actions.action import Action, ActionDependencies, VerifyResult
-from secureli.services.logging import LoggingService, LogAction
+from secureli.services.logging import LoggingService
+from secureli.shared.models.logging import LogAction
 
 
 class InitializerAction(Action):

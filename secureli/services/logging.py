@@ -10,6 +10,7 @@ import pydantic
 import secureli.repositories.secureli_config as SecureliConfig
 from secureli.services.language_support import LanguageSupportService, HookConfiguration
 from secureli.repositories.secureli_config import SecureliConfigRepository
+from secureli.shared.models.logging import LogAction
 from secureli.utilities.git_meta import current_branch_name, git_user_email, origin_url
 from secureli.utilities.secureli_meta import secureli_version
 
@@ -28,16 +29,6 @@ class LogStatus(str, Enum):
 
     success = "SUCCESS"
     failure = "FAILURE"
-
-
-class LogAction(str, Enum):
-    """Which action the log entry is associated with"""
-
-    scan = "SCAN"
-    init = "INIT"
-    build = "_BUILD"
-    update = "UPDATE"
-    publish = "PUBLISH"  # "PUBLISH" does not correspond to a CLI action/subcommand
 
 
 class LogFailure(pydantic.BaseModel):
