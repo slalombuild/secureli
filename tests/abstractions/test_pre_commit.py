@@ -1,7 +1,7 @@
 import datetime
 import shutil
 import unittest.mock as um
-from pathlib import Path
+from pathlib import Path, PosixPath
 from subprocess import CompletedProcess
 from unittest.mock import MagicMock
 
@@ -529,3 +529,13 @@ def test_pre_commit_config_does_not_exist(pre_commit: PreCommitAbstraction):
     with um.patch.object(Path, "exists", return_value=False):
         pre_commit_exists = pre_commit.pre_commit_config_exists(test_folder_path)
         assert pre_commit_exists == False
+
+
+def test_get_pre_commit_config_path_returns_correct_location(
+    pre_commit: PreCommitAbstraction,
+):
+    with um.patch.object(Path, "exists", return_value=True):
+        pre_commit_config_path = pre_commit.get_pre_commit_config_path(test_folder_path)
+        assert pre_commit_config_path == PosixPath(
+            f"{test_folder_path}/.secureli/.pre-commit-config.yaml"
+        )
