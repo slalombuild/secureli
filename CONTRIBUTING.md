@@ -85,7 +85,7 @@ As of June 9, 2023, this repo is being built on and tested against Ubuntu Jammy 
 
 # Setup (all Operating Systems)
 
-- Install BATS (Bash Automated Testing System)
+- Install [BATS (Bash Automated Testing System)](https://bats-core.readthedocs.io/en/stable)
 
   - `cd $HOME`
   - `git clone https://github.com/bats-core/bats-core.git`
@@ -160,7 +160,7 @@ Optionally use PyCharm to run and debug changes during developement
 seCureLI has not been setup yet. Initialize seCureLI now? [Y/n]:
 ```
 
-This is a working prompt. If this is your first time running this, answer “Y” (or just press enter) and you’ll install seCureLI for seCureLI! It should detect the python repo and setup your pre-commit hooks. Your output should look like this:
+This is a working prompt. If this is your first time running this, answer “Y” (or just press enter) and you’ll install seCureLI for seCureLI! It should detect the python repo and setup your [pre-commit](https://pre-commit.com/index.html) hooks. Your output should look like this:
 
 ```commandline
 % secureli/main.py init
@@ -213,13 +213,13 @@ seCureLI’s architecture, including actions, services, APIs and repositories. O
 
 ## Main
 
-The entry point of the application. The main module sets up the dependency injection container, validates the input via the Typer framework and identifies and executes a single action. Main is the only module in the system aware of the Container.
+The entry point of the application. The main module sets up the dependency injection container, validates the input via the [Typer](https://typer.tiangolo.com) framework and identifies and executes a single action. Main is the only module in the system aware of the Container.
 
 Unit tests of Main simply ensure that the Container is set up and leveraged to kick off Actions.
 
 ## Container
 
-The container is where all potential dependencies are registered and wired up. Configuration is read here, and is fed into various objects as necessary. Though Main is the only module that is aware of the Container, the Container is aware of every Module.
+The [Container](https://python-dependency-injector.ets-labs.org/containers/index.html#containers) is where all potential dependencies are registered and wired up. Configuration is read here, and is fed into various objects as necessary. Though Main is the only module that is aware of the Container, the Container is aware of every Module.
 
 Unit tests of the Container ensure that the various providers are validated and initialized. This helps prevent common mistakes where dependencies are manipulated but the Container’s wire-up code was not adjusted accordingly.
 
@@ -251,7 +251,7 @@ Unit tests of Abstractions are done with mock 3rd party dependencies, not the de
 
 Objects that provide **faithful** representation of the underlying system without additional business logic or opinions. This does not have to be an exhaustive implementation. In other words, if the API hosts 30 endpoints for Store CRUD operations, and you only need one (i.e. GET /stores), then you can implement the one. However, GET /stores will take a StoreRequest object and return a StoreResponse object (as defined by the Store API OpenAPI documentation).
 
-Preferably, APIs and Repositories will surface entity objects that programmatically represent the underlying object, such as a Pydantic data model or a dataclass and NOT dictionaries!
+Preferably, APIs and Repositories will surface entity objects that programmatically represent the underlying object, such as a [Pydantic](https://docs.pydantic.dev/latest) data model or a dataclass and NOT dictionaries! (Read more about Pydantic settings [here](https://docs.pydantic.dev/latest/api/pydantic_settings)).
 
 **The API will not** decide to expose it as a class that takes a store name property and creates its own request that represents a store name search. That’s a service’s job.
 
@@ -290,6 +290,10 @@ Current Dockerfiles
   - installs pip
   - installs Secureli
   - Checks out the public pip repo, inits secureli into the repo and runs a scan
+
+## Best Practices
+
+To maintain consistency and best practices across the codebase and its contributors, we prioritize so-called Pythonic coding patterns as much as possible. Read about the Zen of Python [here](https://peps.python.org/pep-0020) and more about Python design patterns [here](https://python-patterns.guide).
 
 # Contributors
 
