@@ -1,6 +1,6 @@
 import pytest
 
-from secureli.services.secureli_ignore import SecureliIgnoreService
+from secureli.modules.secureli_ignore import SecureliIgnoreService
 from secureli.settings import (
     Settings,
     RepoFilesSettings,

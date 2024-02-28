@@ -5,7 +5,10 @@ import unittest.mock as um
 import pytest
 from pytest_mock import MockerFixture
 
-from secureli.services.git_ignore import GitIgnoreService, BadIgnoreBlockError
+from secureli.modules.language_analyzer.language_analyzer_services.git_ignore import (
+    GitIgnoreService,
+    BadIgnoreBlockError,
+)
 
 
 @pytest.fixture()
@@ -44,7 +47,9 @@ def mock_open_with_gitignore_broken_secureli_config(mocker: MockerFixture) -> Ma
 
 @pytest.fixture()
 def mock_path(mocker: MockerFixture) -> MagicMock:
-    mock_path_class = mocker.patch("secureli.services.git_ignore.Path")
+    mock_path_class = mocker.patch(
+        "secureli.modules.language_analyzer.language_analyzer_services.git_ignore.Path"
+    )
     mock_path_instance = MagicMock()
     mock_path_class.return_value = mock_path_instance
     return mock_path_instance

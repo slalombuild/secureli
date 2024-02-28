@@ -4,9 +4,9 @@ from typing import Callable, Any
 import pydantic
 import yaml
 
-from secureli.resources.slugify import slugify
-from secureli.utilities.hash import hash_config
-from secureli.utilities.patterns import combine_patterns
+from secureli.modules.shared.resources.slugify import slugify
+from secureli.modules.shared.utilities.hash import hash_config
+from secureli.modules.shared.utilities.patterns import combine_patterns
 
 
 class LanguageNotSupportedError(Exception):
@@ -134,11 +134,11 @@ class LanguageConfigService:
         language_config_name = Path(f"configs/{slugify(language)}.config.yaml")
 
         # build absolute path to config file if one exists
-        absolute_secureli_path = f'{Path(f"{__file__}").parent.resolve()}'.rsplit(
-            "/", 1
-        )[0]
+        absolute_secureli_path = (
+            f'{Path(f"{__file__}").parent.parent.resolve()}'.rsplit("/", 1)[0]
+        )
         absolute_configs_path = Path(
-            f"{absolute_secureli_path}/resources/files/{language_config_name}"
+            f"{absolute_secureli_path}/shared/resources/files/{language_config_name}"
         )
 
         #  check if config file exists for current language

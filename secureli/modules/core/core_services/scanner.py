@@ -5,7 +5,7 @@ from pathlib import Path
 import pydantic
 import re
 
-from secureli.abstractions.pre_commit import PreCommitAbstraction
+from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
 from secureli.repositories.settings import PreCommitSettings
 
 

@@ -3,9 +3,11 @@ from pathlib import Path
 
 import pydantic
 
-from secureli.abstractions.lexer_guesser import LexerGuesser
+from secureli.modules.shared.abstractions.lexer_guesser import LexerGuesser
 from secureli.repositories.repo_files import RepoFilesRepository
-from secureli.services.language_support import supported_languages
+from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
+    supported_languages,
+)
 
 
 class SkippedFile(pydantic.BaseModel):

@@ -1,4 +1,4 @@
-from secureli.utilities.logging import EchoLevel
+from secureli.modules.shared.utilities.logging import EchoLevel
 
 
 def test_that_echo_level_str_returns_enum_val():

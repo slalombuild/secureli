@@ -1,11 +1,11 @@
 from pytest_mock import MockerFixture
-from secureli.abstractions.echo import TyperEcho
+from secureli.modules.shared.abstractions.echo import TyperEcho
 from unittest.mock import MagicMock, ANY
 
 import pytest
-from secureli.models.echo import Color
+from secureli.modules.shared.models.echo import Color
 
-from secureli.utilities.logging import EchoLevel
+from secureli.modules.shared.utilities.logging import EchoLevel
 
 ECHO_SECURELI_PREFIX = "[seCureLI]"
 

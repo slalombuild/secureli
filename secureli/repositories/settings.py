@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 from pydantic import BaseModel, BaseSettings, Field
-from secureli.utilities.logging import EchoLevel
+from secureli.modules.shared.utilities.logging import EchoLevel
 
 import yaml
 

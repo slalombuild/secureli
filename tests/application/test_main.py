@@ -8,9 +8,9 @@ from secureli.actions.action import VerifyOutcome, VerifyResult
 
 import secureli.container
 import secureli.main
-from secureli.models.publish_results import PublishResultsOption
-from secureli.services.scanner import ScanMode
-from secureli.utilities.secureli_meta import secureli_version
+from secureli.modules.shared.models.publish_results import PublishResultsOption
+from secureli.modules.core.core_services.scanner import ScanMode
+from secureli.modules.shared.utilities.secureli_meta import secureli_version
 
 
 @pytest.fixture()

@@ -1,10 +1,10 @@
 from pathlib import Path
-from secureli.abstractions.pre_commit import RevisionPair
+from secureli.modules.shared.abstractions.pre_commit import RevisionPair
 from secureli.actions.action import ActionDependencies, VerifyOutcome
 from secureli.actions.scan import ScanAction
-from secureli.models.exit_codes import ExitCode
-from secureli.models.publish_results import PublishResultsOption
-from secureli.models.result import Result
+from secureli.modules.shared.models.exit_codes import ExitCode
+from secureli.modules.shared.models.publish_results import PublishResultsOption
+from secureli.modules.shared.models.result import Result
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
 from secureli.repositories.settings import (
     PreCommitHook,
@@ -14,9 +14,11 @@ from secureli.repositories.settings import (
     EchoSettings,
     EchoLevel,
 )
-from secureli.services.language_analyzer import AnalyzeResult
-from secureli.services.logging import LogAction
-from secureli.services.scanner import ScanMode, ScanResult
+from secureli.modules.language_analyzer.language_analyzer_services.language_analyzer import (
+    AnalyzeResult,
+)
+from secureli.modules.observability.observability_services.logging import LogAction
+from secureli.modules.core.core_services.scanner import ScanMode, ScanResult
 from unittest import mock
 from unittest.mock import MagicMock
 from pytest_mock import MockerFixture

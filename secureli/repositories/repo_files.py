@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 import chardet
 
-from secureli.utilities.patterns import combine_patterns
+from secureli.modules.shared.utilities.patterns import combine_patterns
 
 
 class BinaryFileError(ValueError):

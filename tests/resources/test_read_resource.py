@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, mock_open
 import pytest
 from pytest_mock import MockerFixture
 
-import secureli.resources
+import secureli.modules.shared.resources
 
 
 @pytest.fixture()
@@ -14,7 +14,7 @@ def mock_open_resource(mocker: MockerFixture) -> MagicMock:
 
 @pytest.fixture()
 def read_resource(mock_open_resource: MagicMock) -> Callable[[str], str]:
-    return secureli.resources.read_resource
+    return secureli.modules.shared.resources.read_resource
 
 
 def test_that_read_resource_opens_specified_file_in_files_folder(

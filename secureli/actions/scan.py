@@ -4,23 +4,29 @@ from pathlib import Path
 from time import time
 from typing import Optional
 
-from secureli.abstractions.echo import EchoAbstraction
+from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.actions.action import (
     VerifyOutcome,
     Action,
     ActionDependencies,
     VerifyResult,
 )
-from secureli.models.exit_codes import ExitCode
-from secureli.models.publish_results import PublishResultsOption
-from secureli.models.result import Result
-from secureli.services.logging import LoggingService, LogAction
-from secureli.services.scanner import (
+from secureli.modules.shared.models.exit_codes import ExitCode
+from secureli.modules.shared.models.publish_results import PublishResultsOption
+from secureli.modules.shared.models.result import Result
+from secureli.modules.observability.observability_services.logging import (
+    LoggingService,
+    LogAction,
+)
+from secureli.modules.core.core_services.scanner import (
     ScanMode,
     ScannerService,
 )
 from secureli.settings import Settings
-from secureli.utilities.usage_stats import post_log, convert_failures_to_failure_count
+from secureli.modules.shared.utilities.usage_stats import (
+    post_log,
+    convert_failures_to_failure_count,
+)
 
 ONE_WEEK_IN_SECONDS: int = 7 * 24 * 60 * 60
 

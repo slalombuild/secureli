@@ -4,9 +4,9 @@ from typing import IO, Optional
 
 import sys
 import typer
-from secureli.models.echo import Color
+from secureli.modules.shared.models.echo import Color
 
-from secureli.utilities.logging import EchoLevel
+from secureli.modules.shared.utilities.logging import EchoLevel
 
 
 class EchoAbstraction(ABC):

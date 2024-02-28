@@ -8,10 +8,17 @@ from uuid import uuid4
 import pydantic
 
 import secureli.repositories.secureli_config as SecureliConfig
-from secureli.services.language_support import LanguageSupportService, HookConfiguration
+from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
+    LanguageSupportService,
+    HookConfiguration,
+)
 from secureli.repositories.secureli_config import SecureliConfigRepository
-from secureli.utilities.git_meta import current_branch_name, git_user_email, origin_url
-from secureli.utilities.secureli_meta import secureli_version
+from secureli.modules.shared.utilities.git_meta import (
+    current_branch_name,
+    git_user_email,
+    origin_url,
+)
+from secureli.modules.shared.utilities.secureli_meta import secureli_version
 
 
 def generate_unique_id() -> str:

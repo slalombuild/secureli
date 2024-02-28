@@ -5,8 +5,13 @@ import pytest
 from pytest_mock import MockerFixture
 
 from secureli.repositories.secureli_config import SecureliConfig
-from secureli.services.logging import LoggingService, LogAction
-from secureli.services.language_support import HookConfiguration
+from secureli.modules.observability.observability_services.logging import (
+    LoggingService,
+    LogAction,
+)
+from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
+    HookConfiguration,
+)
 
 
 @pytest.fixture()
@@ -17,7 +22,9 @@ def mock_path(mocker: MockerFixture) -> MagicMock:
     mock_path_instance = MagicMock()
     mock_path_instance.__truediv__.return_value = mock_file_path
 
-    mock_path_class = mocker.patch("secureli.services.logging.Path")
+    mock_path_class = mocker.patch(
+        "secureli.modules.observability.observability_services.logging.Path"
+    )
     mock_path_class.return_value = mock_path_instance
 
     return mock_file_path

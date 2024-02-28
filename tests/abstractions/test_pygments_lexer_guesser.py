@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from secureli.abstractions.lexer_guesser import PygmentsLexerGuesser
+from secureli.modules.shared.abstractions.lexer_guesser import PygmentsLexerGuesser
 
 
 @pytest.fixture()

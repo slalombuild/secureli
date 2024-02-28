@@ -2,8 +2,8 @@ from unittest.mock import MagicMock
 from pathlib import Path
 import pytest
 
-from secureli.abstractions.pre_commit import ExecuteResult
-from secureli.services.updater import UpdaterService
+from secureli.modules.shared.abstractions.pre_commit import ExecuteResult
+from secureli.modules.core.core_services.updater import UpdaterService
 
 test_folder_path = Path("does-not-matter")
 

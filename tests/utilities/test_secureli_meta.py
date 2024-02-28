@@ -17,7 +17,9 @@ def mock_open_repo_config(mocker: MockerFixture) -> MagicMock:
 def mock_secureli_meta_path(mocker: MockerFixture) -> MagicMock:
     mock_path_instance = MagicMock()
 
-    mock_path_class = mocker.patch("secureli.utilities.secureli_meta.Path")
+    mock_path_class = mocker.patch(
+        "secureli.modules.shared.utilities.secureli_meta.Path"
+    )
     mock_path_class.return_value = mock_path_instance
 
     return mock_path_instance

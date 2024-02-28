@@ -3,14 +3,18 @@ from typing import Callable, Iterable, Optional, Any
 
 import pydantic
 import yaml
-from secureli.abstractions.echo import EchoAbstraction
+from secureli.modules.shared.abstractions.echo import EchoAbstraction
 
 import secureli.repositories.secureli_config as SecureliConfig
-from secureli.abstractions.pre_commit import PreCommitAbstraction
-from secureli.resources.slugify import slugify
-from secureli.services.git_ignore import GitIgnoreService
-from secureli.services.language_config import LanguageConfigService
-from secureli.utilities.hash import hash_config
+from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
+from secureli.modules.shared.resources.slugify import slugify
+from secureli.modules.language_analyzer.language_analyzer_services.git_ignore import (
+    GitIgnoreService,
+)
+from secureli.modules.language_analyzer.language_analyzer_services.language_config import (
+    LanguageConfigService,
+)
+from secureli.modules.shared.utilities.hash import hash_config
 
 supported_languages = [
     "C#",

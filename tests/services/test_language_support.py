@@ -4,16 +4,16 @@ import pytest
 from _pytest.python_api import raises
 from pytest_mock import MockerFixture
 
-from secureli.abstractions.pre_commit import (
+from secureli.modules.shared.abstractions.pre_commit import (
     InstallResult,
 )
-from secureli.services.language_support import (
+from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
     LanguageSupportService,
     LinterConfig,
     LinterConfigData,
     LinterConfigWriteResult,
 )
-from secureli.services.language_config import (
+from secureli.modules.language_analyzer.language_analyzer_services.language_config import (
     LanguageConfigService,
     LanguagePreCommitResult,
     LoadLinterConfigsResult,
@@ -47,7 +47,7 @@ def mock_hashlib(mocker: MockerFixture) -> MagicMock:
     mock_md5 = MagicMock()
     mock_hashlib.md5.return_value = mock_md5
     mock_md5.hexdigest.return_value = "mock-hash-code"
-    mocker.patch("secureli.utilities.hash.hashlib", mock_hashlib)
+    mocker.patch("secureli.modules.shared.utilities.hash.hashlib", mock_hashlib)
     return mock_hashlib
 
 
@@ -57,7 +57,7 @@ def mock_hashlib_no_match(mocker: MockerFixture) -> MagicMock:
     mock_md5 = MagicMock()
     mock_hashlib.md5.return_value = mock_md5
     mock_md5.hexdigest.side_effect = ["first-hash-code", "second-hash-code"]
-    mocker.patch("secureli.utilities.hash.hashlib", mock_hashlib)
+    mocker.patch("secureli.modules.shared.utilities.hash.hashlib", mock_hashlib)
     return mock_hashlib
 
 

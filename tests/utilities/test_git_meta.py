@@ -4,14 +4,20 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from secureli.utilities.git_meta import git_user_email, origin_url, current_branch_name
+from secureli.modules.shared.utilities.git_meta import (
+    git_user_email,
+    origin_url,
+    current_branch_name,
+)
 
 mock_git_origin_url = r"git@github.com:my-org/repo%20with%20spaces.git"
 
 
 @pytest.fixture()
 def mock_subprocess(mocker: MockerFixture) -> MagicMock:
-    mock_subprocess = mocker.patch("secureli.utilities.git_meta.subprocess")
+    mock_subprocess = mocker.patch(
+        "secureli.modules.shared.utilities.git_meta.subprocess"
+    )
     mock_subprocess.run.return_value = CompletedProcess(
         args=[], returncode=0, stdout="great.engineer@slalom.com\n".encode("utf8")
     )
@@ -20,7 +26,9 @@ def mock_subprocess(mocker: MockerFixture) -> MagicMock:
 
 @pytest.fixture()
 def mock_configparser(mocker: MockerFixture) -> MagicMock:
-    mock_configparser = mocker.patch("secureli.utilities.git_meta.configparser")
+    mock_configparser = mocker.patch(
+        "secureli.modules.shared.utilities.git_meta.configparser"
+    )
     mock_configparser_instance = MagicMock()
     mock_configparser_instance['remote "origin"'].get.return_value = (
         "https://fake-build.com/git/repo"

@@ -2,13 +2,17 @@ from unittest.mock import MagicMock
 from pathlib import Path
 import pytest
 
-from secureli.abstractions.pre_commit import ExecuteResult
+from secureli.modules.shared.abstractions.pre_commit import ExecuteResult
 from secureli.repositories.settings import (
     PreCommitHook,
     PreCommitRepo,
     PreCommitSettings,
 )
-from secureli.services.scanner import ScannerService, ScanMode, OutputParseErrors
+from secureli.modules.core.core_services.scanner import (
+    ScannerService,
+    ScanMode,
+    OutputParseErrors,
+)
 from pytest_mock import MockerFixture
 
 test_folder_path = Path(".")

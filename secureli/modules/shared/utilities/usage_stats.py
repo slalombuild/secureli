@@ -1,13 +1,13 @@
 import requests
 import os
-from secureli.consts.logging import (
+from secureli.modules.observability.consts.logging import (
     TELEMETRY_ENDPOINT_ENV_VAR_NAME,
     TELEMETRY_KEY_ENV_VAR_NAME,
 )
-from secureli.models.publish_results import PublishLogResult
-from secureli.models.result import Result
+from secureli.modules.shared.models.publish_results import PublishLogResult
+from secureli.modules.shared.models.result import Result
 
-from secureli.services.scanner import Failure
+from secureli.modules.core.core_services.scanner import Failure
 from collections import Counter
 
 from secureli.settings import Settings
