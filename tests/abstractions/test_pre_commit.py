@@ -517,3 +517,15 @@ def test_check_for_hook_updates_returns_repos_with_new_revs(
         assert len(updated_repos) == 1  # only the first repo should be returned
         assert updated_repos[repo_urls[0]].oldRev == "tag1"
         assert updated_repos[repo_urls[0]].newRev == "tag2"
+
+
+def test_pre_commit_config_exists(pre_commit: PreCommitAbstraction):
+    with um.patch.object(Path, "exists", return_value=True):
+        pre_commit_exists = pre_commit.pre_commit_config_exists(test_folder_path)
+        assert pre_commit_exists == True
+
+
+def test_pre_commit_config_does_not_exist(pre_commit: PreCommitAbstraction):
+    with um.patch.object(Path, "exists", return_value=False):
+        pre_commit_exists = pre_commit.pre_commit_config_exists(test_folder_path)
+        assert pre_commit_exists == False
