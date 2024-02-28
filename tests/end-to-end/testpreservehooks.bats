@@ -11,7 +11,7 @@ setup() {
 
 @test "can preserve pre-existing hooks" {
     run python secureli/main.py init -y  --directory $MOCK_REPO
-    run grep '# Ive been here the whole time!' $MOCK_REPO/.pre-commit-config.yaml
+    run grep '# Ive been here the whole time!' $MOCK_REPO/.secureli/.pre-commit-config.yaml
     assert_output --partial '# Ive been here the whole time!'
 }
 
