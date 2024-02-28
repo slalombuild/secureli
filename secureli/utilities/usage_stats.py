@@ -47,7 +47,7 @@ def post_log(log_data: str, settings: Settings) -> PublishLogResult:
 
     try:
         result = requests.post(
-            url=api_endpoint, headers={"Api-Key": api_key}, data=log_data
+            url=api_endpoint, headers={"Api-Key": api_key}, data=log_data, timeout=30
         )
     except Exception as e:
         return PublishLogResult(

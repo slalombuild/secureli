@@ -83,7 +83,7 @@ for packageName, packageVersion in filteredPackageInformation.items():
         f"The necessary package retrieved from poetry is {packageName} with version {packageVersion}"
     )
     packagePayload = requests.get(
-        f"https://pypi.org/pypi/{packageName}/{packageVersion}/json"
+        f"https://pypi.org/pypi/{packageName}/{packageVersion}/json", timeout=30
     )
     packagePayloadJsonDict = packagePayload.json()
 
