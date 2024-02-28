@@ -27,7 +27,7 @@ install = "poetry install"
 lint = "black --check ."
 precommit = "pre-commit run --config .secureli/.pre-commit-config.yaml --all-files"
 test = ["init", "lint", "coverage_run", "coverage_report"]
-e2e = "bats --verbose-run tests/end-to-end/test.bats"
+e2e = "bats --verbose-run tests/end-to-end"
 
 [tool.poetry.dependencies]
 # Until `python-dependency-injector` supports python 3.12, restrict to python 3.11 and lower
