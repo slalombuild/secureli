@@ -90,7 +90,7 @@ class Action(ABC):
         if self.action_deps.secureli_config.verify() == VerifyConfigOutcome.OUT_OF_DATE:
             update_config = self._update_secureli_config_only(always_yes)
             if update_config.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
-                self.action_deps.echo.error(f"seCureLI could not be verified.")
+                self.action_deps.echo.error("seCureLI could not be verified.")
                 return VerifyResult(
                     outcome=update_config.outcome,
                 )
@@ -104,6 +104,9 @@ class Action(ABC):
                 )
             )
             if update_result.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
+                self.action_deps.echo.error(
+                    "seCureLI pre-commit-config.yaml could not be updated."
+                )
                 return update_result
 
         config = SecureliConfig() if reset else self.action_deps.secureli_config.load()

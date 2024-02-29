@@ -407,19 +407,38 @@ def test_that_verify_install_returns_success_result_newly_detected_language_inst
     assert verify_result.outcome == VerifyOutcome.INSTALL_SUCCEEDED
 
 
-def test_that_verify_install_returns_failure_result_without_file_path(
+def test_that_verify_install_returns_failure_result_without_re_commit_config_file_path(
     action: Action,
     mock_scanner: MagicMock,
+    mock_echo: MagicMock,
 ):
     with (patch.object(Path, "exists", return_value=False),):
         mock_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
             test_folder_path / ".secureli" / ".pre-commit-config.yaml"
         )
         mock_scanner.pre_commit.migrate_config_file.side_effect = Exception("ERROR")
-        update_result = action.verify_install(
+        verify_result = action.verify_install(
             test_folder_path, reset=False, always_yes=True
         )
-        assert update_result.outcome == VerifyOutcome.UPDATE_FAILED
+        mock_echo.error.assert_called_once_with(
+            "seCureLI pre-commit-config.yaml could not be updated."
+        )
+        assert verify_result.outcome == VerifyOutcome.UPDATE_FAILED
+
+
+def test_that_verify_install_continues_after_pre_commit_config_file_moved(
+    action: Action,
+    mock_scanner: MagicMock,
+    mock_echo: MagicMock,
+):
+    with (patch.object(Path, "exists", return_value=False),):
+        mock_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
+            test_folder_path / ".secureli" / ".pre-commit-config.yaml"
+        )
+        verify_result = action.verify_install(
+            test_folder_path, reset=False, always_yes=True
+        )
+        assert verify_result.outcome == VerifyOutcome.INSTALL_SUCCEEDED
 
 
 def test_that_update_secureli_pre_commit_config_location_moves_file(
@@ -452,7 +471,7 @@ def test_that_update_secureli_pre_commit_config_fails_on_exception(
         assert update_result.outcome == VerifyOutcome.UPDATE_FAILED
 
 
-def test_that_update_secureli_pre_commit_config_location_does_not_move_file(
+def test_that_update_secureli_pre_commit_config_location_cancels_on_user_response(
     action: Action,
     mock_echo: MagicMock,
     mock_scanner: MagicMock,
