@@ -98,6 +98,7 @@ class Action(ABC):
         if not self.action_deps.scanner.pre_commit.get_preferred_pre_commit_config_path(
             folder_path
         ).exists():
+            self.action_deps.echo.print("bingo")
             update_result: VerifyResult = (
                 self._update_secureli_pre_commit_config_location(
                     folder_path, always_yes

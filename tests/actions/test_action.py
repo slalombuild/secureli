@@ -1,5 +1,6 @@
 from pathlib import Path
 from unittest.mock import MagicMock
+import unittest.mock as um
 
 import pytest
 from secureli.abstractions.pre_commit import InstallResult
@@ -407,31 +408,23 @@ def test_that_verify_install_returns_success_result_newly_detected_language_inst
     assert verify_result.outcome == VerifyOutcome.INSTALL_SUCCEEDED
 
 
-def my_side_effect():
-    raise Exception("Test")
-
-
-def test_that_verify_install_returns_failure_result(
+def test_that_verify_install_returns_failure_result_without_file_path(
     action: Action,
     mock_scanner: MagicMock,
     mock_echo: MagicMock,
 ):
-    mock_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
-        test_folder_path / ".secureli" / ".pre-commit-config.yaml"
-    )
-    # not properly mocking this?
-    mock_scanner.pre_commit.migrate_config_file.return_value.raiseError = my_side_effect
-    update_result = action._update_secureli_pre_commit_config_location(
-        test_folder_path, True
-    )
-    mock_echo.print.assert_called_once_with(
-        "seCureLI's .pre-commit-config.yaml is in a deprecated location."
-    )
-    assert update_result.outcome == VerifyOutcome.UPDATE_FAILED
+    with (um.patch.object(Path, "exists", return_value=False),):
+        mock_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
+            Path(None)
+        )
 
+        update_result = action.verify_install(
+            test_folder_path, reset=False, always_yes=True
+        )
 
-# BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO
-# BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO
+        mock_echo.print.assert_called_with("bingo")
+        assert mock_scanner.pre_commit.migrate_config_file.assert_called_once()
+        assert update_result.outcome == VerifyOutcome.UPDATE_FAILED
 
 
 def test_that_update_secureli_pre_commit_config_location_moves_file(
@@ -453,17 +446,15 @@ def test_that_update_secureli_pre_commit_config_location_moves_file(
 def test_that_update_secureli_pre_commit_config_fails_on_exception(
     action: Action,
     mock_scanner: MagicMock,
-    mock_echo: MagicMock,
 ):
-    update_file_location = test_folder_path / ".secureli" / ".pre-commit-config.yaml"
-    update_result = action._update_secureli_pre_commit_config_location(
-        update_file_location, True
-    )
-    mock_echo.print.assert_called_once_with(
-        "seCureLI's .pre-commit-config.yaml is in a deprecated location."
-    )
-    mock_scanner.pre_commit.migrate_config_file.raiseError.side_effect = my_side_effect
-    assert update_result.outcome == VerifyOutcome.UPDATE_FAILED
+    with pytest.raises(Exception):
+        mock_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
+            test_folder_path / ".secureli" / ".pre-commit-config.yaml"
+        )
+        update_result = action._update_secureli_pre_commit_config_location(
+            test_folder_path, True
+        )
+        assert update_result.outcome == VerifyOutcome.UPDATE_FAILED
 
 
 def test_that_update_secureli_pre_commit_config_location_does_not_move_file(

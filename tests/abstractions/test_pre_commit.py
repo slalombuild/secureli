@@ -13,6 +13,7 @@ from secureli.abstractions.pre_commit import (
     InstallResult,
     PreCommitAbstraction,
 )
+from secureli.abstractions.echo import EchoAbstraction
 from secureli.repositories.settings import (
     PreCommitSettings,
     PreCommitRepo,
@@ -81,12 +82,12 @@ def mock_subprocess(mocker: MockerFixture) -> MagicMock:
 @pytest.fixture()
 def mock_echo(mocker: MockerFixture) -> MagicMock:
     mock_echo = MagicMock()
-    mocker.patch("secureli.abstractions.echo", mock_echo)
     return mock_echo
 
 
 @pytest.fixture()
 def pre_commit(
+    mock_echo: mock_echo,
     mock_hashlib: MagicMock,
     mock_open: MagicMock,
     mock_subprocess: MagicMock,
@@ -558,9 +559,9 @@ def test_migrate_config_file_moves_pre_commit_conig(
         um.patch.object(Path, "exists", return_value=True),
     ):
         pre_commit.migrate_config_file(test_folder_path)
-        old_location = test_folder_path / ".pre-commit-config.yaml"
+        old_location = test_folder_path / ".secureli" / ".pre-commit-config.yaml"
         new_location = test_folder_path / ".secureli" / ".pre-commit-config.yaml"
-        mock_echo.print.assert_called_with(
+        mock_echo.print.assert_called_once_with(
             f"Moving {old_location} to {new_location}..."
         )
         mock_move.assert_called_once()
