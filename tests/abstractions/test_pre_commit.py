@@ -1,5 +1,6 @@
 import datetime
 import shutil
+
 import unittest.mock as um
 from pathlib import Path, PosixPath
 from subprocess import CompletedProcess
@@ -80,6 +81,7 @@ def mock_subprocess(mocker: MockerFixture) -> MagicMock:
 @pytest.fixture()
 def mock_echo(mocker: MockerFixture) -> MagicMock:
     mock_echo = MagicMock()
+    mocker.patch("secureli.abstractions.echo", mock_echo)
     return mock_echo
 
 
@@ -539,3 +541,26 @@ def test_get_pre_commit_config_path_returns_correct_location(
         assert pre_commit_config_path == PosixPath(
             f"{test_folder_path}/.secureli/.pre-commit-config.yaml"
         )
+
+
+def test_get_pre_commit_config_path_errors_without_file(
+    pre_commit: PreCommitAbstraction,
+):
+    with pytest.raises(FileNotFoundError):
+        pre_commit.get_pre_commit_config_path(test_folder_path)
+
+
+def test_migrate_config_file_moves_pre_commit_conig(
+    pre_commit: PreCommitAbstraction, mock_echo: MagicMock
+):
+    with (
+        um.patch.object(shutil, "move") as mock_move,
+        um.patch.object(Path, "exists", return_value=True),
+    ):
+        pre_commit.migrate_config_file(test_folder_path)
+        old_location = test_folder_path / ".pre-commit-config.yaml"
+        new_location = test_folder_path / ".secureli" / ".pre-commit-config.yaml"
+        mock_echo.print.assert_called_with(
+            f"Moving {old_location} to {new_location}..."
+        )
+        mock_move.assert_called_once()

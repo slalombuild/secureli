@@ -11,7 +11,6 @@ from secureli.abstractions.echo import EchoAbstraction
 
 import pydantic
 import re
-import shutil
 import stat
 import subprocess
 import yaml
@@ -369,7 +368,7 @@ class PreCommitAbstraction:
         """
         existing_config_file_path = self.get_pre_commit_config_path(folder_path)
         new_config_file_path = folder_path / ".secureli" / self.CONFIG_FILE_NAME
-        self.echo.info(
+        self.echo.print(
             f"Moving {existing_config_file_path} to {new_config_file_path}..."
         )
         shutil.move(existing_config_file_path, new_config_file_path)

@@ -12,7 +12,6 @@ from secureli.services.language_analyzer import AnalyzeResult, SkippedFile
 from secureli.services.language_support import LanguageMetadata
 from secureli.services.scanner import ScanResult, Failure
 from secureli.services.updater import UpdateResult
-from secureli.settings import Settings
 
 test_folder_path = Path("does-not-matter")
 
@@ -406,6 +405,83 @@ def test_that_verify_install_returns_success_result_newly_detected_language_inst
     )
 
     assert verify_result.outcome == VerifyOutcome.INSTALL_SUCCEEDED
+
+
+def my_side_effect():
+    raise Exception("Test")
+
+
+def test_that_verify_install_returns_failure_result(
+    action: Action,
+    mock_scanner: MagicMock,
+    mock_echo: MagicMock,
+):
+    mock_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
+        test_folder_path / ".secureli" / ".pre-commit-config.yaml"
+    )
+    # not properly mocking this?
+    mock_scanner.pre_commit.migrate_config_file.return_value.raiseError = my_side_effect
+    update_result = action._update_secureli_pre_commit_config_location(
+        test_folder_path, True
+    )
+    mock_echo.print.assert_called_once_with(
+        "seCureLI's .pre-commit-config.yaml is in a deprecated location."
+    )
+    assert update_result.outcome == VerifyOutcome.UPDATE_FAILED
+
+
+# BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO
+# BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO BINGO BONGO
+
+
+def test_that_update_secureli_pre_commit_config_location_moves_file(
+    action: Action,
+    mock_scanner: MagicMock,
+    mock_echo: MagicMock,
+):
+    update_file_location = test_folder_path / ".secureli" / ".pre-commit-config.yaml"
+    update_result = action._update_secureli_pre_commit_config_location(
+        update_file_location, True
+    )
+    mock_echo.print.assert_called_once_with(
+        "seCureLI's .pre-commit-config.yaml is in a deprecated location."
+    )
+    mock_scanner.pre_commit.migrate_config_file.assert_called_with(update_file_location)
+    assert update_result.outcome == VerifyOutcome.UPDATE_SUCCEEDED
+
+
+def test_that_update_secureli_pre_commit_config_fails_on_exception(
+    action: Action,
+    mock_scanner: MagicMock,
+    mock_echo: MagicMock,
+):
+    update_file_location = test_folder_path / ".secureli" / ".pre-commit-config.yaml"
+    update_result = action._update_secureli_pre_commit_config_location(
+        update_file_location, True
+    )
+    mock_echo.print.assert_called_once_with(
+        "seCureLI's .pre-commit-config.yaml is in a deprecated location."
+    )
+    mock_scanner.pre_commit.migrate_config_file.raiseError.side_effect = my_side_effect
+    assert update_result.outcome == VerifyOutcome.UPDATE_FAILED
+
+
+def test_that_update_secureli_pre_commit_config_location_does_not_move_file(
+    action: Action,
+    mock_echo: MagicMock,
+    mock_scanner: MagicMock,
+):
+    mock_echo.confirm.return_value = False
+    update_file_location = test_folder_path / ".secureli" / ".pre-commit-config.yaml"
+    update_result = action._update_secureli_pre_commit_config_location(
+        update_file_location, False
+    )
+
+    mock_echo.warning.assert_called_once_with(
+        ".pre-commit-config.yaml migration declined"
+    )
+    mock_scanner.pre_commit.migrate_config_file.assert_not_called()
+    assert update_result.outcome == VerifyOutcome.UPDATE_CANCELED
 
 
 def test_that_initialize_repo_install_flow_warns_about_overwriting_pre_commit_file(
