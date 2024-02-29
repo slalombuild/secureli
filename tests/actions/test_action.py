@@ -1,6 +1,5 @@
 from pathlib import Path
-from unittest.mock import MagicMock
-import unittest.mock as um
+from unittest.mock import MagicMock, patch
 
 import pytest
 from secureli.abstractions.pre_commit import InstallResult
@@ -411,19 +410,15 @@ def test_that_verify_install_returns_success_result_newly_detected_language_inst
 def test_that_verify_install_returns_failure_result_without_file_path(
     action: Action,
     mock_scanner: MagicMock,
-    mock_echo: MagicMock,
 ):
-    with (um.patch.object(Path, "exists", return_value=False),):
+    with (patch.object(Path, "exists", return_value=False),):
         mock_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
-            Path(None)
+            test_folder_path / ".secureli" / ".pre-commit-config.yaml"
         )
-
+        mock_scanner.pre_commit.migrate_config_file.side_effect = Exception("ERROR")
         update_result = action.verify_install(
             test_folder_path, reset=False, always_yes=True
         )
-
-        mock_echo.print.assert_called_with("bingo")
-        assert mock_scanner.pre_commit.migrate_config_file.assert_called_once()
         assert update_result.outcome == VerifyOutcome.UPDATE_FAILED
 
 
