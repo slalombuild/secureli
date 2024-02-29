@@ -7,8 +7,10 @@ from secureli.actions.action import ActionDependencies
 from secureli.actions.initializer import InitializerAction
 from secureli.repositories.secureli_config import SecureliConfig
 from secureli.repositories.settings import SecureliFile, TelemetrySettings
-from secureli.services.language_config import LanguageNotSupportedError
-from secureli.services.logging import LogAction
+from secureli.modules.language_analyzer.language_analyzer_services.language_config import (
+    LanguageNotSupportedError,
+)
+from secureli.modules.observability.observability_services.logging import LogAction
 from secureli.settings import Settings
 
 test_folder_path = Path("does-not-matter")

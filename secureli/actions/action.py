@@ -2,26 +2,31 @@ from abc import ABC
 from enum import Enum
 from pathlib import Path
 from typing import Optional
-from secureli.abstractions.echo import EchoAbstraction
-from secureli.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
-from secureli.models.echo import Color
+from secureli.modules.shared.abstractions.echo import EchoAbstraction
+from secureli.modules.observability.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
+from secureli.modules.shared.models.echo import Color
 from secureli.repositories.secureli_config import (
     SecureliConfig,
     SecureliConfigRepository,
     VerifyConfigOutcome,
 )
 from secureli.repositories.settings import SecureliRepository, TelemetrySettings
-from secureli.services.language_analyzer import LanguageAnalyzerService, AnalyzeResult
-from secureli.services.language_config import LanguageNotSupportedError
-from secureli.services.language_support import (
+from secureli.modules.language_analyzer.language_analyzer_services.language_analyzer import (
+    LanguageAnalyzerService,
+    AnalyzeResult,
+)
+from secureli.modules.language_analyzer.language_analyzer_services.language_config import (
+    LanguageNotSupportedError,
+)
+from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
     LanguageMetadata,
     LanguageSupportService,
 )
-from secureli.services.scanner import ScannerService, ScanMode
-from secureli.services.updater import UpdaterService
+from secureli.modules.core.core_services.scanner import ScannerService, ScanMode
+from secureli.modules.core.core_services.updater import UpdaterService
 
 import pydantic
-from secureli.utilities.formatter import format_sentence_list
+from secureli.modules.shared.utilities.formatter import format_sentence_list
 
 
 class VerifyOutcome(str, Enum):

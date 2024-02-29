@@ -1,5 +1,8 @@
-from secureli.abstractions.echo import EchoAbstraction, Color
-from secureli.services.logging import LoggingService, LogAction
+from secureli.modules.shared.abstractions.echo import EchoAbstraction, Color
+from secureli.modules.observability.observability_services.logging import (
+    LoggingService,
+    LogAction,
+)
 
 
 class BuildAction:

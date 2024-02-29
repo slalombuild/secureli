@@ -8,12 +8,12 @@ from secureli.actions.action import VerifyOutcome
 from secureli.actions.scan import ScanMode
 from secureli.actions.setup import SetupAction
 from secureli.container import Container
-from secureli.models.echo import Color
-from secureli.models.publish_results import PublishResultsOption
-from secureli.resources import read_resource
+from secureli.modules.shared.models.echo import Color
+from secureli.modules.shared.models.publish_results import PublishResultsOption
+from secureli.modules.shared.resources import read_resource
 from secureli.settings import Settings
 import secureli.repositories.secureli_config as SecureliConfig
-from secureli.utilities.secureli_meta import secureli_version
+from secureli.modules.shared.utilities.secureli_meta import secureli_version
 
 # Create SetupAction outside of DI, as it's not yet available.
 setup_action = SetupAction(epilog_template_data=read_resource("epilog.md"))
@@ -28,20 +28,24 @@ container.config.from_pydantic(Settings())
 def version_callback(value: bool):
     if value:
         typer.echo(secureli_version())
-        typer.echo("\nHook Versions:")
-        typer.echo("--------------")
-        config = container.pre_commit_abstraction().get_pre_commit_config(Path("."))
+        pre_commit_abstr = container.pre_commit_abstraction()
+        path = Path(".")
 
-        all_repos = [
-            (hook.id, repo.rev.lstrip("v"))
-            for repo in config.repos
-            for hook in repo.hooks
-        ]
+        if pre_commit_abstr.pre_commit_config_exists(path):
+            typer.echo("\nHook Versions:")
+            typer.echo("--------------")
+            config = pre_commit_abstr.get_pre_commit_config(path)
 
-        sorted_repos = sorted(all_repos, key=lambda x: x[0])
+            all_repos = [
+                (hook.id, repo.rev.lstrip("v"))
+                for repo in config.repos
+                for hook in repo.hooks
+            ]
 
-        for hook_id, version in sorted_repos:
-            typer.echo(f"{hook_id:<30} {version}")
+            sorted_repos = sorted(all_repos, key=lambda x: x[0])
+
+            for hook_id, version in sorted_repos:
+                typer.echo(f"{hook_id:<30} {version}")
 
         raise typer.Exit()
 

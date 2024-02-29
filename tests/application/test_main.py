@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from typer.testing import CliRunner
 
 import pytest
@@ -8,9 +8,9 @@ from secureli.actions.action import VerifyOutcome, VerifyResult
 
 import secureli.container
 import secureli.main
-from secureli.models.publish_results import PublishResultsOption
-from secureli.services.scanner import ScanMode
-from secureli.utilities.secureli_meta import secureli_version
+from secureli.modules.shared.models.publish_results import PublishResultsOption
+from secureli.modules.core.core_services.scanner import ScanMode
+from secureli.modules.shared.utilities.secureli_meta import secureli_version
 
 
 @pytest.fixture()
@@ -61,6 +61,18 @@ def test_that_app_implements_version_option(
     assert secureli_version() in result.stdout
     mock_container.init_resources.assert_not_called()
     mock_container.wire.assert_not_called()
+
+
+@pytest.mark.parametrize("test_input", ["-v", "--version"])
+def test_that_version_callback_does_not_return_hook_versions_if_no_config(
+    test_input: str,
+):
+    with patch.object(Path, "exists", return_value=False):
+        result = CliRunner().invoke(secureli.main.app, [test_input])
+
+        assert result.exit_code is 0
+        assert secureli_version() in result.stdout
+        assert "\nHook Versions:" not in result.stdout
 
 
 def test_that_app_ignores_version_callback(mock_container: MagicMock):

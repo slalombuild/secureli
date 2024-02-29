@@ -1,8 +1,8 @@
 from dependency_injector import containers, providers
 
-from secureli.abstractions.echo import TyperEcho
-from secureli.abstractions.lexer_guesser import PygmentsLexerGuesser
-from secureli.abstractions.pre_commit import PreCommitAbstraction
+from secureli.modules.shared.abstractions.echo import TyperEcho
+from secureli.modules.shared.abstractions.lexer_guesser import PygmentsLexerGuesser
+from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
 from secureli.actions.action import ActionDependencies
 from secureli.actions.initializer import InitializerAction
 from secureli.actions.scan import ScanAction
@@ -11,15 +11,23 @@ from secureli.actions.update import UpdateAction
 from secureli.repositories.repo_files import RepoFilesRepository
 from secureli.repositories.secureli_config import SecureliConfigRepository
 from secureli.repositories.settings import SecureliRepository
-from secureli.resources import read_resource
-from secureli.services.git_ignore import GitIgnoreService
-from secureli.services.language_analyzer import LanguageAnalyzerService
-from secureli.services.language_support import LanguageSupportService
-from secureli.services.logging import LoggingService
-from secureli.services.scanner import ScannerService
-from secureli.services.updater import UpdaterService
-from secureli.services.secureli_ignore import SecureliIgnoreService
-from secureli.services.language_config import LanguageConfigService
+from secureli.modules.shared.resources import read_resource
+from secureli.modules.language_analyzer.language_analyzer_services.git_ignore import (
+    GitIgnoreService,
+)
+from secureli.modules.language_analyzer.language_analyzer_services.language_analyzer import (
+    LanguageAnalyzerService,
+)
+from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
+    LanguageSupportService,
+)
+from secureli.modules.observability.observability_services.logging import LoggingService
+from secureli.modules.core.core_services.scanner import ScannerService
+from secureli.modules.core.core_services.updater import UpdaterService
+from secureli.modules.secureli_ignore import SecureliIgnoreService
+from secureli.modules.language_analyzer.language_analyzer_services.language_config import (
+    LanguageConfigService,
+)
 from secureli.settings import Settings
 
 
