@@ -75,6 +75,19 @@ def test_that_version_callback_does_not_return_hook_versions_if_no_config(
         assert "\nHook Versions:" not in result.stdout
 
 
+@pytest.mark.parametrize("test_input", ["-v", "--version"])
+def test_that_version_callback_returns_hook_versions_if_config(
+    test_input: str,
+):
+    with patch.object(Path, "exists", return_value=True):
+        result = CliRunner().invoke(secureli.main.app, [test_input])
+
+        assert result.exit_code is 0
+        assert secureli_version() in result.stdout
+        assert "\nHook Versions:" in result.stdout
+        assert "--------------" in result.stdout
+
+
 def test_that_app_ignores_version_callback(mock_container: MagicMock):
     result = CliRunner().invoke(secureli.main.app, ["scan"])
 
