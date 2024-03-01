@@ -3,7 +3,8 @@ from typing import Callable, Iterable, Optional, Any
 
 import pydantic
 import yaml
-from secureli.modules.shared.abstractions.echo import EchoAbstraction
+from secureli.modules.shared.models.config import HookConfiguration, LinterConfig, Repo
+from secureli.modules.shared.models.language import LanguageMetadata
 
 import secureli.repositories.secureli_config as SecureliConfig
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
@@ -15,70 +16,6 @@ from secureli.modules.language_analyzer.language_analyzer_services.language_conf
     LanguageConfigService,
 )
 from secureli.modules.shared.utilities.hash import hash_config
-
-supported_languages = [
-    "C#",
-    "Python",
-    "Java",
-    "Terraform",
-    "TypeScript",
-    "JavaScript",
-    "Go",
-    "Swift",
-    "Kotlin",
-]
-
-
-class LanguageMetadata(pydantic.BaseModel):
-    version: str
-    security_hook_id: Optional[str]
-    linter_config_write_errors: Optional[list[str]] = []
-
-
-class ValidateConfigResult(pydantic.BaseModel):
-    """
-    The results of calling validate_config
-    """
-
-    successful: bool
-    output: str
-
-
-class Repo(pydantic.BaseModel):
-    """A repository containing pre-commit hooks"""
-
-    repo: str
-    revision: str
-    hooks: list[str]
-
-
-class HookConfiguration(pydantic.BaseModel):
-    """A simplified pre-commit configuration representation for logging purposes"""
-
-    repos: list[Repo]
-
-
-class UnexpectedReposResult(pydantic.BaseModel):
-    """
-    The result of checking for unexpected repos in config
-    """
-
-    missing_repos: Optional[list[str]] = []
-    unexpected_repos: Optional[list[str]] = []
-
-
-class LinterConfigData(pydantic.BaseModel):
-    """
-    Represents the structure of a linter config file
-    """
-
-    filename: str
-    settings: Any
-
-
-class LinterConfig(pydantic.BaseModel):
-    language: str
-    linter_data: list[LinterConfigData]
 
 
 class BuildConfigResult(pydantic.BaseModel):

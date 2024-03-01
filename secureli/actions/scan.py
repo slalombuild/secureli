@@ -6,22 +6,21 @@ from typing import Optional
 
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.actions.action import (
-    VerifyOutcome,
     Action,
     ActionDependencies,
-    VerifyResult,
 )
 from secureli.modules.shared.models.exit_codes import ExitCode
+from secureli.modules.shared.models.install import VerifyOutcome, VerifyResult
+from secureli.modules.shared.models.logging import LogAction
 from secureli.modules.shared.models.publish_results import PublishResultsOption
 from secureli.modules.shared.models.result import Result
 from secureli.modules.observability.observability_services.logging import (
     LoggingService,
-    LogAction,
 )
 from secureli.modules.core.core_services.scanner import (
-    ScanMode,
     ScannerService,
 )
+from secureli.modules.shared.models.scan import ScanMode
 from secureli.settings import Settings
 from secureli.modules.shared.utilities.usage_stats import (
     post_log,

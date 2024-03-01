@@ -1,36 +1,15 @@
 from pathlib import Path
-from typing import Callable, Any
-
-import pydantic
+from typing import Callable
 import yaml
 
+from secureli.modules.shared.models.language import (
+    LanguageNotSupportedError,
+    LanguagePreCommitResult,
+    LoadLinterConfigsResult,
+)
 from secureli.modules.shared.resources.slugify import slugify
 from secureli.modules.shared.utilities.hash import hash_config
 from secureli.modules.shared.utilities.patterns import combine_patterns
-
-
-class LanguageNotSupportedError(Exception):
-    """The given language was not supported by the PreCommitHooks abstraction"""
-
-    pass
-
-
-class LoadLinterConfigsResult(pydantic.BaseModel):
-    """Results from finding and loading any pre-commit configs for the language"""
-
-    successful: bool
-    linter_data: list[Any]
-
-
-class LanguagePreCommitResult(pydantic.BaseModel):
-    """
-    A configuration model for a supported pre-commit-configurable language.
-    """
-
-    language: str
-    config_data: str
-    version: str
-    linter_config: LoadLinterConfigsResult
 
 
 class LanguageConfigService:

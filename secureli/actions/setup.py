@@ -1,6 +1,6 @@
 import jinja2
 
-from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
+from secureli.modules.shared.consts.language import (
     supported_languages,
 )
 

@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from secureli.modules.shared.abstractions.pre_commit import ExecuteResult
+from secureli.modules.shared.models.scan import ScanMode
 from secureli.repositories.settings import (
     PreCommitHook,
     PreCommitRepo,
@@ -10,7 +11,6 @@ from secureli.repositories.settings import (
 )
 from secureli.modules.core.core_services.scanner import (
     ScannerService,
-    ScanMode,
     OutputParseErrors,
 )
 from pytest_mock import MockerFixture

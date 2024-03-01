@@ -3,14 +3,12 @@ from unittest.mock import MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
+from secureli.modules.shared.models.config import HookConfiguration
+from secureli.modules.shared.models.logging import LogAction
 
 from secureli.repositories.secureli_config import SecureliConfig
 from secureli.modules.observability.observability_services.logging import (
     LoggingService,
-    LogAction,
-)
-from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
-    HookConfiguration,
 )
 
 

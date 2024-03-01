@@ -9,12 +9,13 @@ from secureli.modules.shared.abstractions.pre_commit import (
 )
 from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
     LanguageSupportService,
-    LinterConfig,
-    LinterConfigData,
     LinterConfigWriteResult,
 )
 from secureli.modules.language_analyzer.language_analyzer_services.language_config import (
     LanguageConfigService,
+)
+from secureli.modules.shared.models.config import LinterConfig, LinterConfigData
+from secureli.modules.shared.models.language import (
     LanguagePreCommitResult,
     LoadLinterConfigsResult,
 )

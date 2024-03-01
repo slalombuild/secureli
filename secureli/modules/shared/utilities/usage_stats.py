@@ -6,14 +6,13 @@ from secureli.modules.observability.consts.logging import (
 )
 from secureli.modules.shared.models.publish_results import PublishLogResult
 from secureli.modules.shared.models.result import Result
-
-from secureli.modules.core.core_services.scanner import Failure
 from collections import Counter
+from secureli.modules.shared.models.scan import ScanFailure
 
 from secureli.settings import Settings
 
 
-def convert_failures_to_failure_count(failure_list: list[Failure]):
+def convert_failures_to_failure_count(failure_list: list[ScanFailure]):
     """
     Convert a list of Failure ids to a list of individual failure count with underscore naming convention
     :param failure_list: a list of Failure Object
