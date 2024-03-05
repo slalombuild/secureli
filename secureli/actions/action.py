@@ -43,6 +43,7 @@ class VerifyResult(pydantic.BaseModel):
     outcome: VerifyOutcome
     config: Optional[SecureliConfig] = None
     analyze_result: Optional[AnalyzeResult] = None
+    file_path: Optional[Path] = None
 
 
 class ActionDependencies:
@@ -95,14 +96,18 @@ class Action(ABC):
                     outcome=update_config.outcome,
                 )
 
-        if not self.action_deps.scanner.pre_commit.get_preferred_pre_commit_config_path(
-            folder_path
-        ).exists():
+        pre_commit_config_location = (
+            self.action_deps.scanner.pre_commit.get_preferred_pre_commit_config_path(
+                folder_path
+            )
+        )
+        if not pre_commit_config_location.exists():
             update_result: VerifyResult = (
                 self._update_secureli_pre_commit_config_location(
                     folder_path, always_yes
                 )
             )
+            pre_commit_config_location = update_result.file_path
             if update_result.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
                 self.action_deps.echo.error(
                     "seCureLI pre-commit-config.yaml could not be updated."
@@ -138,7 +143,11 @@ class Action(ABC):
             or newly_detected_languages
         ):
             return self._install_secureli(
-                folder_path, languages, newly_detected_languages, always_yes
+                folder_path,
+                languages,
+                newly_detected_languages,
+                pre_commit_config_location,
+                always_yes,
             )
         else:
             self.action_deps.echo.print(
@@ -157,6 +166,7 @@ class Action(ABC):
         folder_path: Path,
         detected_languages: list[str],
         install_languages: list[str],
+        pre_commit_config_location: Path,
         always_yes: bool,
     ) -> VerifyResult:
         """
@@ -191,8 +201,8 @@ class Action(ABC):
             install_languages, always_yes
         )
         language_config_result = (
-            self.action_deps.language_support._build_pre_commit_config(
-                install_languages, lint_languages
+            self.action_deps.language_support.build_pre_commit_config(
+                install_languages, lint_languages, pre_commit_config_location
             )
         )
         metadata = self.action_deps.language_support.apply_support(
@@ -435,10 +445,19 @@ class Action(ABC):
         )
         if response:
             try:
-                self.action_deps.scanner.pre_commit.migrate_config_file(folder_path)
-                return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
+                new_file_path = self.action_deps.scanner.pre_commit.migrate_config_file(
+                    folder_path
+                )
+                return VerifyResult(
+                    outcome=VerifyOutcome.UPDATE_SUCCEEDED, file_path=new_file_path
+                )
             except:
                 return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
         else:
             self.action_deps.echo.warning(".pre-commit-config.yaml migration declined")
-            return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)
+            deprecated_location = self.action_deps.scanner.get_pre_commit_config_path(
+                folder_path
+            )
+            return VerifyResult(
+                outcome=VerifyOutcome.UPDATE_CANCELED, file_path=deprecated_location
+            )

@@ -372,6 +372,7 @@ class PreCommitAbstraction:
             f"Moving {existing_config_file_path} to {new_config_file_path}..."
         )
         shutil.move(existing_config_file_path, new_config_file_path)
+        return new_config_file_path
 
     def pre_commit_config_exists(self, folder_path: Path) -> bool:
         """

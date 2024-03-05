@@ -107,12 +107,14 @@ class LanguageSupportService:
         pre_commit_hook: PreCommitAbstraction,
         language_config: LanguageConfigService,
         git_ignore: GitIgnoreService,
+        echo: EchoAbstraction,
         data_loader: Callable[[str], str],
     ):
         self.git_ignore = git_ignore
         self.pre_commit_hook = pre_commit_hook
         self.language_config = language_config
         self.data_loader = data_loader
+        self.echo = echo
 
     def apply_support(
         self,
@@ -165,7 +167,7 @@ class LanguageSupportService:
         :return: The hook ID to use for secrets analysis if supported, otherwise None.
         """
         # lint_languages param can be an empty set since we only need secrets detection hooks
-        language_config = self._build_pre_commit_config(languages, [])
+        language_config = self.build_pre_commit_config(languages, [])
         config = language_config.config_data
         secrets_detecting_repos_data = self.data_loader(
             "pre-commit/secrets_detecting_repos.yaml"
@@ -208,7 +210,7 @@ class LanguageSupportService:
         :param languages: list of languages to get config for.
         :return: A serializable Configuration model
         """
-        config = self._build_pre_commit_config(languages, set(languages)).config_data
+        config = self.build_pre_commit_config(languages, set(languages)).config_data
 
         create_repo: Callable[[Repo], Repo] = lambda raw_repo: Repo(
             repo=raw_repo.get("repo", "unknown"),
@@ -219,8 +221,11 @@ class LanguageSupportService:
         repos = [create_repo(raw_repo) for raw_repo in config.get("repos", [])]
         return HookConfiguration(repos=repos)
 
-    def _build_pre_commit_config(
-        self, languages: list[str], lint_languages: Iterable[str]
+    def build_pre_commit_config(
+        self,
+        languages: list[str],
+        lint_languages: Iterable[str],
+        pre_commit_config_location: Optional[Path] = None,
     ) -> BuildConfigResult:
         """
         Builds the final .pre-commit-config.yaml from all supported repo languages. Also returns any and all
@@ -229,12 +234,22 @@ class LanguageSupportService:
         :param lint_languages: list of languages to add lint pre-commit hooks for.
         :return: BuildConfigResult
         """
-        config_data = []
+        config_repos = []
+        existing_data = {}
         successful_languages: list[str] = []
         linter_configs: list[LinterConfig] = []
         config_languages = [*languages, "base"]
         config_lint_languages = [*lint_languages, "base"]
-
+        if pre_commit_config_location:
+            with open(pre_commit_config_location) as stream:
+                try:
+                    data = yaml.safe_load(stream)
+                    existing_data = data or {}
+                    config_repos += data["repos"]
+                except yaml.YAMLError as exc:
+                    self.echo.error(
+                        f"There was an issue parsing existing pre-commit-config.yaml: {exc}"
+                    )
         for language in config_languages:
             include_linter = language in config_lint_languages
             result = self.language_config.get_language_config(language, include_linter)
@@ -251,13 +266,12 @@ class LanguageSupportService:
                     else None
                 )
                 data = yaml.safe_load(result.config_data)
-                config_data += data["repos"] or []
-
-        config = {"repos": config_data}
+                config_repos += data["repos"] or []
+        config = {**existing_data, "repos": config_repos}
         version = hash_config(yaml.dump(config))
 
         return BuildConfigResult(
-            successful=True if len(config_data) > 0 else False,
+            successful=True if len(config_repos) > 0 else False,
             languages_added=successful_languages,
             config_data=config,
             version=version,

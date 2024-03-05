@@ -261,7 +261,7 @@ def test_that_language_support_writes_linter_config_files(
     languages = ["RadLang"]
     lint_languages = [*languages]
 
-    build_config_result = language_support_service._build_pre_commit_config(
+    build_config_result = language_support_service.build_pre_commit_config(
         languages, lint_languages
     )
 
@@ -295,7 +295,7 @@ def test_that_language_support_throws_exception_when_language_config_file_cannot
     languages = ["RadLang"]
     lint_languages = [*languages]
 
-    build_config_result = language_support_service._build_pre_commit_config(
+    build_config_result = language_support_service.build_pre_commit_config(
         languages, lint_languages
     )
 
@@ -327,7 +327,7 @@ def test_that_language_support_handles_invalid_language_config(
     languages = ["RadLang"]
     lint_languages = [*languages]
 
-    build_config_result = language_support_service._build_pre_commit_config(
+    build_config_result = language_support_service.build_pre_commit_config(
         languages, lint_languages
     )
 
@@ -359,7 +359,7 @@ def test_that_language_support_handles_empty_repos_list(
     languages = ["RadLang"]
     lint_languages = [*languages]
 
-    build_config_result = language_support_service._build_pre_commit_config(
+    build_config_result = language_support_service.build_pre_commit_config(
         languages, lint_languages
     )
 
