@@ -5,13 +5,8 @@ import pytest
 from pytest_mock import MockerFixture
 
 from secureli.repositories.secureli_config import SecureliConfig
-from secureli.modules.observability.observability_services.logging import (
-    LoggingService,
-    LogAction,
-)
-from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
-    HookConfiguration,
-)
+from secureli.modules.observability.observability_services import logging
+from secureli.modules.language_analyzer import language_analyzer_services
 
 
 @pytest.fixture()
@@ -49,15 +44,15 @@ def mock_language_support() -> MagicMock:
 @pytest.fixture()
 def logging_service(
     mock_language_support: MagicMock, mock_secureli_config: MagicMock
-) -> LoggingService:
-    return LoggingService(
+) -> logging.LoggingService:
+    return logging.LoggingService(
         language_support=mock_language_support,
         secureli_config=mock_secureli_config,
     )
 
 
 def test_that_logging_service_success_creates_logs_folder_if_not_exists(
-    logging_service: LoggingService,
+    logging_service: logging.LoggingService,
     mock_path: MagicMock,
     mock_open: MagicMock,
     mock_secureli_config: MagicMock,
@@ -66,14 +61,16 @@ def test_that_logging_service_success_creates_logs_folder_if_not_exists(
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
-    mock_language_support.get_configuration.return_value = HookConfiguration(repos=[])
-    logging_service.success(LogAction.init)
+    mock_language_support.get_configuration.return_value = (
+        language_analyzer_services.language_support.HookConfiguration(repos=[])
+    )
+    logging_service.success(logging.LogAction.init)
 
     mock_path.parent.mkdir.assert_called_once()
 
 
 def test_that_logging_service_failure_creates_logs_folder_if_not_exists(
-    logging_service: LoggingService,
+    logging_service: logging.LoggingService,
     mock_path: MagicMock,
     mock_open: MagicMock,
     mock_secureli_config: MagicMock,
@@ -82,13 +79,13 @@ def test_that_logging_service_failure_creates_logs_folder_if_not_exists(
         languages=None, version_installed=None
     )
 
-    logging_service.failure(LogAction.init, "Horrible Failure", None, None)
+    logging_service.failure(logging.LogAction.init, "Horrible Failure", None, None)
 
     mock_path.parent.mkdir.assert_called_once()
 
 
 def test_that_logging_service_success_logs_none_for_hook_config_if_not_initialized(
-    logging_service: LoggingService,
+    logging_service: logging.LoggingService,
     mock_path: MagicMock,
     mock_open: MagicMock,
     mock_secureli_config: MagicMock,
@@ -98,6 +95,6 @@ def test_that_logging_service_success_logs_none_for_hook_config_if_not_initializ
         languages=None, version_installed=None
     )
 
-    log_entry = logging_service.success(LogAction.build)
+    log_entry = logging_service.success(logging.LogAction.build)
 
     assert log_entry.hook_config is None

@@ -5,13 +5,8 @@ import pytest
 
 from secureli.actions.action import ActionDependencies
 from secureli.actions.initializer import InitializerAction
-from secureli.repositories.secureli_config import SecureliConfig
-from secureli.repositories.settings import SecureliFile, TelemetrySettings
-from secureli.modules.language_analyzer.language_analyzer_services.language_config import (
-    LanguageNotSupportedError,
-)
+from secureli.modules.language_analyzer import language_analyzer_services
 from secureli.modules.observability.observability_services.logging import LogAction
-from secureli.settings import Settings
 
 test_folder_path = Path("does-not-matter")
 
@@ -79,7 +74,9 @@ def test_that_initialize_repo_logs_failure_when_failing_to_verify(
     mock_language_analyzer: MagicMock,
     mock_logging_service: MagicMock,
 ):
-    mock_language_analyzer.analyze.side_effect = LanguageNotSupportedError
+    mock_language_analyzer.analyze.side_effect = (
+        language_analyzer_services.language_config.LanguageNotSupportedError
+    )
 
     initializer_action.initialize_repo(test_folder_path, True, True)
 

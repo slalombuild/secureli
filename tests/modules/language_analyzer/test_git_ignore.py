@@ -5,10 +5,7 @@ import unittest.mock as um
 import pytest
 from pytest_mock import MockerFixture
 
-from secureli.modules.language_analyzer.language_analyzer_services.git_ignore import (
-    GitIgnoreService,
-    BadIgnoreBlockError,
-)
+from secureli.modules.language_analyzer.language_analyzer_services import git_ignore
 
 
 @pytest.fixture()
@@ -56,39 +53,41 @@ def mock_path(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture
-def git_ignore(mock_path: MagicMock) -> GitIgnoreService:
-    git_ignore = GitIgnoreService()
-    git_ignore.git_ignore_path = mock_path
-    return git_ignore
+def mock_git_ignore(mock_path: MagicMock) -> git_ignore.GitIgnoreService:
+    local_git_ignore = git_ignore.GitIgnoreService()
+    local_git_ignore.git_ignore_path = mock_path
+    return local_git_ignore
 
 
 def test_that_git_ignore_creates_file_if_missing(
-    git_ignore: GitIgnoreService, mock_path: MagicMock, mock_open: MagicMock
+    mock_git_ignore: git_ignore.GitIgnoreService,
+    mock_path: MagicMock,
+    mock_open: MagicMock,
 ):
     mock_path.exists.return_value = False
 
     with um.patch.object(Path, "exists") as mock_exists:
         mock_exists.return_value = False
 
-        git_ignore.ignore_secureli_files()
+        mock_git_ignore.ignore_secureli_files()
 
         mock_open.return_value.write.assert_called_once()
 
         args, _ = mock_open.return_value.write.call_args_list[0]
         assert args[0].find("# existing contents") == -1
         assert args[0].find(".secureli") != -1
-        assert args[0].find(git_ignore.header) != -1
-        assert args[0].find(git_ignore.footer) != -1
+        assert args[0].find(mock_git_ignore.header) != -1
+        assert args[0].find(mock_git_ignore.footer) != -1
 
 
 def test_that_git_ignore_appends_to_existing_file_if_block_is_missing(
-    git_ignore: GitIgnoreService,
+    mock_git_ignore: git_ignore.GitIgnoreService,
     mock_path: MagicMock,
     mock_open_with_gitignore: MagicMock,
 ):
     mock_path.exists.return_value = True
 
-    git_ignore.ignore_secureli_files()
+    mock_git_ignore.ignore_secureli_files()
 
     mock_open_with_gitignore.return_value.write.assert_called_once()
 
@@ -98,13 +97,13 @@ def test_that_git_ignore_appends_to_existing_file_if_block_is_missing(
 
 
 def test_that_git_ignore_updates_existing_file_if_block_is_present(
-    git_ignore: GitIgnoreService,
+    mock_git_ignore: git_ignore.GitIgnoreService,
     mock_path: MagicMock,
     mock_open_with_gitignore_existing_secureli_config: MagicMock,
 ):
     mock_path.exists.return_value = True
 
-    git_ignore.ignore_secureli_files()
+    mock_git_ignore.ignore_secureli_files()
 
     mock_open_with_gitignore_existing_secureli_config.return_value.write.assert_called_once()
 
@@ -120,24 +119,24 @@ def test_that_git_ignore_updates_existing_file_if_block_is_present(
 
 
 def test_that_git_ignore_is_mad_if_header_is_found_without_footer(
-    git_ignore: GitIgnoreService,
+    mock_git_ignore: git_ignore.GitIgnoreService,
     mock_path: MagicMock,
     mock_open_with_gitignore_broken_secureli_config: MagicMock,
 ):
     mock_path.exists.return_value = True
 
-    with pytest.raises(BadIgnoreBlockError):
-        git_ignore.ignore_secureli_files()
+    with pytest.raises(git_ignore.BadIgnoreBlockError):
+        mock_git_ignore.ignore_secureli_files()
 
 
 def test_that_ignore_ignore_finds_and_reads_file(
-    git_ignore: GitIgnoreService,
+    mock_git_ignore: git_ignore.GitIgnoreService,
     mock_path: MagicMock,
     mock_open_with_ignored_patterns: MagicMock,
 ):
     mock_path.exists.return_value = True
 
-    ignored_patterns = git_ignore.ignored_file_patterns()
+    ignored_patterns = mock_git_ignore.ignored_file_patterns()
 
     assert ignored_patterns == [
         "^(?:.+/)?[^/]*\\.py(?:(?P<ps_d>/).*)?$",
@@ -146,12 +145,12 @@ def test_that_ignore_ignore_finds_and_reads_file(
 
 
 def test_that_ignore_ignore_does_not_find_file_and_returns_empty(
-    git_ignore: GitIgnoreService,
+    mock_git_ignore: git_ignore.GitIgnoreService,
     mock_path: MagicMock,
     mock_open_with_ignored_patterns: MagicMock,
 ):
     mock_path.exists.return_value = False
 
-    ignored_patterns = git_ignore.ignored_file_patterns()
+    ignored_patterns = mock_git_ignore.ignored_file_patterns()
 
     assert ignored_patterns == []

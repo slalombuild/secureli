@@ -4,20 +4,8 @@ import pytest
 from _pytest.python_api import raises
 from pytest_mock import MockerFixture
 
-from secureli.modules.shared.abstractions.pre_commit import (
-    InstallResult,
-)
-from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
-    LanguageSupportService,
-    LinterConfig,
-    LinterConfigData,
-    LinterConfigWriteResult,
-)
-from secureli.modules.language_analyzer.language_analyzer_services.language_config import (
-    LanguageConfigService,
-    LanguagePreCommitResult,
-    LoadLinterConfigsResult,
-)
+from secureli.modules.shared.abstractions import pre_commit
+from secureli.modules.language_analyzer import language_analyzer_services
 
 
 @pytest.fixture()
@@ -64,7 +52,7 @@ def mock_hashlib_no_match(mocker: MockerFixture) -> MagicMock:
 @pytest.fixture()
 def mock_pre_commit_hook() -> MagicMock:
     mock_pre_commit_hook = MagicMock()
-    mock_pre_commit_hook.install.return_value = InstallResult(
+    mock_pre_commit_hook.install.return_value = pre_commit.InstallResult(
         successful=True,
     )
 
@@ -91,7 +79,9 @@ def mock_echo() -> MagicMock:
 
 
 @pytest.fixture()
-def mock_language_config_service() -> LanguageConfigService:
+def mock_language_config_service() -> (
+    language_analyzer_services.language_config.LanguageConfigService
+):
     mock_language_config_service = MagicMock()
 
     return mock_language_config_service
@@ -103,8 +93,8 @@ def language_support_service(
     mock_git_ignore: MagicMock,
     mock_language_config_service: MagicMock,
     mock_data_loader: MagicMock,
-) -> LanguageSupportService:
-    return LanguageSupportService(
+) -> language_analyzer_services.language_support.LanguageSupportService:
+    return language_analyzer_services.language_support.LanguageSupportService(
         pre_commit_hook=mock_pre_commit_hook,
         git_ignore=mock_git_ignore,
         language_config=mock_language_config_service,
@@ -113,7 +103,7 @@ def language_support_service(
 
 
 def test_that_language_support_identifies_a_security_hook_we_can_use_during_init(
-    language_support_service: LanguageSupportService,
+    language_support_service: language_analyzer_services.language_support.LanguageSupportService,
     mock_data_loader: MagicMock,
     mock_language_config_service: MagicMock,
 ):
@@ -123,10 +113,12 @@ def test_that_language_support_identifies_a_security_hook_we_can_use_during_init
                 - baddie-finder-hook
         """
 
-    mock_language_config_service.get_language_config.return_value = LanguagePreCommitResult(
+    mock_language_config_service.get_language_config.return_value = language_analyzer_services.language_config.LanguagePreCommitResult(
         language="Python",
         version="abc123",
-        linter_config=LoadLinterConfigsResult(successful=False, linter_data=list()),
+        linter_config=language_analyzer_services.language_config.LoadLinterConfigsResult(
+            successful=False, linter_data=list()
+        ),
         config_data="""
             repos:
             -   repo: http://sample-repo.com/baddie-finder
@@ -143,7 +135,7 @@ def test_that_language_support_identifies_a_security_hook_we_can_use_during_init
 
 
 def test_that_language_support_does_not_identify_a_security_hook_if_config_does_not_use_repo_even_if_hook_id_matches(
-    language_support_service: LanguageSupportService,
+    language_support_service: language_analyzer_services.language_support.LanguageSupportService,
     mock_data_loader: MagicMock,
     mock_language_config_service: MagicMock,
 ):
@@ -153,10 +145,12 @@ def test_that_language_support_does_not_identify_a_security_hook_if_config_does_
                 - baddie-finder-hook
         """
 
-    mock_language_config_service.get_language_config.return_value = LanguagePreCommitResult(
+    mock_language_config_service.get_language_config.return_value = language_analyzer_services.language_config.LanguagePreCommitResult(
         language="Python",
         version="abc123",
-        linter_config=LoadLinterConfigsResult(successful=False, linter_data=list()),
+        linter_config=language_analyzer_services.language_config.LoadLinterConfigsResult(
+            successful=False, linter_data=list()
+        ),
         config_data="""
             repos:
             -   repo: http://sample-repo.com/goodie-finder # does not match our secrets_detectors
@@ -173,13 +167,15 @@ def test_that_language_support_does_not_identify_a_security_hook_if_config_does_
 
 
 def test_that_language_support_calculates_a_serializable_hook_configuration(
-    language_support_service: LanguageSupportService,
-    mock_language_config_service: LanguageConfigService,
+    language_support_service: language_analyzer_services.language_support.LanguageSupportService,
+    mock_language_config_service: language_analyzer_services.language_config.LanguageConfigService,
 ):
-    mock_language_config_service.get_language_config.return_value = LanguagePreCommitResult(
+    mock_language_config_service.get_language_config.return_value = language_analyzer_services.language_config.LanguagePreCommitResult(
         language="Python",
         version="abc123",
-        linter_config=LoadLinterConfigsResult(successful=False, linter_data=list()),
+        linter_config=language_analyzer_services.language_config.LoadLinterConfigsResult(
+            successful=False, linter_data=list()
+        ),
         config_data="""
         repos:
         -   repo: http://sample-repo.com/hooks
@@ -198,7 +194,7 @@ def test_that_language_support_calculates_a_serializable_hook_configuration(
 
 
 def test_that_language_support_does_not_identify_a_security_hook_if_config_uses_matching_repo_but_not_matching_hook(
-    language_support_service: LanguageSupportService,
+    language_support_service: language_analyzer_services.language_support.LanguageSupportService,
     mock_data_loader: MagicMock,
     mock_language_config_service: MagicMock,
 ):
@@ -208,10 +204,12 @@ def test_that_language_support_does_not_identify_a_security_hook_if_config_uses_
                 - baddie-finder-hook
         """
 
-    mock_language_config_service.get_language_config.return_value = LanguagePreCommitResult(
+    mock_language_config_service.get_language_config.return_value = language_analyzer_services.language_config.LanguagePreCommitResult(
         language="Python",
         version="abc123",
-        linter_config=LoadLinterConfigsResult(successful=False, linter_data=list()),
+        linter_config=language_analyzer_services.language_config.LoadLinterConfigsResult(
+            successful=False, linter_data=list()
+        ),
         config_data="""
             repos:
             -   repo: http://sample-repo.com/baddie-finder
@@ -229,7 +227,7 @@ def test_that_language_support_does_not_identify_a_security_hook_if_config_uses_
 
 # #### _write_pre_commit_configs ####
 def test_that_language_support_writes_linter_config_files(
-    language_support_service: LanguageSupportService,
+    language_support_service: language_analyzer_services.language_support.LanguageSupportService,
     mock_language_config_service: MagicMock,
     mock_data_loader: MagicMock,
     mock_open: MagicMock,
@@ -241,10 +239,10 @@ def test_that_language_support_writes_linter_config_files(
                 - baddie-finder
         """
 
-    mock_language_config_service.get_language_config.return_value = LanguagePreCommitResult(
+    mock_language_config_service.get_language_config.return_value = language_analyzer_services.language_config.LanguagePreCommitResult(
         language="Python",
         version="abc123",
-        linter_config=LoadLinterConfigsResult(
+        linter_config=language_analyzer_services.language_config.LoadLinterConfigsResult(
             successful=True,
             linter_data=[{"filename": "test.txt", "settings": {}}],
         ),
@@ -273,14 +271,14 @@ def test_that_language_support_writes_linter_config_files(
 
 
 def test_that_language_support_throws_exception_when_language_config_file_cannot_be_opened(
-    language_support_service: LanguageSupportService,
+    language_support_service: language_analyzer_services.language_support.LanguageSupportService,
     mock_language_config_service: MagicMock,
     mock_open: MagicMock,
 ):
-    mock_language_config_service.get_language_config.return_value = LanguagePreCommitResult(
+    mock_language_config_service.get_language_config.return_value = language_analyzer_services.language_config.LanguagePreCommitResult(
         language="Python",
         version="abc123",
-        linter_config=LoadLinterConfigsResult(
+        linter_config=language_analyzer_services.language_config.LoadLinterConfigsResult(
             successful=True,
             linter_data=[{"filename": "test.txt", "settings": {}}],
         ),
@@ -308,20 +306,18 @@ def test_that_language_support_throws_exception_when_language_config_file_cannot
 
 
 def test_that_language_support_handles_invalid_language_config(
-    language_support_service: LanguageSupportService,
+    language_support_service: language_analyzer_services.language_support.LanguageSupportService,
     mock_language_config_service: MagicMock,
     mock_open: MagicMock,
 ):
-    mock_language_config_service.get_language_config.return_value = (
-        LanguagePreCommitResult(
-            language="Python",
-            version="abc123",
-            linter_config=LoadLinterConfigsResult(
-                successful=True,
-                linter_data=[{"filename": "test.txt", "settings": {}}],
-            ),
-            config_data="",
-        )
+    mock_language_config_service.get_language_config.return_value = language_analyzer_services.language_config.LanguagePreCommitResult(
+        language="Python",
+        version="abc123",
+        linter_config=language_analyzer_services.language_config.LoadLinterConfigsResult(
+            successful=True,
+            linter_data=[{"filename": "test.txt", "settings": {}}],
+        ),
+        config_data="",
     )
 
     languages = ["RadLang"]
@@ -338,14 +334,14 @@ def test_that_language_support_handles_invalid_language_config(
 
 
 def test_that_language_support_handles_empty_repos_list(
-    language_support_service: LanguageSupportService,
+    language_support_service: language_analyzer_services.language_support.LanguageSupportService,
     mock_language_config_service: MagicMock,
     mock_data_loader: MagicMock,
 ):
-    mock_language_config_service.get_language_config.return_value = LanguagePreCommitResult(
+    mock_language_config_service.get_language_config.return_value = language_analyzer_services.language_config.LanguagePreCommitResult(
         language="Python",
         version="abc123",
-        linter_config=LoadLinterConfigsResult(
+        linter_config=language_analyzer_services.language_config.LoadLinterConfigsResult(
             successful=True,
             linter_data=[{"filename": "test.txt", "settings": {}}],
         ),
@@ -367,23 +363,23 @@ def test_that_language_support_handles_empty_repos_list(
 
 
 def test_write_pre_commit_configs_writes_successfully(
-    language_support_service: LanguageSupportService,
+    language_support_service: language_analyzer_services.language_support.LanguageSupportService,
     mock_open: MagicMock,
 ):
     configs = [
-        LinterConfig(
+        language_analyzer_services.language_support.LinterConfig(
             language="RadLag",
             linter_data=[
-                LinterConfigData(
+                language_analyzer_services.language_support.LinterConfigData(
                     filename="rad-lint.yml",
                     settings={},
                 )
             ],
         ),
-        LinterConfig(
+        language_analyzer_services.language_support.LinterConfig(
             language="CoolLang",
             linter_data=[
-                LinterConfigData(
+                language_analyzer_services.language_support.LinterConfigData(
                     filename="cool-lint.yml",
                     settings={},
                 )
@@ -397,7 +393,7 @@ def test_write_pre_commit_configs_writes_successfully(
 
 
 def test_write_pre_commit_configs_ignores_empty_linter_arr(
-    language_support_service: LanguageSupportService,
+    language_support_service: language_analyzer_services.language_support.LanguageSupportService,
     mock_open: MagicMock,
 ):
     language_support_service._write_pre_commit_configs([])
@@ -407,7 +403,7 @@ def test_write_pre_commit_configs_ignores_empty_linter_arr(
 
 
 def test_write_pre_commit_configs_returns_error_messages(
-    language_support_service: LanguageSupportService,
+    language_support_service: language_analyzer_services.language_support.LanguageSupportService,
     mock_open: MagicMock,
 ):
     mock_open.side_effect = Exception("error")
@@ -415,16 +411,20 @@ def test_write_pre_commit_configs_returns_error_messages(
     mock_filename = "cool-lint-config.yml"
     result = language_support_service._write_pre_commit_configs(
         [
-            LinterConfig(
+            language_analyzer_services.language_support.LinterConfig(
                 language=mock_language,
-                linter_data=[LinterConfigData(filename=mock_filename, settings={})],
+                linter_data=[
+                    language_analyzer_services.language_support.LinterConfigData(
+                        filename=mock_filename, settings={}
+                    )
+                ],
             ),
         ]
     )
 
     mock_open.assert_called_once()
     mock_open.return_value.write.assert_not_called()
-    assert result == LinterConfigWriteResult(
+    assert result == language_analyzer_services.language_support.LinterConfigWriteResult(
         error_messages=[
             f"Failed to write {mock_filename} linter config file for {mock_language}"
         ],
@@ -433,14 +433,17 @@ def test_write_pre_commit_configs_returns_error_messages(
 
 
 def test_write_pre_commit_configs_handles_empty_lint_configs(
-    language_support_service: LanguageSupportService,
+    language_support_service: language_analyzer_services.language_support.LanguageSupportService,
     mock_open: MagicMock,
 ):
     result = language_support_service._write_pre_commit_configs([])
 
     mock_open.assert_not_called()
     mock_open.return_value.write.assert_not_called()
-    assert result == LinterConfigWriteResult(
-        error_messages=[],
-        successful_languages=[],
+    assert (
+        result
+        == language_analyzer_services.language_support.LinterConfigWriteResult(
+            error_messages=[],
+            successful_languages=[],
+        )
     )

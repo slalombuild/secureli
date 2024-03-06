@@ -6,17 +6,8 @@ from secureli.modules.shared.models.exit_codes import ExitCode
 from secureli.modules.shared.models.publish_results import PublishResultsOption
 from secureli.modules.shared.models.result import Result
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
-from secureli.repositories.settings import (
-    PreCommitHook,
-    PreCommitRepo,
-    PreCommitSettings,
-    SecureliFile,
-    EchoSettings,
-    EchoLevel,
-)
-from secureli.modules.language_analyzer.language_analyzer_services.language_analyzer import (
-    AnalyzeResult,
-)
+from secureli.repositories import settings
+from secureli.modules.language_analyzer import language_analyzer_services
 from secureli.modules.observability.observability_services.logging import LogAction
 from secureli.modules.core.core_services.scanner import ScanMode, ScanResult
 from unittest import mock
@@ -42,13 +33,13 @@ def mock_scanner(mock_pre_commit) -> MagicMock:
 @pytest.fixture()
 def mock_pre_commit() -> MagicMock:
     mock_pre_commit = MagicMock()
-    mock_pre_commit.get_pre_commit_config.return_value = PreCommitSettings(
+    mock_pre_commit.get_pre_commit_config.return_value = settings.PreCommitSettings(
         repos=[
-            PreCommitRepo(
+            settings.PreCommitRepo(
                 repo="http://example-repo.com/",
                 rev="master",
                 hooks=[
-                    PreCommitHook(
+                    settings.PreCommitHook(
                         id="hook-id",
                         arguments=None,
                         additional_args=None,
@@ -81,8 +72,8 @@ def mock_get_time_far_from_epoch(mocker: MockerFixture) -> MagicMock:
 
 @pytest.fixture()
 def mock_default_settings(mock_settings_repository: MagicMock) -> MagicMock:
-    mock_echo_settings = EchoSettings(level=EchoLevel.info)
-    mock_settings_file = SecureliFile(echo=mock_echo_settings)
+    mock_echo_settings = settings.EchoSettings(level=settings.EchoLevel.info)
+    mock_settings_file = settings.SecureliFile(echo=mock_echo_settings)
     mock_settings_repository.load.return_value = mock_settings_file
 
     return mock_settings_repository
@@ -145,9 +136,11 @@ def test_that_scan_repo_errors_if_not_successful(
     mock_language_analyzer: MagicMock,
 ):
     mock_language = "RadLang"
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
-        language_proportions={f"{mock_language}": 1.0},
-        skipped_files=[],
+    mock_language_analyzer.analyze.return_value = (
+        language_analyzer_services.language_analyzer.AnalyzeResult(
+            language_proportions={f"{mock_language}": 1.0},
+            skipped_files=[],
+        )
     )
     mock_scanner.scan_repo.return_value = ScanResult(
         successful=False, output="Bad Error", failures=[]
@@ -170,9 +163,11 @@ def test_that_scan_repo_scans_if_installed(
     mock_scanner: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
-        language_proportions={"RadLang": 1.0},
-        skipped_files=[],
+    mock_language_analyzer.analyze.return_value = (
+        language_analyzer_services.language_analyzer.AnalyzeResult(
+            language_proportions={"RadLang": 1.0},
+            skipped_files=[],
+        )
     )
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
@@ -193,9 +188,11 @@ def test_that_scan_repo_continue_scan_if_upgrade_canceled(
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
-        language_proportions={"RadLang": 1.0},
-        skipped_files=[],
+    mock_language_analyzer.analyze.return_value = (
+        language_analyzer_services.language_analyzer.AnalyzeResult(
+            language_proportions={"RadLang": 1.0},
+            skipped_files=[],
+        )
     )
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=["RadLang"], version_installed="abc123"

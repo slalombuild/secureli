@@ -3,12 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-import secureli.repositories.secureli_config as SecureliConfigAll
-from secureli.repositories.secureli_config import (
-    SecureliConfigRepository,
-    SecureliConfig,
-    VerifyConfigOutcome,
-)
+from secureli.repositories import secureli_config
 
 
 @pytest.fixture()
@@ -86,25 +81,24 @@ def existent_path_old_schema(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
-def secureli_config() -> SecureliConfigRepository:
-    secureli_config = SecureliConfigRepository()
-    return secureli_config
+def secureli_config_fixture() -> secureli_config.SecureliConfigRepository:
+    return secureli_config.SecureliConfigRepository()
 
 
 def test_that_repo_synthesizes_default_config_when_missing(
     non_existent_path: MagicMock,
-    secureli_config: SecureliConfigRepository,
+    secureli_config_fixture: secureli_config.SecureliConfigRepository,
 ):
-    config = secureli_config.load()
+    config = secureli_config_fixture.load()
 
     assert config.languages is None
 
 
 def test_that_repo_loads_config_when_present(
     existent_path: MagicMock,
-    secureli_config: SecureliConfigRepository,
+    secureli_config_fixture: secureli_config.SecureliConfigRepository,
 ):
-    config = secureli_config.load()
+    config = secureli_config_fixture.load()
 
     assert config.languages == ["RadLang"]
 
@@ -112,49 +106,54 @@ def test_that_repo_loads_config_when_present(
 def test_that_repo_saves_config(
     existent_path: MagicMock,
     mock_open: MagicMock,
-    secureli_config: SecureliConfigRepository,
+    secureli_config_fixture: secureli_config.SecureliConfigRepository,
 ):
-    config = SecureliConfig(languages=["AwesomeLang"])
-    secureli_config.save(config)
+    config = secureli_config.SecureliConfig(languages=["AwesomeLang"])
+    secureli_config_fixture.save(config)
 
     mock_open.assert_called_once()
 
 
 def test_that_repo_validates_most_current_schema(
-    existent_path: MagicMock, secureli_config: SecureliConfigRepository
+    existent_path: MagicMock,
+    secureli_config_fixture: secureli_config.SecureliConfigRepository,
 ):
-    result = secureli_config.verify()
+    result = secureli_config_fixture.verify()
 
-    assert result == VerifyConfigOutcome.UP_TO_DATE
+    assert result == secureli_config.VerifyConfigOutcome.UP_TO_DATE
 
 
 def test_that_repo_catches_deprecated_schema(
-    existent_path_old_schema: MagicMock, secureli_config: SecureliConfigRepository
+    existent_path_old_schema: MagicMock,
+    secureli_config_fixture: secureli_config.SecureliConfigRepository,
 ):
-    result = secureli_config.verify()
+    result = secureli_config_fixture.verify()
 
-    assert result == VerifyConfigOutcome.OUT_OF_DATE
+    assert result == secureli_config.VerifyConfigOutcome.OUT_OF_DATE
 
 
 def test_that_repo_does_not_validate_with_missing_config(
-    non_existent_path: MagicMock, secureli_config: SecureliConfigRepository
+    non_existent_path: MagicMock,
+    secureli_config_fixture: secureli_config.SecureliConfigRepository,
 ):
-    result = secureli_config.verify()
+    result = secureli_config_fixture.verify()
 
-    assert result == VerifyConfigOutcome.MISSING
+    assert result == secureli_config.VerifyConfigOutcome.MISSING
 
 
 def test_that_repo_updates_config(
-    existent_path_old_schema: MagicMock, secureli_config: SecureliConfigRepository
+    existent_path_old_schema: MagicMock,
+    secureli_config_fixture: secureli_config.SecureliConfigRepository,
 ):
-    result = secureli_config.update()
+    result = secureli_config_fixture.update()
 
     assert result.languages
 
 
 def test_that_update_returns_empty_config_if_missing_config_file(
-    non_existent_path: MagicMock, secureli_config: SecureliConfigRepository
+    non_existent_path: MagicMock,
+    secureli_config_fixture: secureli_config.SecureliConfigRepository,
 ):
-    result = secureli_config.update()
+    result = secureli_config_fixture.update()
 
-    assert result == SecureliConfig()
+    assert result == secureli_config.SecureliConfig()
