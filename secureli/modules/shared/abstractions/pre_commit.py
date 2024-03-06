@@ -6,7 +6,7 @@ import shutil
 # A cleaner approach would be to update pre-commit
 # by implementing a dry-run option for the `autoupdate` command
 from pre_commit.commands.autoupdate import RevInfo as HookRepoRevInfo
-from typing import Any, Optional
+from typing import Optional
 
 import pydantic
 import re
