@@ -5,7 +5,9 @@ import pydantic
 
 from secureli.modules.shared.abstractions.lexer_guesser import LexerGuesser
 from secureli.repositories.repo_files import RepoFilesRepository
-from secureli.modules.language_analyzer import language_analyzer_services
+from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
+    supported_languages,
+)
 
 
 class SkippedFile(pydantic.BaseModel):
@@ -83,9 +85,7 @@ class LanguageAnalyzerService:
 
         # Filter out the keys that aren't in the list of supported languages
         filtered_keys = {
-            key: results[key]
-            for key in sorted_keys
-            if key in language_analyzer_services.language_support.supported_languages
+            key: results[key] for key in sorted_keys if key in supported_languages
         }
 
         # Count the number of files in the remaining dictionary of supported lexers
