@@ -3,7 +3,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from secureli.modules.language_analyzer import language_analyzer_services
+from secureli.modules.language_analyzer.language_analyzer_services.language_analyzer import (
+    LanguageAnalyzerService,
+)
 
 
 @pytest.fixture()
@@ -48,8 +50,8 @@ def mock_lexer_guesser_python() -> MagicMock:
 def language_analyzer_bad_lang(
     mock_repo_files: MagicMock,
     mock_lexer_guesser_bad_lang: MagicMock,
-) -> language_analyzer_services.language_analyzer.LanguageAnalyzerService:
-    return language_analyzer_services.language_analyzer.LanguageAnalyzerService(
+) -> LanguageAnalyzerService:
+    return LanguageAnalyzerService(
         repo_files=mock_repo_files,
         lexer_guesser=mock_lexer_guesser_bad_lang,
     )
@@ -59,8 +61,8 @@ def language_analyzer_bad_lang(
 def language_analyzer_python(
     mock_repo_files: MagicMock,
     mock_lexer_guesser_python: MagicMock,
-) -> language_analyzer_services.language_analyzer.LanguageAnalyzerService:
-    return language_analyzer_services.language_analyzer.LanguageAnalyzerService(
+) -> LanguageAnalyzerService:
+    return LanguageAnalyzerService(
         repo_files=mock_repo_files,
         lexer_guesser=mock_lexer_guesser_python,
     )
@@ -70,8 +72,8 @@ def language_analyzer_python(
 def language_analyzer_with_warnings(
     mock_repo_files_value_error: MagicMock,
     mock_lexer_guesser_python: MagicMock,
-) -> language_analyzer_services.language_analyzer.LanguageAnalyzerService:
-    return language_analyzer_services.language_analyzer.LanguageAnalyzerService(
+) -> LanguageAnalyzerService:
+    return LanguageAnalyzerService(
         repo_files=mock_repo_files_value_error,
         lexer_guesser=mock_lexer_guesser_python,
     )
@@ -84,8 +86,7 @@ def folder_path() -> MagicMock:
 
 
 def test_that_language_analyzer_removes_unsupported_languages(
-    language_analyzer_bad_lang: language_analyzer_services.language_analyzer.LanguageAnalyzerService,
-    folder_path: MagicMock,
+    language_analyzer_bad_lang: LanguageAnalyzerService, folder_path: MagicMock
 ):
     percentages_per_language = language_analyzer_bad_lang.analyze(folder_path)
 
@@ -93,8 +94,7 @@ def test_that_language_analyzer_removes_unsupported_languages(
 
 
 def test_that_language_analyzer_includes_python(
-    language_analyzer_python: language_analyzer_services.language_analyzer.LanguageAnalyzerService,
-    folder_path: MagicMock,
+    language_analyzer_python: LanguageAnalyzerService, folder_path: MagicMock
 ):
     analyze_result = language_analyzer_python.analyze(folder_path)
 
@@ -103,7 +103,7 @@ def test_that_language_analyzer_includes_python(
 
 
 def test_that_language_analyzer_displays_warnings(
-    language_analyzer_with_warnings: language_analyzer_services.language_analyzer.LanguageAnalyzerService,
+    language_analyzer_with_warnings: LanguageAnalyzerService,
     folder_path: MagicMock,
 ):
     analyze_result = language_analyzer_with_warnings.analyze(folder_path)

@@ -8,9 +8,16 @@ from secureli.actions.action import Action, ActionDependencies, VerifyOutcome
 from secureli.modules.observability.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
 from secureli.modules.shared.models.echo import Color
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
-from secureli.modules.language_analyzer import language_analyzer_services
+from secureli.modules.language_analyzer.language_analyzer_services.language_analyzer import (
+    AnalyzeResult,
+    SkippedFile,
+)
+from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
+    LanguageMetadata,
+)
 from secureli.modules.core.core_services.scanner import ScanResult, Failure
 from secureli.modules.core.core_services.updater import UpdateResult
+from secureli.settings import Settings
 
 test_folder_path = Path("does-not-matter")
 
@@ -58,10 +65,8 @@ def test_that_initialize_repo_raises_value_error_without_any_supported_languages
     mock_language_analyzer: MagicMock,
     mock_echo: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={}, skipped_files=[]
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={}, skipped_files=[]
     )
 
     action.verify_install(test_folder_path, reset=True, always_yes=True)
@@ -76,14 +81,12 @@ def test_that_initialize_repo_install_flow_selects_both_languages(
     mock_language_analyzer: MagicMock,
     mock_echo: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={
-                "RadLang": 0.75,
-                "CoolLang": 0.25,
-            },
-            skipped_files=[],
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={
+            "RadLang": 0.75,
+            "CoolLang": 0.25,
+        },
+        skipped_files=[],
     )
 
     action.verify_install(test_folder_path, reset=True, always_yes=True)
@@ -100,14 +103,12 @@ def test_that_initialize_repo_install_flow_performs_security_analysis(
     mock_language_analyzer: MagicMock,
     mock_scanner: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={
-                "RadLang": 0.75,
-                "BadLang": 0.25,
-            },
-            skipped_files=[],
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={
+            "RadLang": 0.75,
+            "BadLang": 0.25,
+        },
+        skipped_files=[],
     )
 
     action.verify_install(test_folder_path, reset=True, always_yes=True)
@@ -134,19 +135,15 @@ def test_that_initialize_repo_install_flow_skips_security_analysis_if_unavailabl
     mock_scanner: MagicMock,
     mock_language_support: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={
-                "RadLang": 0.75,
-                "BadLang": 0.25,
-            },
-            skipped_files=[],
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={
+            "RadLang": 0.75,
+            "BadLang": 0.25,
+        },
+        skipped_files=[],
     )
-    mock_language_support.apply_support.return_value = (
-        language_analyzer_services.language_support.LanguageMetadata(
-            version="abc123", security_hook_id=None
-        )
+    mock_language_support.apply_support.return_value = LanguageMetadata(
+        version="abc123", security_hook_id=None
     )
 
     action.verify_install(test_folder_path, reset=True, always_yes=True)
@@ -160,22 +157,20 @@ def test_that_initialize_repo_install_flow_warns_about_skipped_files(
     mock_echo: MagicMock,
     mock_updater: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={
-                "RadLang": 0.75,
-                "BadLang": 0.25,
-            },
-            skipped_files=[
-                language_analyzer_services.language_analyzer.SkippedFile(
-                    file_path=Path("./file.wacky-extension"),
-                    error_message="What a wacky extension!",
-                ),
-                language_analyzer_services.language_analyzer.SkippedFile(
-                    file_path=Path("./file2.huge"), error_message="What a huge file!"
-                ),
-            ],
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={
+            "RadLang": 0.75,
+            "BadLang": 0.25,
+        },
+        skipped_files=[
+            SkippedFile(
+                file_path=Path("./file.wacky-extension"),
+                error_message="What a wacky extension!",
+            ),
+            SkippedFile(
+                file_path=Path("./file2.huge"), error_message="What a huge file!"
+            ),
+        ],
     )
 
     mock_updater.pre_commit.install.return_value = InstallResult(
@@ -207,11 +202,9 @@ def test_that_initialize_repo_selects_previously_selected_language(
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={"PreviousLang": 1.0},
-            skipped_files=[],
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"PreviousLang": 1.0},
+        skipped_files=[],
     )
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=["PreviousLang"], version_installed="abc123"
@@ -247,11 +240,9 @@ def test_that_initialize_repo_updates_repo_config_if_old_schema(
     mock_language_support: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={"PreviousLang": 1.0},
-            skipped_files=[],
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"PreviousLang": 1.0},
+        skipped_files=[],
     )
     mock_secureli_config.verify.return_value = VerifyConfigOutcome.OUT_OF_DATE
 
@@ -311,10 +302,8 @@ def test_that_initialize_repo_returns_up_to_date_if_the_process_is_canceled_on_e
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={"RadLang": 0.5, "CoolLang": 0.5}, skipped_files=[]
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"RadLang": 0.5, "CoolLang": 0.5}, skipped_files=[]
     )
 
     result = action.verify_install(test_folder_path, reset=False, always_yes=False)
@@ -329,12 +318,10 @@ def test_that_initialize_repo_prints_warnings_for_failed_linter_config_writes(
 ):
     config_write_error = "Failed to write config file for RadLang"
 
-    mock_language_support.apply_support.return_value = (
-        language_analyzer_services.language_support.LanguageMetadata(
-            version="abc123",
-            security_hook_id="test_hook_id",
-            linter_config_write_errors=[config_write_error],
-        )
+    mock_language_support.apply_support.return_value = LanguageMetadata(
+        version="abc123",
+        security_hook_id="test_hook_id",
+        linter_config_write_errors=[config_write_error],
     )
 
     mock_updater.pre_commit.install.return_value = InstallResult(
@@ -355,10 +342,8 @@ def test_that_verify_install_returns_failed_result_on_new_install_language_not_s
         languages=[], version_installed=None
     )
 
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={}, skipped_files=[]
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={}, skipped_files=[]
     )
 
     verify_result = action.verify_install(
@@ -377,10 +362,8 @@ def test_that_verify_install_returns_up_to_date_result_on_existing_install_langu
         languages=["RadLang"], version_installed="abc123"
     )
 
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={}, skipped_files=[]
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={}, skipped_files=[]
     )
 
     verify_result = action.verify_install(
@@ -399,10 +382,8 @@ def test_that_verify_install_returns_up_to_date_result_on_existing_install_no_ne
         languages=["RadLang"], version_installed="abc123"
     )
 
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={"RadLang": 1.0}, skipped_files=[]
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"RadLang": 1.0}, skipped_files=[]
     )
 
     verify_result = action.verify_install(
@@ -421,10 +402,8 @@ def test_that_verify_install_returns_success_result_newly_detected_language_inst
         languages=["RadLang"], version_installed="abc123"
     )
 
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={"RadLang": 0.5, "CoolLang": 0.5}, skipped_files=[]
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"RadLang": 0.5, "CoolLang": 0.5}, skipped_files=[]
     )
 
     verify_result = action.verify_install(
@@ -440,13 +419,11 @@ def test_that_initialize_repo_install_flow_warns_about_overwriting_pre_commit_fi
     mock_echo: MagicMock,
     mock_updater: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={
-                "RadLang": 0.75,
-            },
-            skipped_files=[],
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={
+            "RadLang": 0.75,
+        },
+        skipped_files=[],
     )
 
     install_result = InstallResult(
@@ -605,10 +582,7 @@ def test_that_post_install_scan_creates_pre_commit_on_new_install(
     action: Action, mock_updater: MagicMock
 ):
     action._run_post_install_scan(
-        "test/path",
-        SecureliConfig(),
-        language_analyzer_services.language_support.LanguageMetadata(version="0.03"),
-        True,
+        "test/path", SecureliConfig(), LanguageMetadata(version="0.03"), True
     )
 
     mock_updater.pre_commit.install.assert_called_once()
@@ -618,10 +592,7 @@ def test_that_post_install_scan_ignores_creating_pre_commit_on_existing_install(
     action: Action, mock_updater: MagicMock
 ):
     action._run_post_install_scan(
-        "test/path",
-        SecureliConfig(),
-        language_analyzer_services.language_support.LanguageMetadata(version="0.03"),
-        False,
+        "test/path", SecureliConfig(), LanguageMetadata(version="0.03"), False
     )
 
     mock_updater.pre_commit.install.assert_not_called()
@@ -633,9 +604,7 @@ def test_that_post_install_scan_scans_repo(
     action._run_post_install_scan(
         "test/path",
         SecureliConfig(),
-        language_analyzer_services.language_support.LanguageMetadata(
-            version="0.03", security_hook_id="secrets-hook"
-        ),
+        LanguageMetadata(version="0.03", security_hook_id="secrets-hook"),
         False,
     )
 
@@ -649,7 +618,7 @@ def test_that_post_install_scan_does_not_scan_repo_when_no_security_hook_id(
     action._run_post_install_scan(
         "test/path",
         SecureliConfig(languages=["RadLang"]),
-        language_analyzer_services.language_support.LanguageMetadata(version="0.03"),
+        LanguageMetadata(version="0.03"),
         False,
     )
 
@@ -662,11 +631,9 @@ def test_that_post_install_scan_does_not_scan_repo_when_no_security_hook_id(
 def test_that_install_saves_settings(
     action: Action, mock_language_analyzer: MagicMock, mock_settings: MagicMock
 ):
-    mock_language_analyzer.analyze.return_value = (
-        language_analyzer_services.language_analyzer.AnalyzeResult(
-            language_proportions={"PreviousLang": 1.0},
-            skipped_files=[],
-        )
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"PreviousLang": 1.0},
+        skipped_files=[],
     )
     action._install_secureli("test/path", ["RadLang"], [], True)
 

@@ -3,8 +3,16 @@ from pathlib import Path
 import pytest
 
 from secureli.modules.shared.abstractions.pre_commit import ExecuteResult
-from secureli.repositories import settings
-from secureli.modules.core.core_services import scanner
+from secureli.repositories.settings import (
+    PreCommitHook,
+    PreCommitRepo,
+    PreCommitSettings,
+)
+from secureli.modules.core.core_services.scanner import (
+    ScannerService,
+    ScanMode,
+    OutputParseErrors,
+)
 from pytest_mock import MockerFixture
 
 test_folder_path = Path(".")
@@ -110,24 +118,22 @@ def mock_config_no_black(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
-def scanner_service(mock_pre_commit: MagicMock) -> scanner.ScannerService:
-    return scanner.ScannerService(mock_pre_commit)
+def scanner_service(mock_pre_commit: MagicMock) -> ScannerService:
+    return ScannerService(mock_pre_commit)
 
 
 def test_that_scanner_service_scans_repositories_with_pre_commit(
-    scanner_service: scanner.ScannerService,
+    scanner_service: ScannerService,
     mock_pre_commit: MagicMock,
 ):
-    scan_result = scanner_service.scan_repo(
-        test_folder_path, scanner.ScanMode.ALL_FILES
-    )
+    scan_result = scanner_service.scan_repo(test_folder_path, ScanMode.ALL_FILES)
 
     mock_pre_commit.execute_hooks.assert_called_once()
     assert scan_result.successful
 
 
 def test_that_scanner_service_parses_failures(
-    scanner_service: scanner.ScannerService,
+    scanner_service: ScannerService,
     mock_pre_commit: MagicMock,
     mock_scan_output_single_failure: MagicMock,
     mock_config_all_repos: MagicMock,
@@ -135,15 +141,13 @@ def test_that_scanner_service_parses_failures(
     mock_pre_commit.execute_hooks.return_value = ExecuteResult(
         successful=True, output=mock_scan_output_single_failure
     )
-    scan_result = scanner_service.scan_repo(
-        test_folder_path, scanner.ScanMode.ALL_FILES
-    )
+    scan_result = scanner_service.scan_repo(test_folder_path, ScanMode.ALL_FILES)
 
     assert len(scan_result.failures) is 1
 
 
 def test_that_scanner_service_parses_multiple_failures(
-    scanner_service: scanner.ScannerService,
+    scanner_service: ScannerService,
     mock_pre_commit: MagicMock,
     mock_scan_output_double_failure: MagicMock,
     mock_config_all_repos: MagicMock,
@@ -151,15 +155,13 @@ def test_that_scanner_service_parses_multiple_failures(
     mock_pre_commit.execute_hooks.return_value = ExecuteResult(
         successful=True, output=mock_scan_output_double_failure
     )
-    scan_result = scanner_service.scan_repo(
-        test_folder_path, scanner.ScanMode.ALL_FILES
-    )
+    scan_result = scanner_service.scan_repo(test_folder_path, ScanMode.ALL_FILES)
 
     assert len(scan_result.failures) is 2
 
 
 def test_that_scanner_service_parses_when_no_failures(
-    scanner_service: scanner.ScannerService,
+    scanner_service: ScannerService,
     mock_pre_commit: MagicMock,
     mock_scan_output_no_failure: MagicMock,
     mock_config_all_repos: MagicMock,
@@ -167,15 +169,13 @@ def test_that_scanner_service_parses_when_no_failures(
     mock_pre_commit.execute_hooks.return_value = ExecuteResult(
         successful=True, output=mock_scan_output_no_failure
     )
-    scan_result = scanner_service.scan_repo(
-        test_folder_path, scanner.ScanMode.ALL_FILES
-    )
+    scan_result = scanner_service.scan_repo(test_folder_path, ScanMode.ALL_FILES)
 
     assert len(scan_result.failures) is 0
 
 
 def test_that_scanner_service_handles_error_in_missing_repo(
-    scanner_service: scanner.ScannerService,
+    scanner_service: ScannerService,
     mock_pre_commit: MagicMock,
     mock_scan_output_double_failure: MagicMock,
     mock_config_no_black: MagicMock,
@@ -183,27 +183,23 @@ def test_that_scanner_service_handles_error_in_missing_repo(
     mock_pre_commit.execute_hooks.return_value = ExecuteResult(
         successful=True, output=mock_scan_output_double_failure
     )
-    scan_result = scanner_service.scan_repo(
-        test_folder_path, scanner.ScanMode.ALL_FILES
-    )
+    scan_result = scanner_service.scan_repo(test_folder_path, ScanMode.ALL_FILES)
 
-    assert scan_result.failures[1].repo == scanner.OutputParseErrors.REPO_NOT_FOUND
+    assert scan_result.failures[1].repo == OutputParseErrors.REPO_NOT_FOUND
 
 
-def test_that_find_repo_from_id_finds_matching_hooks(
-    scanner_service: scanner.ScannerService,
-):
+def test_that_find_repo_from_id_finds_matching_hooks(scanner_service: ScannerService):
     mock_hook_id = "find_secrets"
     expected_repo = "mock_repo"
     result = scanner_service._find_repo_from_id(
         mock_hook_id,
-        settings.PreCommitSettings(
+        PreCommitSettings(
             repos=[
-                settings.PreCommitRepo(
+                PreCommitRepo(
                     repo=expected_repo,
                     rev="",
                     url="test-url",
-                    hooks=[settings.PreCommitHook(id=mock_hook_id)],
+                    hooks=[PreCommitHook(id=mock_hook_id)],
                     suppressed_hook_ids=[],
                 )
             ],
@@ -215,17 +211,17 @@ def test_that_find_repo_from_id_finds_matching_hooks(
 
 
 def test_that_find_repo_from_id_does_not_have_matching_hook_id(
-    scanner_service: scanner.ScannerService,
+    scanner_service: ScannerService,
 ):
     result = scanner_service._find_repo_from_id(
         "test-hook-id",
-        settings.PreCommitSettings(
+        PreCommitSettings(
             repos=[
-                settings.PreCommitRepo(
+                PreCommitRepo(
                     repo="mock-repo",
                     rev="",
                     url="test-url",
-                    hooks=[settings.PreCommitHook(id="other_hook_id")],
+                    hooks=[PreCommitHook(id="other_hook_id")],
                     suppressed_hook_ids=[],
                 )
             ],
@@ -233,4 +229,4 @@ def test_that_find_repo_from_id_does_not_have_matching_hook_id(
         ),
     )
 
-    assert result is scanner.OutputParseErrors.REPO_NOT_FOUND
+    assert result is OutputParseErrors.REPO_NOT_FOUND
