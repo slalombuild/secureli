@@ -4,13 +4,13 @@ from secureli.modules.observability.consts.logging import (
 )
 from secureli.modules.shared.models.publish_results import PublishLogResult
 from secureli.modules.shared.models.result import Result
+from secureli.modules.shared.models.scan import ScanFailure
 from secureli.repositories.settings import TelemetrySettings
 from secureli.settings import Settings
 from secureli.modules.shared.utilities.usage_stats import (
     post_log,
     convert_failures_to_failure_count,
 )
-from secureli.modules.core.core_services.scanner import Failure
 from unittest import mock
 from unittest.mock import Mock, patch
 
@@ -19,9 +19,9 @@ import os
 
 def test_that_convert_failures_to_failure_count_returns_correct_count():
     list_of_failure = [
-        Failure(id="testfailid1", file="testfile1", repo="testrepo1"),
-        Failure(id="testfailid1", file="testfile2", repo="testrepo1"),
-        Failure(id="testfailid2", file="testfile1", repo="testrepo1"),
+        ScanFailure(id="testfailid1", file="testfile1", repo="testrepo1"),
+        ScanFailure(id="testfailid1", file="testfile2", repo="testrepo1"),
+        ScanFailure(id="testfailid2", file="testfile1", repo="testrepo1"),
     ]
 
     result = convert_failures_to_failure_count(list_of_failure)

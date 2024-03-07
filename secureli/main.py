@@ -3,13 +3,13 @@ from typing import Optional, List
 from typing_extensions import Annotated
 import typer
 from typer import Option
-from secureli.actions.action import VerifyOutcome
 
-from secureli.actions.scan import ScanMode
 from secureli.actions.setup import SetupAction
 from secureli.container import Container
 from secureli.modules.shared.models.echo import Color
+from secureli.modules.shared.models.install import VerifyOutcome
 from secureli.modules.shared.models.publish_results import PublishResultsOption
+from secureli.modules.shared.models.scan import ScanMode
 from secureli.modules.shared.resources import read_resource
 from secureli.settings import Settings
 import secureli.repositories.secureli_config as SecureliConfig
