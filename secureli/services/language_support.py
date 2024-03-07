@@ -7,7 +7,6 @@ from secureli.abstractions.echo import EchoAbstraction
 
 import secureli.repositories.secureli_config as SecureliConfig
 from secureli.abstractions.pre_commit import PreCommitAbstraction
-from secureli.resources.slugify import slugify
 from secureli.services.git_ignore import GitIgnoreService
 from secureli.services.language_config import LanguageConfigService
 from secureli.utilities.hash import hash_config
@@ -240,16 +239,25 @@ class LanguageSupportService:
         linter_configs: list[LinterConfig] = []
         config_languages = [*languages, "base"]
         config_lint_languages = [*lint_languages, "base"]
+
         if pre_commit_config_location:
             with open(pre_commit_config_location) as stream:
                 try:
                     data = yaml.safe_load(stream)
                     existing_data = data or {}
                     config_repos += data["repos"]
-                except yaml.YAMLError as exc:
+                except yaml.YAMLError:
                     self.echo.error(
-                        f"There was an issue parsing existing pre-commit-config.yaml: {exc}"
+                        f"There was an issue parsing existing pre-commit-config.yaml."
                     )
+                    return BuildConfigResult(
+                        successful=False,
+                        languages_added=[],
+                        config_data={},
+                        version="",
+                        linter_configs=linter_configs,
+                    )
+
         for language in config_languages:
             include_linter = language in config_lint_languages
             result = self.language_config.get_language_config(language, include_linter)

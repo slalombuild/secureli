@@ -1,5 +1,7 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+from pathlib import Path
 
+import yaml
 import pytest
 from _pytest.python_api import raises
 from pytest_mock import MockerFixture
@@ -18,6 +20,8 @@ from secureli.services.language_config import (
     LanguagePreCommitResult,
     LoadLinterConfigsResult,
 )
+
+test_folder_path = Path("does-not-matter")
 
 
 @pytest.fixture()
@@ -396,6 +400,79 @@ def test_write_pre_commit_configs_writes_successfully(
 
     assert mock_open.call_count == len(configs)
     assert mock_open.return_value.write.call_count == len(configs)
+
+
+def test_build_pre_commit_displays_error_parsing_existing_config(
+    language_support_service: LanguageSupportService,
+    mock_language_config_service: MagicMock,
+    mock_open: MagicMock,
+    mock_echo: MagicMock,
+):
+    with (
+        patch("builtins.open", mock_open(read_data="data")),
+        patch.object(yaml, "safe_load", side_effect=yaml.YAMLError),
+    ):
+        mock_language_config_service.get_language_config.return_value = LanguagePreCommitResult(
+            language="Python",
+            version="abc123",
+            linter_config=LoadLinterConfigsResult(
+                successful=True,
+                linter_data=[{"filename": "test.txt", "settings": {}}],
+            ),
+            config_data="""
+                repos:
+                """,
+        )
+        mock_data_loader.return_value = ""
+        languages = ["RadLang"]
+        lint_languages = [*languages]
+
+        result = language_support_service.build_pre_commit_config(
+            languages, lint_languages, test_folder_path
+        )
+
+        mock_echo.error.assert_called_with(
+            "There was an issue parsing existing pre-commit-config.yaml."
+        )
+        assert result.successful == False
+
+
+def test_build_pre_commit_respects_existing_pre_commit_config(
+    language_support_service: LanguageSupportService,
+    mock_language_config_service: MagicMock,
+    mock_open: MagicMock,
+):
+    mock_language_config_service.get_language_config.return_value = LanguagePreCommitResult(
+        language="Python",
+        version="abc123",
+        linter_config=LoadLinterConfigsResult(
+            successful=True,
+            linter_data=[{"filename": "test.txt", "settings": {}}],
+        ),
+        config_data="""
+            repos:
+            """,
+    )
+    mock_data_loader.return_value = ""
+    languages = ["RadLang"]
+    lint_languages = [*languages]
+    with (
+        patch("builtins.open", mock_open(read_data="data")),
+        patch.object(
+            yaml, "safe_load", return_value={"repos": [{"autoPep8": {"version": 0}}]}
+        ),
+    ):
+        result = language_support_service.build_pre_commit_config(
+            languages, lint_languages, test_folder_path
+        )
+        assert result.successful == True
+        assert result.config_data == {
+            "repos": [
+                {"autoPep8": {"version": 0}},
+                {"autoPep8": {"version": 0}},
+                {"autoPep8": {"version": 0}},
+            ]
+        }
 
 
 def test_write_pre_commit_configs_ignores_empty_linter_arr(
