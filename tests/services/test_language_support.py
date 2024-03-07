@@ -459,7 +459,7 @@ def test_build_pre_commit_respects_existing_pre_commit_config(
     with (
         patch("builtins.open", mock_open(read_data="data")),
         patch.object(
-            yaml, "safe_load", return_value={"repos": [{"autoPep8": {"version": 0}}]}
+            yaml, "safe_load", return_value={"repos": [{"autopep8": {"version": 0}}]}
         ),
     ):
         result = language_support_service.build_pre_commit_config(
@@ -468,9 +468,9 @@ def test_build_pre_commit_respects_existing_pre_commit_config(
         assert result.successful == True
         assert result.config_data == {
             "repos": [
-                {"autoPep8": {"version": 0}},
-                {"autoPep8": {"version": 0}},
-                {"autoPep8": {"version": 0}},
+                {"autopep8": {"version": 0}},
+                {"autopep8": {"version": 0}},
+                {"autopep8": {"version": 0}},
             ]
         }
 
