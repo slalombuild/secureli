@@ -103,12 +103,14 @@ def language_support_service(
     mock_git_ignore: MagicMock,
     mock_language_config_service: MagicMock,
     mock_data_loader: MagicMock,
+    mock_echo: MagicMock,
 ) -> LanguageSupportService:
     return LanguageSupportService(
         pre_commit_hook=mock_pre_commit_hook,
         git_ignore=mock_git_ignore,
         language_config=mock_language_config_service,
         data_loader=mock_data_loader,
+        echo=mock_echo,
     )
 
 

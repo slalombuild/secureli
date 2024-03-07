@@ -107,8 +107,8 @@ class LanguageSupportService:
         pre_commit_hook: PreCommitAbstraction,
         language_config: LanguageConfigService,
         git_ignore: GitIgnoreService,
-        echo: EchoAbstraction,
         data_loader: Callable[[str], str],
+        echo: EchoAbstraction,
     ):
         self.git_ignore = git_ignore
         self.pre_commit_hook = pre_commit_hook

@@ -115,6 +115,7 @@ class Action(ABC):
                 return update_result
 
         config = SecureliConfig() if reset else self.action_deps.secureli_config.load()
+        languages = []
 
         try:
             languages = self._detect_languages(folder_path)
@@ -146,8 +147,8 @@ class Action(ABC):
                 folder_path,
                 languages,
                 newly_detected_languages,
-                pre_commit_config_location,
                 always_yes,
+                pre_commit_config_location,
             )
         else:
             self.action_deps.echo.print(
@@ -166,8 +167,8 @@ class Action(ABC):
         folder_path: Path,
         detected_languages: list[str],
         install_languages: list[str],
-        pre_commit_config_location: Path,
         always_yes: bool,
+        pre_commit_config_location: Path = None,
     ) -> VerifyResult:
         """
         Installs seCureLI into the given folder path and returns the new configuration
