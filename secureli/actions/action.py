@@ -1,10 +1,14 @@
 from abc import ABC
-from enum import Enum
 from pathlib import Path
-from typing import Optional
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.modules.observability.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
 from secureli.modules.shared.models.echo import Color
+from secureli.modules.shared.models.install import VerifyOutcome, VerifyResult
+from secureli.modules.shared.models.language import (
+    LanguageMetadata,
+    LanguageNotSupportedError,
+)
+from secureli.modules.shared.models.scan import ScanMode
 from secureli.repositories.secureli_config import (
     SecureliConfig,
     SecureliConfigRepository,
@@ -13,41 +17,14 @@ from secureli.repositories.secureli_config import (
 from secureli.repositories.settings import SecureliRepository, TelemetrySettings
 from secureli.modules.language_analyzer.language_analyzer_services.language_analyzer import (
     LanguageAnalyzerService,
-    AnalyzeResult,
-)
-from secureli.modules.language_analyzer.language_analyzer_services.language_config import (
-    LanguageNotSupportedError,
 )
 from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
-    LanguageMetadata,
     LanguageSupportService,
 )
-from secureli.modules.core.core_services.scanner import ScannerService, ScanMode
+from secureli.modules.core.core_services.scanner import ScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
 
-import pydantic
 from secureli.modules.shared.utilities.formatter import format_sentence_list
-
-
-class VerifyOutcome(str, Enum):
-    INSTALL_CANCELED = "install-canceled"
-    INSTALL_FAILED = "install-failed"
-    INSTALL_SUCCEEDED = "install-succeeded"
-    UPDATE_CANCELED = "update-canceled"
-    UPDATE_SUCCEEDED = "update-succeeded"
-    UPDATE_FAILED = "update-failed"
-    UP_TO_DATE = "up-to-date"
-
-
-class VerifyResult(pydantic.BaseModel):
-    """
-    The outcomes of performing verification. Actions can use these results
-    to decide whether to proceed with their post-initialization actions or not.
-    """
-
-    outcome: VerifyOutcome
-    config: Optional[SecureliConfig] = None
-    analyze_result: Optional[AnalyzeResult] = None
 
 
 class ActionDependencies:

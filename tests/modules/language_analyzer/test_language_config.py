@@ -4,6 +4,8 @@ import pytest
 
 from secureli.modules.language_analyzer.language_analyzer_services.language_config import (
     LanguageConfigService,
+)
+from secureli.modules.shared.models.language import (
     LanguageNotSupportedError,
     LoadLinterConfigsResult,
 )

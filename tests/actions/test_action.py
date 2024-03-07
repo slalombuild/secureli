@@ -4,20 +4,18 @@ from unittest.mock import MagicMock
 import pytest
 from secureli.modules.shared.abstractions.pre_commit import InstallResult
 
-from secureli.actions.action import Action, ActionDependencies, VerifyOutcome
+from secureli.actions.action import Action, ActionDependencies
 from secureli.modules.observability.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
 from secureli.modules.shared.models.echo import Color
-from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
-from secureli.modules.language_analyzer.language_analyzer_services.language_analyzer import (
+from secureli.modules.shared.models.install import VerifyOutcome
+from secureli.modules.shared.models.language import (
     AnalyzeResult,
+    LanguageMetadata,
     SkippedFile,
 )
-from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
-    LanguageMetadata,
-)
-from secureli.modules.core.core_services.scanner import ScanResult, Failure
+from secureli.modules.shared.models.scan import ScanFailure, ScanResult
+from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
 from secureli.modules.core.core_services.updater import UpdateResult
-from secureli.settings import Settings
 
 test_folder_path = Path("does-not-matter")
 
@@ -122,7 +120,7 @@ def test_that_initialize_repo_install_flow_displays_security_analysis_results(
     mock_scanner.scan_repo.return_value = ScanResult(
         successful=False,
         output="Detect secrets...Failed",
-        failures=[Failure(repo="repo", id="id", file="file")],
+        failures=[ScanFailure(repo="repo", id="id", file="file")],
     )
     action.verify_install(test_folder_path, reset=True, always_yes=True)
 

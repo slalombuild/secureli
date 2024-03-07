@@ -1,11 +1,12 @@
 from pathlib import Path
 
 from secureli.actions.scan import ScanAction
-from secureli.actions.action import Action, ActionDependencies, VerifyResult
+from secureli.actions.action import Action, ActionDependencies
 from secureli.modules.observability.observability_services.logging import (
     LoggingService,
-    LogAction,
 )
+from secureli.modules.shared.models.install import VerifyResult
+from secureli.modules.shared.models.logging import LogAction
 
 
 class InitializerAction(Action):

@@ -6,11 +6,12 @@ from typing import Optional
 from uuid import uuid4
 
 import pydantic
+from secureli.modules.shared.models.config import HookConfiguration
+from secureli.modules.shared.models.logging import LogAction
 
 import secureli.repositories.secureli_config as SecureliConfig
 from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
     LanguageSupportService,
-    HookConfiguration,
 )
 from secureli.repositories.secureli_config import SecureliConfigRepository
 from secureli.modules.shared.utilities.git_meta import (
@@ -35,16 +36,6 @@ class LogStatus(str, Enum):
 
     success = "SUCCESS"
     failure = "FAILURE"
-
-
-class LogAction(str, Enum):
-    """Which action the log entry is associated with"""
-
-    scan = "SCAN"
-    init = "INIT"
-    build = "_BUILD"
-    update = "UPDATE"
-    publish = "PUBLISH"  # "PUBLISH" does not correspond to a CLI action/subcommand
 
 
 class LogFailure(pydantic.BaseModel):
