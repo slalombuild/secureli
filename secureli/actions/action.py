@@ -43,6 +43,7 @@ class VerifyResult(pydantic.BaseModel):
     outcome: VerifyOutcome
     config: Optional[SecureliConfig] = None
     analyze_result: Optional[AnalyzeResult] = None
+    file_path: Optional[Path] = None
 
 
 class ActionDependencies:
@@ -90,12 +91,31 @@ class Action(ABC):
         if self.action_deps.secureli_config.verify() == VerifyConfigOutcome.OUT_OF_DATE:
             update_config = self._update_secureli_config_only(always_yes)
             if update_config.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
-                self.action_deps.echo.error(f"seCureLI could not be verified.")
+                self.action_deps.echo.error("seCureLI could not be verified.")
                 return VerifyResult(
                     outcome=update_config.outcome,
                 )
 
+        pre_commit_config_location = (
+            self.action_deps.scanner.pre_commit.get_preferred_pre_commit_config_path(
+                folder_path
+            )
+        )
+        if not pre_commit_config_location.exists():
+            update_result: VerifyResult = (
+                self._update_secureli_pre_commit_config_location(
+                    folder_path, always_yes
+                )
+            )
+            pre_commit_config_location = update_result.file_path
+            if update_result.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
+                self.action_deps.echo.error(
+                    "seCureLI pre-commit-config.yaml could not be updated."
+                )
+                return update_result
+
         config = SecureliConfig() if reset else self.action_deps.secureli_config.load()
+        languages = []
 
         try:
             languages = self._detect_languages(folder_path)
@@ -124,7 +144,11 @@ class Action(ABC):
             or newly_detected_languages
         ):
             return self._install_secureli(
-                folder_path, languages, newly_detected_languages, always_yes
+                folder_path,
+                languages,
+                newly_detected_languages,
+                always_yes,
+                pre_commit_config_location,
             )
         else:
             self.action_deps.echo.print(
@@ -144,6 +168,7 @@ class Action(ABC):
         detected_languages: list[str],
         install_languages: list[str],
         always_yes: bool,
+        pre_commit_config_location: Path = None,
     ) -> VerifyResult:
         """
         Installs seCureLI into the given folder path and returns the new configuration
@@ -177,8 +202,8 @@ class Action(ABC):
             install_languages, always_yes
         )
         language_config_result = (
-            self.action_deps.language_support._build_pre_commit_config(
-                install_languages, lint_languages
+            self.action_deps.language_support.build_pre_commit_config(
+                install_languages, lint_languages, pre_commit_config_location
             )
         )
         metadata = self.action_deps.language_support.apply_support(
@@ -398,3 +423,42 @@ class Action(ABC):
             return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
         except:
             return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
+
+    def _update_secureli_pre_commit_config_location(
+        self, folder_path: Path, always_yes: bool
+    ) -> VerifyResult:
+        """
+        In order to provide an upgrade path for existing users of secureli,
+        we will prompt users to move their .pre-commit-config.yaml into the .secureli/ directory.
+        I would consider this particular implementation to be technical debt but it is consistent with
+        an existing pattern for upgrading the secureli config file schema.
+        Once this has existed for awhile, we could remove this function altogether since
+        we make no promises of about backward compatibility with our pre-release versions.
+        Long term, I think there are better ways to implement one-time upgrade migrations
+        to avoid breaking backward compatibility.
+        """
+        self.action_deps.echo.print(
+            "seCureLI's .pre-commit-config.yaml is in a deprecated location."
+        )
+        response = always_yes or self.action_deps.echo.confirm(
+            "Would you like it automatically moved to the .secureli/ directory?",
+            default_response=True,
+        )
+        if response:
+            try:
+                new_file_path = self.action_deps.scanner.pre_commit.migrate_config_file(
+                    folder_path
+                )
+                return VerifyResult(
+                    outcome=VerifyOutcome.UPDATE_SUCCEEDED, file_path=new_file_path
+                )
+            except:
+                return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
+        else:
+            self.action_deps.echo.warning(".pre-commit-config.yaml migration declined")
+            deprecated_location = self.action_deps.scanner.get_pre_commit_config_path(
+                folder_path
+            )
+            return VerifyResult(
+                outcome=VerifyOutcome.UPDATE_CANCELED, file_path=deprecated_location
+            )

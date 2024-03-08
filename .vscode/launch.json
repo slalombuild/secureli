@@ -1,6 +1,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Python: secureli --version",
             "type": "debugpy",
@@ -55,6 +56,15 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": ["update"]
+        },
+        {
+            "name": "Debug Tests",
+            "type": "python",
+            "request": "test",
+            "program": "${file}",
+            "purpose": ["debug-test"],
+            "console": "integratedTerminal",
+            "justMyCode": false
         }
     ]
 }

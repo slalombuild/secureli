@@ -65,7 +65,7 @@ class UpdaterService:
         :param folder_path: Indicates the git folder against which you run secureli
         :return: ExecuteResult, indicating success or failure.
         """
-        update_message = "Updating .pre-commit-config.yaml...\n"
+        update_message = "Updating pre-commit hooks...\n"
         output = update_message
 
         hook_install_result = self.pre_commit.update(folder_path)

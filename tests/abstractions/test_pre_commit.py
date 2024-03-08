@@ -1,7 +1,8 @@
 import datetime
 import shutil
+
 import unittest.mock as um
-from pathlib import Path
+from pathlib import Path, PosixPath
 from subprocess import CompletedProcess
 from unittest.mock import MagicMock
 
@@ -12,6 +13,7 @@ from secureli.abstractions.pre_commit import (
     InstallResult,
     PreCommitAbstraction,
 )
+from secureli.abstractions.echo import EchoAbstraction
 from secureli.repositories.settings import (
     PreCommitSettings,
     PreCommitRepo,
@@ -76,88 +78,102 @@ def mock_subprocess(mocker: MockerFixture) -> MagicMock:
     return mock_subprocess
 
 
+# TODO consider removing if I don't actually need to test anything?
+@pytest.fixture()
+def mock_echo(mocker: MockerFixture) -> MagicMock:
+    mock_echo = MagicMock()
+    return mock_echo
+
+
 @pytest.fixture()
 def pre_commit(
+    mock_echo: mock_echo,
     mock_hashlib: MagicMock,
     mock_open: MagicMock,
     mock_subprocess: MagicMock,
 ) -> PreCommitAbstraction:
-    return PreCommitAbstraction(
-        command_timeout_seconds=300,
-    )
+    return PreCommitAbstraction(command_timeout_seconds=300, echo=mock_echo)
 
 
 def test_that_pre_commit_executes_hooks_successfully(
     pre_commit: PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
-    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.execute_hooks(test_folder_path)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+        execute_result = pre_commit.execute_hooks(test_folder_path)
 
-    assert execute_result.successful
-    assert "--all-files" not in mock_subprocess.run.call_args_list[0].args[0]
+        assert execute_result.successful
+        assert "--all-files" not in mock_subprocess.run.call_args_list[0].args[0]
 
 
 def test_that_pre_commit_executes_hooks_successfully_including_all_files(
     pre_commit: PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
-    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.execute_hooks(test_folder_path, all_files=True)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+        execute_result = pre_commit.execute_hooks(test_folder_path, all_files=True)
 
-    assert execute_result.successful
-    assert "--all-files" in mock_subprocess.run.call_args_list[0].args[0]
+        assert execute_result.successful
+        assert "--all-files" in mock_subprocess.run.call_args_list[0].args[0]
 
 
 def test_that_pre_commit_executes_hooks_and_reports_failures(
     pre_commit: PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
-    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    execute_result = pre_commit.execute_hooks(test_folder_path)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
+        execute_result = pre_commit.execute_hooks(test_folder_path)
 
-    assert not execute_result.successful
+        assert not execute_result.successful
 
 
 def test_that_pre_commit_executes_a_single_hook_if_specified(
     pre_commit: PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
-    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    pre_commit.execute_hooks(test_folder_path, hook_id="detect-secrets")
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+        pre_commit.execute_hooks(test_folder_path, hook_id="detect-secrets")
 
-    assert mock_subprocess.run.call_args_list[0].args[0][-1] == "detect-secrets"
+        assert mock_subprocess.run.call_args_list[0].args[0][-1] == "detect-secrets"
 
 
 def test_that_pre_commit_executes_hooks_on_specified_files(
     pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
 ):
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        files = ["test_file.py", "test-file.js"]
+        mock_subprocess.return_value = CompletedProcess(args=[], returncode=0)
+        pre_commit.execute_hooks(
+            test_folder_path,
+            hook_id="detect-secrets",
+            files=files,
+        )
 
-    files = ["test_file.py", "test-file.js"]
-    mock_subprocess.return_value = CompletedProcess(args=[], returncode=0)
-    pre_commit.execute_hooks(
-        test_folder_path,
-        hook_id="detect-secrets",
-        files=files,
-    )
+        sub_process_args: [str] = mock_subprocess.run.call_args_list[0].args[0]
+        files_arg_idx = sub_process_args.index("--files")
 
-    sub_process_args: [str] = mock_subprocess.run.call_args_list[0].args[0]
-    files_arg_idx = sub_process_args.index("--files")
-
-    assert " ".join(files) == sub_process_args[files_arg_idx + 1]
+        assert " ".join(files) == sub_process_args[files_arg_idx + 1]
 
 
 def test_that_pre_commit_does_not_execute_hooks_on_specified_files_if_not_included(
     pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
 ):
-
-    mock_subprocess.return_value = CompletedProcess(args=[], returncode=0)
-    pre_commit.execute_hooks(
-        test_folder_path,
-        hook_id="detect-secrets",
-    )
-    sub_process_args: [str] = mock_subprocess.run.call_args_list[0].args[0]
-    assert "--files" not in sub_process_args
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_subprocess.return_value = CompletedProcess(args=[], returncode=0)
+        pre_commit.execute_hooks(
+            test_folder_path,
+            hook_id="detect-secrets",
+        )
+        sub_process_args: [str] = mock_subprocess.run.call_args_list[0].args[0]
+        assert "--files" not in sub_process_args
 
 
 ##### autoupdate_hooks #####
@@ -165,42 +181,52 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully(
     pre_commit: PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
-    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(test_folder_path)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+        execute_result = pre_commit.autoupdate_hooks(test_folder_path)
 
-    assert execute_result.successful
+        assert execute_result.successful
 
 
 def test_that_pre_commit_autoupdate_hooks_properly_handles_failed_executions(
     pre_commit: PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
-    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    execute_result = pre_commit.autoupdate_hooks(test_folder_path)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
+        execute_result = pre_commit.autoupdate_hooks(test_folder_path)
 
-    assert not execute_result.successful
+        assert not execute_result.successful
 
 
 def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_bleeding_edge(
     pre_commit: PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
-    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(test_folder_path, bleeding_edge=True)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+        execute_result = pre_commit.autoupdate_hooks(
+            test_folder_path, bleeding_edge=True
+        )
 
-    assert execute_result.successful
-    assert "--bleeding-edge" in mock_subprocess.run.call_args_list[0].args[0]
+        assert execute_result.successful
+        assert "--bleeding-edge" in mock_subprocess.run.call_args_list[0].args[0]
 
 
 def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_freeze(
     pre_commit: PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
-    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(test_folder_path, freeze=True)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+        execute_result = pre_commit.autoupdate_hooks(test_folder_path, freeze=True)
 
-    assert execute_result.successful
-    assert "--freeze" in mock_subprocess.run.call_args_list[0].args[0]
+        assert execute_result.successful
+        assert "--freeze" in mock_subprocess.run.call_args_list[0].args[0]
 
 
 def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_repos(
@@ -208,11 +234,13 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_repos(
     mock_subprocess: MagicMock,
 ):
     test_repos = ["some-repo-url"]
-    mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+        execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
 
-    assert execute_result.successful
-    assert "--repo some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
+        assert execute_result.successful
+        assert "--repo some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
 
 
 def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_multiple_repos(
@@ -221,11 +249,16 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_multiple_re
 ):
     test_repos = ["some-repo-url", "some-other-repo-url"]
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
 
-    assert execute_result.successful
-    assert "--repo some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
-    assert "--repo some-other-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
+        assert execute_result.successful
+        assert "--repo some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
+        assert (
+            "--repo some-other-repo-url"
+            in mock_subprocess.run.call_args_list[0].args[0]
+        )
 
 
 def test_that_pre_commit_autoupdate_hooks_fails_with_repos_containing_non_strings(
@@ -234,9 +267,11 @@ def test_that_pre_commit_autoupdate_hooks_fails_with_repos_containing_non_string
 ):
     test_repos = [{"something": "something-else"}]
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
 
-    assert not execute_result.successful
+        assert not execute_result.successful
 
 
 def test_that_pre_commit_autoupdate_hooks_ignores_repos_when_repos_is_a_dict(
@@ -245,10 +280,12 @@ def test_that_pre_commit_autoupdate_hooks_ignores_repos_when_repos_is_a_dict(
 ):
     test_repos = {}
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)  # type: ignore
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)  # type: ignore
 
-    assert execute_result.successful
-    assert "--repo {}" not in mock_subprocess.run.call_args_list[0].args[0]
+        assert execute_result.successful
+        assert "--repo {}" not in mock_subprocess.run.call_args_list[0].args[0]
 
 
 def test_that_pre_commit_autoupdate_hooks_converts_repos_when_repos_is_a_string(
@@ -257,10 +294,12 @@ def test_that_pre_commit_autoupdate_hooks_converts_repos_when_repos_is_a_string(
 ):
     test_repos = "string"
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)  # type: ignore
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)  # type: ignore
 
-    assert execute_result.successful
-    assert "--repo string" in mock_subprocess.run.call_args_list[0].args[0]
+        assert execute_result.successful
+        assert "--repo string" in mock_subprocess.run.call_args_list[0].args[0]
 
 
 ##### update #####
@@ -269,9 +308,11 @@ def test_that_pre_commit_update_executes_successfully(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.update(test_folder_path)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        execute_result = pre_commit.update(test_folder_path)
 
-    assert execute_result.successful
+        assert execute_result.successful
 
 
 def test_that_pre_commit_update_properly_handles_failed_executions(
@@ -279,9 +320,11 @@ def test_that_pre_commit_update_properly_handles_failed_executions(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    execute_result = pre_commit.update(test_folder_path)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        execute_result = pre_commit.update(test_folder_path)
 
-    assert not execute_result.successful
+        assert not execute_result.successful
 
 
 ##### remove_unused_hooks #####
@@ -290,9 +333,11 @@ def test_that_pre_commit_remove_unused_hookss_executes_successfully(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    execute_result = pre_commit.remove_unused_hooks(test_folder_path)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        execute_result = pre_commit.remove_unused_hooks(test_folder_path)
 
-    assert execute_result.successful
+        assert execute_result.successful
 
 
 def test_that_pre_commit_remove_unused_hooks_properly_handles_failed_executions(
@@ -300,9 +345,11 @@ def test_that_pre_commit_remove_unused_hooks_properly_handles_failed_executions(
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-    execute_result = pre_commit.remove_unused_hooks(test_folder_path)
+    with (um.patch.object(Path, "exists") as mock_exists,):
+        mock_exists.return_value = True
+        execute_result = pre_commit.remove_unused_hooks(test_folder_path)
 
-    assert not execute_result.successful
+        assert not execute_result.successful
 
 
 def test_that_pre_commit_install_creates_pre_commit_hook_for_secureli(
@@ -357,7 +404,11 @@ def test_that_pre_commit_install_creates_backup_file_when_already_exists(
 def test_pre_commit_config_file_is_deserialized_correctly(
     pre_commit: PreCommitAbstraction,
 ):
-    with um.patch("builtins.open", um.mock_open()) as mock_open:
+    with (
+        um.patch("builtins.open", um.mock_open()) as mock_open,
+        um.patch.object(Path, "exists") as mock_exists,
+    ):
+        mock_exists.return_value = True
         mock_open.return_value.read.return_value = (
             "repos:\n"
             "  - repo: my-repo\n"
@@ -481,3 +532,36 @@ def test_pre_commit_config_does_not_exist(pre_commit: PreCommitAbstraction):
     with um.patch.object(Path, "exists", return_value=False):
         pre_commit_exists = pre_commit.pre_commit_config_exists(test_folder_path)
         assert pre_commit_exists == False
+
+
+def test_get_pre_commit_config_path_returns_correct_location(
+    pre_commit: PreCommitAbstraction,
+):
+    with um.patch.object(Path, "exists", return_value=True):
+        pre_commit_config_path = pre_commit.get_pre_commit_config_path(test_folder_path)
+        assert pre_commit_config_path == PosixPath(
+            f"{test_folder_path}/.secureli/.pre-commit-config.yaml"
+        )
+
+
+def test_get_pre_commit_config_path_errors_without_file(
+    pre_commit: PreCommitAbstraction,
+):
+    with pytest.raises(FileNotFoundError):
+        pre_commit.get_pre_commit_config_path(test_folder_path)
+
+
+def test_migrate_config_file_moves_pre_commit_conig(
+    pre_commit: PreCommitAbstraction, mock_echo: MagicMock
+):
+    with (
+        um.patch.object(shutil, "move") as mock_move,
+        um.patch.object(Path, "exists", return_value=True),
+    ):
+        pre_commit.migrate_config_file(test_folder_path)
+        old_location = test_folder_path / ".secureli" / ".pre-commit-config.yaml"
+        new_location = test_folder_path / ".secureli" / ".pre-commit-config.yaml"
+        mock_echo.print.assert_called_once_with(
+            f"Moving {old_location} to {new_location}..."
+        )
+        mock_move.assert_called_once()

@@ -32,6 +32,8 @@ class ScanAction(Action):
     halting_outcomes = [
         VerifyOutcome.INSTALL_FAILED,
         VerifyOutcome.INSTALL_CANCELED,
+        VerifyOutcome.UPDATE_FAILED,
+        VerifyOutcome.UPDATE_CANCELED,
     ]
 
     def __init__(
@@ -50,10 +52,10 @@ class ScanAction(Action):
         """
         Queries repositories referenced by pre-commit hooks to check
         if we have the latest revisions listed in the .pre-commit-config.yaml file
-        :param folder_path: The folder path containing the .pre-commit-config.yaml file
+        :param folder_path: The folder path containing the .secureli/ folder
         """
 
-        self.action_deps.echo.info("Checking for pre-commit hook updates...")
+        self.action_deps.echo.print("Checking for pre-commit hook updates...")
         pre_commit_config = self.scanner.pre_commit.get_pre_commit_config(folder_path)
 
         repos_to_update = self.scanner.pre_commit.check_for_hook_updates(
@@ -61,7 +63,7 @@ class ScanAction(Action):
         )
 
         if not repos_to_update:
-            self.action_deps.echo.info("No hooks to update")
+            self.action_deps.echo.print("No hooks to update")
             return VerifyResult(outcome=VerifyOutcome.UP_TO_DATE)
 
         for repo, revs in repos_to_update.items():

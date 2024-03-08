@@ -9,3 +9,5 @@ repo_files:
   - .png
   - .jpg
   max_file_size: 1000000
+telemetry:
+  api_url: https://log-api.newrelic.com/log/v1
