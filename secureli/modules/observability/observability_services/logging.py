@@ -10,9 +10,7 @@ from secureli.modules.shared.models.config import HookConfiguration
 from secureli.modules.shared.models.logging import LogAction
 
 import secureli.repositories.secureli_config as SecureliConfig
-from secureli.modules.language_analyzer.language_analyzer_services import (
-    language_support,
-)
+from secureli.modules.language_analyzer import language_support
 from secureli.repositories.secureli_config import SecureliConfigRepository
 from secureli.modules.shared.utilities import git_meta
 from secureli.modules.shared.utilities.secureli_meta import secureli_version

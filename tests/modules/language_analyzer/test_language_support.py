@@ -5,12 +5,7 @@ from _pytest.python_api import raises
 from pytest_mock import MockerFixture
 
 from secureli.modules.shared.abstractions import pre_commit
-from secureli.modules.language_analyzer.language_analyzer_services import (
-    language_support,
-)
-from secureli.modules.language_analyzer.language_analyzer_services import (
-    language_config,
-)
+from secureli.modules.language_analyzer import language_support, language_config
 from secureli.modules.shared.models.config import LinterConfig, LinterConfigData
 from secureli.modules.shared.models import language
 

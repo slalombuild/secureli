@@ -121,7 +121,7 @@ class LanguageConfigService:
             f'{Path(f"{__file__}").parent.parent.resolve()}'.rsplit("/", 1)[0]
         )
         absolute_configs_path = Path(
-            f"{absolute_secureli_path}/shared/resources/files/{language_config_name}"
+            f"{absolute_secureli_path}/modules/shared/resources/files/{language_config_name}"
         )
 
         #  check if config file exists for current language

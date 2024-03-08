@@ -3,9 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from secureli.modules.language_analyzer.language_analyzer_services import (
-    language_analyzer,
-)
+from secureli.modules.language_analyzer import language_analyzer
 
 
 @pytest.fixture()

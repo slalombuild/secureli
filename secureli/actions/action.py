@@ -8,12 +8,7 @@ from secureli.modules.shared.models import language
 from secureli.modules.shared.models.scan import ScanMode
 from secureli.repositories import secureli_config
 from secureli.repositories.repo_settings import SecureliRepository, TelemetrySettings
-from secureli.modules.language_analyzer.language_analyzer_services import (
-    language_analyzer,
-)
-from secureli.modules.language_analyzer.language_analyzer_services import (
-    language_support,
-)
+from secureli.modules.language_analyzer import language_analyzer, language_support
 from secureli.modules.core.core_services.scanner import ScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
 

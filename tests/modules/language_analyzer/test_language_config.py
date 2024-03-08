@@ -1,10 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-
-from secureli.modules.language_analyzer.language_analyzer_services import (
-    language_config,
-)
+from secureli.modules.language_analyzer import language_config
 from secureli.modules.shared.models import language
 
 
