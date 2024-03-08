@@ -10,14 +10,7 @@ from secureli.modules.shared.models.publish_results import PublishResultsOption
 from secureli.modules.shared.models.result import Result
 from secureli.modules.shared.models.scan import ScanMode, ScanResult
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
-from secureli.repositories.settings import (
-    PreCommitHook,
-    PreCommitRepo,
-    PreCommitSettings,
-    SecureliFile,
-    EchoSettings,
-    EchoLevel,
-)
+from secureli.repositories import repo_settings
 from unittest import mock
 from unittest.mock import MagicMock
 from pytest_mock import MockerFixture
@@ -41,20 +34,22 @@ def mock_scanner(mock_pre_commit) -> MagicMock:
 @pytest.fixture()
 def mock_pre_commit() -> MagicMock:
     mock_pre_commit = MagicMock()
-    mock_pre_commit.get_pre_commit_config.return_value = PreCommitSettings(
-        repos=[
-            PreCommitRepo(
-                repo="http://example-repo.com/",
-                rev="master",
-                hooks=[
-                    PreCommitHook(
-                        id="hook-id",
-                        arguments=None,
-                        additional_args=None,
-                    )
-                ],
-            )
-        ]
+    mock_pre_commit.get_pre_commit_config.return_value = (
+        repo_settings.PreCommitSettings(
+            repos=[
+                repo_settings.PreCommitRepo(
+                    repo="http://example-repo.com/",
+                    rev="master",
+                    hooks=[
+                        repo_settings.PreCommitHook(
+                            id="hook-id",
+                            arguments=None,
+                            additional_args=None,
+                        )
+                    ],
+                )
+            ]
+        )
     )
     mock_pre_commit.check_for_hook_updates.return_value = {}
     return mock_pre_commit
@@ -80,8 +75,8 @@ def mock_get_time_far_from_epoch(mocker: MockerFixture) -> MagicMock:
 
 @pytest.fixture()
 def mock_default_settings(mock_settings_repository: MagicMock) -> MagicMock:
-    mock_echo_settings = EchoSettings(level=EchoLevel.info)
-    mock_settings_file = SecureliFile(echo=mock_echo_settings)
+    mock_echo_settings = repo_settings.EchoSettings(level=repo_settings.EchoLevel.info)
+    mock_settings_file = repo_settings.SecureliFile(echo=mock_echo_settings)
     mock_settings_repository.load.return_value = mock_settings_file
 
     return mock_settings_repository
@@ -133,7 +128,7 @@ def scan_action(
 
 @pytest.fixture()
 def mock_post_log(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch("secureli.actions.scan.post_log")
+    return mocker.patch("secureli.modules.shared.utilities.usage_stats.post_log")
 
 
 @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)

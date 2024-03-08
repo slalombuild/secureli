@@ -4,11 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from secureli.modules.shared.utilities.git_meta import (
-    git_user_email,
-    origin_url,
-    current_branch_name,
-)
+from secureli.modules.shared.utilities import git_meta
 
 mock_git_origin_url = r"git@github.com:my-org/repo%20with%20spaces.git"
 
@@ -65,14 +61,14 @@ def mock_open_io_error(mocker: MockerFixture) -> MagicMock:
 
 
 def test_git_user_email_loads_user_email_via_git_subprocess(mock_subprocess: MagicMock):
-    result = git_user_email()
+    result = git_meta.git_user_email()
 
     mock_subprocess.run.assert_called_once()
     assert result == "great.engineer@slalom.com"  # note: without trailing newline
 
 
 def test_origin_url_parses_config_to_get_origin_url(mock_configparser: MagicMock):
-    result = origin_url()
+    result = git_meta.origin_url()
 
     mock_configparser.read.assert_called_once_with(".git/config")
     assert result == "https://fake-build.com/git/repo"
@@ -81,7 +77,7 @@ def test_origin_url_parses_config_to_get_origin_url(mock_configparser: MagicMock
 def test_current_branch_name_finds_ref_name_from_head_file(
     mock_open_git_head: MagicMock,
 ):
-    result = current_branch_name()
+    result = git_meta.current_branch_name()
 
     assert result == "feature/wicked-sick-branch"
 
@@ -89,10 +85,10 @@ def test_current_branch_name_finds_ref_name_from_head_file(
 def test_current_branch_name_yields_unknown_due_to_io_error(
     mock_open_io_error: MagicMock,
 ):
-    result = current_branch_name()
+    result = git_meta.current_branch_name()
 
     assert result == "UNKNOWN"
 
 
 def test_configparser_can_read_origin_url_with_percent(mock_open_git_origin: MagicMock):
-    assert origin_url() == mock_git_origin_url
+    assert git_meta.origin_url() == mock_git_origin_url

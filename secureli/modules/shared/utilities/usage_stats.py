@@ -1,9 +1,6 @@
 import requests
 import os
-from secureli.modules.observability.consts.logging import (
-    TELEMETRY_ENDPOINT_ENV_VAR_NAME,
-    TELEMETRY_KEY_ENV_VAR_NAME,
-)
+from secureli.modules.observability.consts import logging
 from secureli.modules.shared.models.publish_results import PublishLogResult
 from secureli.modules.shared.models.result import Result
 from collections import Counter
@@ -34,14 +31,14 @@ def post_log(log_data: str, settings: Settings) -> PublishLogResult:
     """
 
     api_endpoint = (
-        os.getenv(TELEMETRY_ENDPOINT_ENV_VAR_NAME) or settings.telemetry.api_url
+        os.getenv(logging.TELEMETRY_ENDPOINT_ENV_VAR_NAME) or settings.telemetry.api_url
     )
-    api_key = os.getenv(TELEMETRY_KEY_ENV_VAR_NAME)
+    api_key = os.getenv(logging.TELEMETRY_KEY_ENV_VAR_NAME)
 
     if not api_endpoint or not api_key:
         return PublishLogResult(
             result=Result.FAILURE,
-            result_message=f"{TELEMETRY_ENDPOINT_ENV_VAR_NAME} or {TELEMETRY_KEY_ENV_VAR_NAME} not found in environment variables",
+            result_message=f"{logging.TELEMETRY_ENDPOINT_ENV_VAR_NAME} or {logging.TELEMETRY_KEY_ENV_VAR_NAME} not found in environment variables",
         )
 
     try:

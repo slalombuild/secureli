@@ -7,9 +7,7 @@ from secureli.modules.shared.models.config import HookConfiguration
 from secureli.modules.shared.models.logging import LogAction
 
 from secureli.repositories.secureli_config import SecureliConfig
-from secureli.modules.observability.observability_services.logging import (
-    LoggingService,
-)
+from secureli.modules.observability.observability_services import logging
 
 
 @pytest.fixture()
@@ -47,15 +45,15 @@ def mock_language_support() -> MagicMock:
 @pytest.fixture()
 def logging_service(
     mock_language_support: MagicMock, mock_secureli_config: MagicMock
-) -> LoggingService:
-    return LoggingService(
+) -> logging.LoggingService:
+    return logging.LoggingService(
         language_support=mock_language_support,
         secureli_config=mock_secureli_config,
     )
 
 
 def test_that_logging_service_success_creates_logs_folder_if_not_exists(
-    logging_service: LoggingService,
+    logging_service: logging.LoggingService,
     mock_path: MagicMock,
     mock_open: MagicMock,
     mock_secureli_config: MagicMock,
@@ -71,7 +69,7 @@ def test_that_logging_service_success_creates_logs_folder_if_not_exists(
 
 
 def test_that_logging_service_failure_creates_logs_folder_if_not_exists(
-    logging_service: LoggingService,
+    logging_service: logging.LoggingService,
     mock_path: MagicMock,
     mock_open: MagicMock,
     mock_secureli_config: MagicMock,
@@ -86,7 +84,7 @@ def test_that_logging_service_failure_creates_logs_folder_if_not_exists(
 
 
 def test_that_logging_service_success_logs_none_for_hook_config_if_not_initialized(
-    logging_service: LoggingService,
+    logging_service: logging.LoggingService,
     mock_path: MagicMock,
     mock_open: MagicMock,
     mock_secureli_config: MagicMock,

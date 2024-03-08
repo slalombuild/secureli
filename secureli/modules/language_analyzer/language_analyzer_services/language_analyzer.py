@@ -4,9 +4,7 @@ from pathlib import Path
 from secureli.modules.shared.abstractions.lexer_guesser import LexerGuesser
 from secureli.modules.shared.models.language import AnalyzeResult, SkippedFile
 from secureli.repositories.repo_files import RepoFilesRepository
-from secureli.modules.shared.consts.language import (
-    supported_languages,
-)
+from secureli.modules.shared.consts.language import supported_languages
 
 
 class LanguageAnalyzerService:

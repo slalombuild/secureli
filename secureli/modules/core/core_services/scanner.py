@@ -7,7 +7,7 @@ import re
 
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
 from secureli.modules.shared.models.scan import ScanFailure, ScanMode, ScanResult
-from secureli.repositories.settings import PreCommitSettings
+from secureli.repositories.repo_settings import PreCommitSettings
 
 
 class OutputParseErrors(str, Enum):

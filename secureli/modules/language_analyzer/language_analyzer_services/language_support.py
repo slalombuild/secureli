@@ -8,7 +8,6 @@ from secureli.modules.shared.models.language import LanguageMetadata
 
 import secureli.repositories.secureli_config as SecureliConfig
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
-from secureli.modules.shared.resources.slugify import slugify
 from secureli.modules.language_analyzer.language_analyzer_services.git_ignore import (
     GitIgnoreService,
 )

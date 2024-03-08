@@ -1,34 +1,30 @@
 import pytest
 
 from secureli.modules.secureli_ignore import SecureliIgnoreService
-from secureli.settings import (
-    Settings,
-    RepoFilesSettings,
-    LanguageSupportSettings,
-    EchoSettings,
-)
+from secureli.repositories import repo_settings
+from secureli.settings import Settings
 
 
 @pytest.fixture()
-def repo_files() -> RepoFilesSettings:
-    return RepoFilesSettings()
+def repo_files() -> repo_settings.RepoFilesSettings:
+    return repo_settings.RepoFilesSettings()
 
 
 @pytest.fixture()
-def echo() -> EchoSettings:
-    return EchoSettings()
+def echo() -> repo_settings.EchoSettings:
+    return repo_settings.EchoSettings()
 
 
 @pytest.fixture()
-def language_support() -> LanguageSupportSettings:
-    return LanguageSupportSettings()
+def language_support() -> repo_settings.LanguageSupportSettings:
+    return repo_settings.LanguageSupportSettings()
 
 
 @pytest.fixture()
 def settings(
-    repo_files: RepoFilesSettings,
-    echo: EchoSettings,
-    language_support: LanguageSupportSettings,
+    repo_files: repo_settings.RepoFilesSettings,
+    echo: repo_settings.EchoSettings,
+    language_support: repo_settings.LanguageSupportSettings,
 ) -> Settings:
     return Settings(
         repo_files=repo_files,
