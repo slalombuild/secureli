@@ -4,23 +4,11 @@ from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.modules.observability.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
 from secureli.modules.shared.models.echo import Color
 from secureli.modules.shared.models.install import VerifyOutcome, VerifyResult
-from secureli.modules.shared.models.language import (
-    LanguageMetadata,
-    LanguageNotSupportedError,
-)
+from secureli.modules.shared.models import language
 from secureli.modules.shared.models.scan import ScanMode
-from secureli.repositories.secureli_config import (
-    SecureliConfig,
-    SecureliConfigRepository,
-    VerifyConfigOutcome,
-)
-from secureli.repositories.settings import SecureliRepository, TelemetrySettings
-from secureli.modules.language_analyzer.language_analyzer_services.language_analyzer import (
-    LanguageAnalyzerService,
-)
-from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
-    LanguageSupportService,
-)
+from secureli.repositories import secureli_config
+from secureli.repositories.repo_settings import SecureliRepository, TelemetrySettings
+from secureli.modules.language_analyzer import language_analyzer, language_support
 from secureli.modules.core.core_services.scanner import ScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
 
@@ -37,10 +25,10 @@ class ActionDependencies:
     def __init__(
         self,
         echo: EchoAbstraction,
-        language_analyzer: LanguageAnalyzerService,
-        language_support: LanguageSupportService,
+        language_analyzer: language_analyzer.LanguageAnalyzerService,
+        language_support: language_support.LanguageSupportService,
         scanner: ScannerService,
-        secureli_config: SecureliConfigRepository,
+        secureli_config: secureli_config.SecureliConfigRepository,
         settings: SecureliRepository,
         updater: UpdaterService,
     ):
@@ -69,7 +57,10 @@ class Action(ABC):
         :param always_yes: Assume "Yes" to all prompts
         """
 
-        if self.action_deps.secureli_config.verify() == VerifyConfigOutcome.OUT_OF_DATE:
+        if (
+            self.action_deps.secureli_config.verify()
+            == secureli_config.VerifyConfigOutcome.OUT_OF_DATE
+        ):
             update_config = self._update_secureli_config_only(always_yes)
             if update_config.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
                 self.action_deps.echo.error(f"seCureLI could not be verified.")
@@ -77,11 +68,15 @@ class Action(ABC):
                     outcome=update_config.outcome,
                 )
 
-        config = SecureliConfig() if reset else self.action_deps.secureli_config.load()
+        config = (
+            secureli_config.SecureliConfig()
+            if reset
+            else self.action_deps.secureli_config.load()
+        )
 
         try:
             languages = self._detect_languages(folder_path)
-        except (ValueError, LanguageNotSupportedError) as e:
+        except (ValueError, language.LanguageNotSupportedError) as e:
             if config.languages and config.version_installed:
                 self.action_deps.echo.warning(
                     f"Newly detected languages are unsupported by seCureLI"
@@ -172,7 +167,7 @@ class Action(ABC):
         for error_msg in metadata.linter_config_write_errors:
             self.action_deps.echo.warning(error_msg)
 
-        config = SecureliConfig(
+        config = secureli_config.SecureliConfig(
             languages=detected_languages,
             version_installed=metadata.version,
         )
@@ -233,8 +228,8 @@ class Action(ABC):
     def _run_post_install_scan(
         self,
         folder_path: Path,
-        config: SecureliConfig,
-        metadata: LanguageMetadata,
+        config: secureli_config.SecureliConfig,
+        metadata: language.LanguageMetadata,
         new_install: bool,
     ):
         """

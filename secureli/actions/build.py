@@ -1,7 +1,5 @@
 from secureli.modules.shared.abstractions.echo import EchoAbstraction, Color
-from secureli.modules.observability.observability_services.logging import (
-    LoggingService,
-)
+from secureli.modules.observability.observability_services.logging import LoggingService
 from secureli.modules.shared.models.logging import LogAction
 
 

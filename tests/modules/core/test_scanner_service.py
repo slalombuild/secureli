@@ -4,11 +4,7 @@ import pytest
 
 from secureli.modules.shared.abstractions.pre_commit import ExecuteResult
 from secureli.modules.shared.models.scan import ScanMode
-from secureli.repositories.settings import (
-    PreCommitHook,
-    PreCommitRepo,
-    PreCommitSettings,
-)
+from secureli.repositories import repo_settings
 from secureli.modules.core.core_services.scanner import (
     ScannerService,
     OutputParseErrors,
@@ -193,13 +189,13 @@ def test_that_find_repo_from_id_finds_matching_hooks(scanner_service: ScannerSer
     expected_repo = "mock_repo"
     result = scanner_service._find_repo_from_id(
         mock_hook_id,
-        PreCommitSettings(
+        repo_settings.PreCommitSettings(
             repos=[
-                PreCommitRepo(
+                repo_settings.PreCommitRepo(
                     repo=expected_repo,
                     rev="",
                     url="test-url",
-                    hooks=[PreCommitHook(id=mock_hook_id)],
+                    hooks=[repo_settings.PreCommitHook(id=mock_hook_id)],
                     suppressed_hook_ids=[],
                 )
             ],
@@ -215,13 +211,13 @@ def test_that_find_repo_from_id_does_not_have_matching_hook_id(
 ):
     result = scanner_service._find_repo_from_id(
         "test-hook-id",
-        PreCommitSettings(
+        repo_settings.PreCommitSettings(
             repos=[
-                PreCommitRepo(
+                repo_settings.PreCommitRepo(
                     repo="mock-repo",
                     rev="",
                     url="test-url",
-                    hooks=[PreCommitHook(id="other_hook_id")],
+                    hooks=[repo_settings.PreCommitHook(id="other_hook_id")],
                     suppressed_hook_ids=[],
                 )
             ],

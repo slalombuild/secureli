@@ -1,16 +1,10 @@
-from secureli.modules.observability.consts.logging import (
-    TELEMETRY_ENDPOINT_ENV_VAR_NAME,
-    TELEMETRY_KEY_ENV_VAR_NAME,
-)
+from secureli.modules.observability.consts import logging
 from secureli.modules.shared.models.publish_results import PublishLogResult
 from secureli.modules.shared.models.result import Result
 from secureli.modules.shared.models.scan import ScanFailure
-from secureli.repositories.settings import TelemetrySettings
+from secureli.repositories.repo_settings import TelemetrySettings
 from secureli.settings import Settings
-from secureli.modules.shared.utilities.usage_stats import (
-    post_log,
-    convert_failures_to_failure_count,
-)
+from secureli.modules.shared.utilities import usage_stats
 from unittest import mock
 from unittest.mock import Mock, patch
 
@@ -24,7 +18,7 @@ def test_that_convert_failures_to_failure_count_returns_correct_count():
         ScanFailure(id="testfailid2", file="testfile1", repo="testrepo1"),
     ]
 
-    result = convert_failures_to_failure_count(list_of_failure)
+    result = usage_stats.convert_failures_to_failure_count(list_of_failure)
 
     assert result["testfailid1"] == 2
     assert result["testfailid2"] == 1
@@ -33,7 +27,7 @@ def test_that_convert_failures_to_failure_count_returns_correct_count():
 def test_that_convert_failures_to_failure_count_returns_correctly_when_no_failure():
     list_of_failure = []
 
-    result = convert_failures_to_failure_count(list_of_failure)
+    result = usage_stats.convert_failures_to_failure_count(list_of_failure)
 
     assert result == {}
 
@@ -41,14 +35,14 @@ def test_that_convert_failures_to_failure_count_returns_correctly_when_no_failur
 @mock.patch.dict(
     os.environ,
     {
-        f"{TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "testendpoint",
-        f"{TELEMETRY_KEY_ENV_VAR_NAME}": "",
+        f"{logging.TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "testendpoint",
+        f"{logging.TELEMETRY_KEY_ENV_VAR_NAME}": "",
     },
     clear=True,
 )
 @patch("requests.post")
 def test_post_log_with_no_api_key(mock_requests):
-    result = post_log("testing", Settings())
+    result = usage_stats.post_log("testing", Settings())
 
     mock_requests.assert_not_called()
 
@@ -62,14 +56,16 @@ def test_post_log_with_no_api_key(mock_requests):
 @mock.patch.dict(
     os.environ,
     {
-        f"{TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "",
-        f"{TELEMETRY_KEY_ENV_VAR_NAME}": "testkey",
+        f"{logging.TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "",
+        f"{logging.TELEMETRY_KEY_ENV_VAR_NAME}": "testkey",
     },
     clear=True,
 )
 @patch("requests.post")
 def test_post_log_with_no_api_endpoint(mock_requests):
-    result = post_log("testing", Settings(telemetry=TelemetrySettings(api_url=None)))
+    result = usage_stats.post_log(
+        "testing", Settings(telemetry=TelemetrySettings(api_url=None))
+    )
 
     mock_requests.assert_not_called()
 
@@ -82,8 +78,8 @@ def test_post_log_with_no_api_endpoint(mock_requests):
 @mock.patch.dict(
     os.environ,
     {
-        f"{TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "testendpoint",
-        f"{TELEMETRY_KEY_ENV_VAR_NAME}": "testkey",
+        f"{logging.TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "testendpoint",
+        f"{logging.TELEMETRY_KEY_ENV_VAR_NAME}": "testkey",
     },  # pragma: allowlist secret
     clear=True,
 )
@@ -91,7 +87,7 @@ def test_post_log_with_no_api_endpoint(mock_requests):
 def test_post_log_http_error(mock_requests):
     mock_requests.side_effect = Exception("test exception")
 
-    result = post_log("test_log_data", Settings())
+    result = usage_stats.post_log("test_log_data", Settings())
 
     mock_requests.assert_called_once_with(
         url="testendpoint", headers={"Api-Key": "testkey"}, data="test_log_data"
@@ -105,8 +101,8 @@ def test_post_log_http_error(mock_requests):
 @mock.patch.dict(
     os.environ,
     {
-        f"{TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "testendpoint",
-        f"{TELEMETRY_KEY_ENV_VAR_NAME}": "testkey",
+        f"{logging.TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "testendpoint",
+        f"{logging.TELEMETRY_KEY_ENV_VAR_NAME}": "testkey",
     },  # pragma: allowlist secret
     clear=True,
 )
@@ -114,7 +110,7 @@ def test_post_log_http_error(mock_requests):
 def test_post_log_happy_path(mock_requests):
     mock_requests.return_value = Mock(status_code=202, text="sample-response")
 
-    result = post_log("test_log_data", Settings())
+    result = usage_stats.post_log("test_log_data", Settings())
 
     mock_requests.assert_called_once_with(
         url="testendpoint", headers={"Api-Key": "testkey"}, data="test_log_data"
@@ -127,8 +123,8 @@ def test_post_log_happy_path(mock_requests):
 @mock.patch.dict(
     os.environ,
     {
-        f"{TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "",
-        f"{TELEMETRY_KEY_ENV_VAR_NAME}": "testkey",
+        f"{logging.TELEMETRY_ENDPOINT_ENV_VAR_NAME}": "",
+        f"{logging.TELEMETRY_KEY_ENV_VAR_NAME}": "testkey",
     },  # pragma: allowlist secret
     clear=True,
 )
@@ -136,7 +132,7 @@ def test_post_log_happy_path(mock_requests):
 def test_post_log_uses_settings_endpoint_if_no_env_endpoint(mock_requests):
     mock_requests.return_value = Mock(status_code=202, text="sample-response")
 
-    result = post_log(
+    result = usage_stats.post_log(
         "test_log_data", Settings(telemetry=TelemetrySettings(api_url="testendpoint"))
     )
 

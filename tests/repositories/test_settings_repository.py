@@ -3,12 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from secureli.repositories.settings import (
-    SecureliFile,
-    SecureliRepository,
-    EchoLevel,
-    EchoSettings,
-)
+from secureli.repositories import repo_settings
 
 
 @pytest.fixture()
@@ -22,7 +17,7 @@ def non_existent_path(mocker: MockerFixture) -> MagicMock:
     mock_path_class = MagicMock()
     mock_path_class.return_value = mock_folder_path
 
-    mocker.patch("secureli.repositories.settings.Path", mock_path_class)
+    mocker.patch("secureli.repositories.repo_settings.Path", mock_path_class)
 
     return mock_folder_path
 
@@ -55,29 +50,29 @@ def existent_path(mocker: MockerFixture) -> MagicMock:
     )
     mocker.patch("builtins.open", mock_open)
 
-    mocker.patch("secureli.repositories.settings.Path", mock_path_class)
+    mocker.patch("secureli.repositories.repo_settings.Path", mock_path_class)
 
     return mock_folder_path
 
 
 @pytest.fixture()
-def settings_repository() -> SecureliRepository:
-    settings_repository = SecureliRepository()
+def settings_repository() -> repo_settings.SecureliRepository:
+    settings_repository = repo_settings.SecureliRepository()
     return settings_repository
 
 
 def test_that_settings_file_loads_settings_when_present(
     existent_path: MagicMock,
-    settings_repository: SecureliRepository,
+    settings_repository: repo_settings.SecureliRepository,
 ):
     secureli_file = settings_repository.load(existent_path)
 
-    assert secureli_file.echo.level == EchoLevel.error
+    assert secureli_file.echo.level == repo_settings.EchoLevel.error
 
 
 def test_that_settings_file_created_when_not_present(
     non_existent_path: MagicMock,
-    settings_repository: SecureliRepository,
+    settings_repository: repo_settings.SecureliRepository,
 ):
     secureli_file = settings_repository.load(non_existent_path)
 
@@ -87,10 +82,10 @@ def test_that_settings_file_created_when_not_present(
 def test_that_repo_saves_config(
     existent_path: MagicMock,
     mock_open: MagicMock,
-    settings_repository: SecureliRepository,
+    settings_repository: repo_settings.SecureliRepository,
 ):
-    echo_level = EchoSettings(level=EchoLevel.info)
-    settings_file = SecureliFile(echo=echo_level)
+    echo_level = repo_settings.EchoSettings(level=repo_settings.EchoLevel.info)
+    settings_file = repo_settings.SecureliFile(echo=echo_level)
     settings_repository.save(settings_file)
 
     mock_open.assert_called_once()
@@ -99,9 +94,9 @@ def test_that_repo_saves_config(
 def test_that_repo_saves_without_echo_level(
     existent_path: MagicMock,
     mock_open: MagicMock,
-    settings_repository: SecureliRepository,
+    settings_repository: repo_settings.SecureliRepository,
 ):
-    settings_file = SecureliFile()
+    settings_file = repo_settings.SecureliFile()
     settings_repository.save(settings_file)
 
     mock_open.assert_called_once()

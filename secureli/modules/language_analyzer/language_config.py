@@ -2,11 +2,7 @@ from pathlib import Path
 from typing import Callable
 import yaml
 
-from secureli.modules.shared.models.language import (
-    LanguageNotSupportedError,
-    LanguagePreCommitResult,
-    LoadLinterConfigsResult,
-)
+from secureli.modules.shared.models import language
 from secureli.modules.shared.resources.slugify import slugify
 from secureli.modules.shared.utilities.hash import hash_config
 from secureli.modules.shared.utilities.patterns import combine_patterns
@@ -24,8 +20,8 @@ class LanguageConfigService:
         self.ignored_file_patterns = ignored_file_patterns
 
     def get_language_config(
-        self, language: str, include_linter: bool
-    ) -> LanguagePreCommitResult:
+        self, specified_language: str, include_linter: bool
+    ) -> language.LanguagePreCommitResult:
         """
         Calculates a hash of the pre-commit file for the given language to be used as part
         of the overall installed configuration.
@@ -37,27 +33,29 @@ class LanguageConfigService:
         """
         try:
             config_data = self._calculate_combined_configuration_data(
-                language, include_linter
+                specified_language, include_linter
             )
             linter_config_data = (
-                self._load_linter_config_file(language)
+                self._load_linter_config_file(specified_language)
                 if include_linter
-                else LoadLinterConfigsResult(successful=True, linter_data=list())
+                else language.LoadLinterConfigsResult(
+                    successful=True, linter_data=list()
+                )
             )
             version = hash_config(config_data)
-            return LanguagePreCommitResult(
-                language=language,
+            return language.LanguagePreCommitResult(
+                language=specified_language,
                 config_data=config_data,
                 version=version,
                 linter_config=linter_config_data,
             )
         except ValueError:
-            raise LanguageNotSupportedError(
-                f"Language '{language}' is currently unsupported"
+            raise language.LanguageNotSupportedError(
+                f"Language '{specified_language}' is currently unsupported"
             )
 
     def _calculate_combined_configuration(
-        self, language: str, include_linter: bool
+        self, specified_language: str, include_linter: bool
     ) -> dict:
         """
         Combine elements of our configuration for the specified language along with
@@ -69,7 +67,7 @@ class LanguageConfigService:
         :return: The combined configuration data as a dictionary
         """
         config = {"repos": []}
-        slugified_language = slugify(language)
+        slugified_language = slugify(specified_language)
         config_folder_names = ["base"]
 
         if include_linter:
@@ -89,7 +87,7 @@ class LanguageConfigService:
         return config
 
     def _calculate_combined_configuration_data(
-        self, language: str, include_linter: bool
+        self, specified_language: str, include_linter: bool
     ) -> str:
         """
         Combine elements of our configuration for the specified language along with
@@ -99,10 +97,14 @@ class LanguageConfigService:
         :param include_linter: Whether or not linter pre-commit hooks should be included
         :return: The combined configuration data as a string
         """
-        config = self._calculate_combined_configuration(language, include_linter)
+        config = self._calculate_combined_configuration(
+            specified_language, include_linter
+        )
         return yaml.dump(config)
 
-    def _load_linter_config_file(self, language: str) -> LoadLinterConfigsResult:
+    def _load_linter_config_file(
+        self, specified_language: str
+    ) -> language.LoadLinterConfigsResult:
         """
         Load any config files for given language if they exist.
         :param language: repo language
@@ -110,14 +112,16 @@ class LanguageConfigService:
         """
 
         # respective name for config file
-        language_config_name = Path(f"configs/{slugify(language)}.config.yaml")
+        language_config_name = Path(
+            f"configs/{slugify(specified_language)}.config.yaml"
+        )
 
         # build absolute path to config file if one exists
         absolute_secureli_path = (
             f'{Path(f"{__file__}").parent.parent.resolve()}'.rsplit("/", 1)[0]
         )
         absolute_configs_path = Path(
-            f"{absolute_secureli_path}/shared/resources/files/{language_config_name}"
+            f"{absolute_secureli_path}/modules/shared/resources/files/{language_config_name}"
         )
 
         #  check if config file exists for current language
@@ -125,8 +129,8 @@ class LanguageConfigService:
             language_configs_data = self.data_loader(language_config_name)
             language_configs = yaml.safe_load_all(language_configs_data)
 
-            return LoadLinterConfigsResult(
+            return language.LoadLinterConfigsResult(
                 successful=True, linter_data=language_configs
             )
 
-        return LoadLinterConfigsResult(successful=False, linter_data=list())
+        return language.LoadLinterConfigsResult(successful=False, linter_data=list())

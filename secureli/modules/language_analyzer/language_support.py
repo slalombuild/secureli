@@ -8,13 +8,7 @@ from secureli.modules.shared.models.language import LanguageMetadata
 
 import secureli.repositories.secureli_config as SecureliConfig
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
-from secureli.modules.shared.resources.slugify import slugify
-from secureli.modules.language_analyzer.language_analyzer_services.git_ignore import (
-    GitIgnoreService,
-)
-from secureli.modules.language_analyzer.language_analyzer_services.language_config import (
-    LanguageConfigService,
-)
+from secureli.modules.language_analyzer import git_ignore, language_config
 from secureli.modules.shared.utilities.hash import hash_config
 
 
@@ -46,8 +40,8 @@ class LanguageSupportService:
     def __init__(
         self,
         pre_commit_hook: PreCommitAbstraction,
-        language_config: LanguageConfigService,
-        git_ignore: GitIgnoreService,
+        language_config: language_config.LanguageConfigService,
+        git_ignore: git_ignore.GitIgnoreService,
         data_loader: Callable[[str], str],
     ):
         self.git_ignore = git_ignore
