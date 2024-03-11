@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 from pydantic import BaseModel, BaseSettings, Field
-from secureli.modules.shared.utilities.logging import EchoLevel
+from secureli.modules.shared.models.echo import Level
 
 import yaml
 
@@ -74,7 +74,7 @@ class EchoSettings(BaseSettings):
     Settings that affect how seCureLI provides information to the user.
     """
 
-    level: EchoLevel = Field(default=EchoLevel.warn)
+    level: Level = Field(default=Level.warn)
 
 
 class LanguageSupportSettings(BaseSettings):
@@ -157,7 +157,7 @@ class SecureliRepository:
             key: value for (key, value) in settings.dict().items() if value is not None
         }
 
-        # Converts EchoLevel to string
+        # Converts echo Level to string
         if settings_dict.get("echo"):
             settings_dict["echo"]["level"] = "{}".format(settings_dict["echo"]["level"])
 

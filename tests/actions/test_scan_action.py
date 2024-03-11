@@ -2,6 +2,7 @@ from pathlib import Path
 from secureli.modules.shared.abstractions.pre_commit import RevisionPair
 from secureli.actions.action import ActionDependencies
 from secureli.actions.scan import ScanAction
+from secureli.modules.shared.models.echo import Level
 from secureli.modules.shared.models.exit_codes import ExitCode
 from secureli.modules.shared.models.install import VerifyOutcome
 from secureli.modules.shared.models.language import AnalyzeResult
@@ -75,7 +76,7 @@ def mock_get_time_far_from_epoch(mocker: MockerFixture) -> MagicMock:
 
 @pytest.fixture()
 def mock_default_settings(mock_settings_repository: MagicMock) -> MagicMock:
-    mock_echo_settings = repo_settings.EchoSettings(level=repo_settings.EchoLevel.info)
+    mock_echo_settings = repo_settings.EchoSettings(level=Level.info)
     mock_settings_file = repo_settings.SecureliFile(echo=mock_echo_settings)
     mock_settings_repository.load.return_value = mock_settings_file
 

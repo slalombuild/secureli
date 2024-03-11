@@ -4,6 +4,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from secureli.repositories import repo_settings
+from secureli.modules.shared.models.echo import Level
 
 
 @pytest.fixture()
@@ -67,7 +68,7 @@ def test_that_settings_file_loads_settings_when_present(
 ):
     secureli_file = settings_repository.load(existent_path)
 
-    assert secureli_file.echo.level == repo_settings.EchoLevel.error
+    assert secureli_file.echo.level == Level.error
 
 
 def test_that_settings_file_created_when_not_present(
@@ -84,7 +85,7 @@ def test_that_repo_saves_config(
     mock_open: MagicMock,
     settings_repository: repo_settings.SecureliRepository,
 ):
-    echo_level = repo_settings.EchoSettings(level=repo_settings.EchoLevel.info)
+    echo_level = repo_settings.EchoSettings(level=Level.info)
     settings_file = repo_settings.SecureliFile(echo=echo_level)
     settings_repository.save(settings_file)
 
