@@ -129,7 +129,7 @@ def scan_action(
 
 @pytest.fixture()
 def mock_post_log(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch("secureli.modules.shared.utilities.usage_stats.post_log")
+    return mocker.patch("secureli.modules.shared.utilities.post_log")
 
 
 @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)

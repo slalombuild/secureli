@@ -15,7 +15,7 @@ from secureli.modules.observability.observability_services.logging import Loggin
 from secureli.modules.core.core_services.scanner import ScannerService
 from secureli.modules.shared.models.scan import ScanMode
 from secureli.settings import Settings
-from secureli.modules.shared.utilities import usage_stats
+from secureli.modules.shared import utilities
 
 ONE_WEEK_IN_SECONDS: int = 7 * 24 * 60 * 60
 
@@ -85,7 +85,7 @@ class ScanAction(action.Action):
             publish_results_condition == PublishResultsOption.ON_FAIL
             and not action_successful
         ):
-            result = usage_stats.post_log(log_str, Settings())
+            result = utilities.post_log(log_str, Settings())
             self.echo.debug(result.result_message)
 
             if result.result == Result.SUCCESS:
@@ -137,7 +137,7 @@ class ScanAction(action.Action):
             [ob.__dict__ for ob in scan_result.failures]
         )
 
-        individual_failure_count = usage_stats.convert_failures_to_failure_count(
+        individual_failure_count = utilities.convert_failures_to_failure_count(
             scan_result.failures
         )
 

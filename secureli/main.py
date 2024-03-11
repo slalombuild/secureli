@@ -13,7 +13,7 @@ from secureli.modules.shared.models.scan import ScanMode
 from secureli.modules.shared.resources import read_resource
 from secureli.settings import Settings
 import secureli.repositories.secureli_config as SecureliConfig
-from secureli.modules.shared.utilities.secureli_meta import secureli_version
+from secureli.modules.shared.utilities import secureli_version
 
 # Create SetupAction outside of DI, as it's not yet available.
 setup_action = SetupAction(epilog_template_data=read_resource("epilog.md"))

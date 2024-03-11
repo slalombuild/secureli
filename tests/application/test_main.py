@@ -10,7 +10,7 @@ import secureli.main
 from secureli.modules.shared.models.install import VerifyOutcome, VerifyResult
 from secureli.modules.shared.models.publish_results import PublishResultsOption
 from secureli.modules.shared.models.scan import ScanMode
-from secureli.modules.shared.utilities.secureli_meta import secureli_version
+from secureli.modules.shared.utilities import secureli_version
 
 
 @pytest.fixture()

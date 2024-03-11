@@ -4,8 +4,7 @@ import yaml
 
 from secureli.modules.shared.models import language
 from secureli.modules.shared.resources.slugify import slugify
-from secureli.modules.shared.utilities.hash import hash_config
-from secureli.modules.shared.utilities.patterns import combine_patterns
+from secureli.modules.shared.utilities import combine_patterns, hash_config
 
 
 class LanguageConfigService:

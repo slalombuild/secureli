@@ -12,8 +12,7 @@ from secureli.modules.shared.models.logging import LogAction
 import secureli.repositories.secureli_config as SecureliConfig
 from secureli.modules.language_analyzer import language_support
 from secureli.repositories.secureli_config import SecureliConfigRepository
-from secureli.modules.shared.utilities import git_meta
-from secureli.modules.shared.utilities.secureli_meta import secureli_version
+from secureli.modules.shared import utilities
 
 
 def generate_unique_id() -> str:
@@ -21,7 +20,7 @@ def generate_unique_id() -> str:
     A unique identifier representing the log entry, including various
     bits specific to the user and environment
     """
-    origin_email_branch = f"{git_meta.origin_url()}|{git_meta.git_user_email()}|{git_meta.current_branch_name()}"
+    origin_email_branch = f"{utilities.origin_url()}|{utilities.git_user_email()}|{utilities.current_branch_name()}"
     return f"{uuid4()}|{origin_email_branch}"
 
 
@@ -43,9 +42,9 @@ class LogEntry(pydantic.BaseModel):
 
     id: str = generate_unique_id()
     timestamp: datetime = datetime.utcnow()
-    username: str = git_meta.git_user_email()
+    username: str = utilities.git_user_email()
     machineid: str = platform.uname().node
-    secureli_version: str = secureli_version()
+    secureli_version: str = utilities.secureli_version()
     languages: Optional[list[str]]
     status: LogStatus
     action: LogAction
@@ -125,7 +124,7 @@ class LoggingService:
     def _log(self, log_entry: LogEntry):
         """Commit a log entry to the branch log file"""
         log_folder_path = Path(SecureliConfig.FOLDER_PATH / ".secureli/logs")
-        path_to_log = log_folder_path / f"{git_meta.current_branch_name()}"
+        path_to_log = log_folder_path / f"{utilities.current_branch_name()}"
 
         # Do not simply mkdir the log folder path, in case the branch name contains
         # additional folder structure, like `bugfix/` or `feature/`

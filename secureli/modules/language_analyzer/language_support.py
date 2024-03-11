@@ -9,7 +9,7 @@ from secureli.modules.shared.models.language import LanguageMetadata
 import secureli.repositories.secureli_config as SecureliConfig
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
 from secureli.modules.language_analyzer import git_ignore, language_config
-from secureli.modules.shared.utilities.hash import hash_config
+from secureli.modules.shared.utilities import hash_config
 
 
 class BuildConfigResult(pydantic.BaseModel):
