@@ -3,9 +3,7 @@ from secureli.modules.shared.abstractions.echo import TyperEcho
 from unittest.mock import MagicMock, ANY
 
 import pytest
-from secureli.modules.shared.models.echo import Color
-
-from secureli.modules.shared.utilities.logging import EchoLevel
+from secureli.modules.shared.models.echo import Color, Level
 
 ECHO_SECURELI_PREFIX = "[seCureLI]"
 
@@ -48,7 +46,7 @@ def typer_echo(request) -> TyperEcho:
 
 @pytest.mark.parametrize(
     "typer_echo",
-    [EchoLevel.info, EchoLevel.debug, EchoLevel.error, EchoLevel.warn],
+    [Level.info, Level.debug, Level.error, Level.warn],
     indirect=True,
 )
 def test_that_typer_echo_renders_print_messages_correctly(
@@ -68,10 +66,10 @@ def test_that_typer_echo_renders_print_messages_correctly(
 @pytest.mark.parametrize(
     "typer_echo",
     [
-        EchoLevel.debug,
-        EchoLevel.info,
-        EchoLevel.warn,
-        EchoLevel.error,
+        Level.debug,
+        Level.info,
+        Level.warn,
+        Level.error,
     ],
     indirect=True,
 )
@@ -90,7 +88,7 @@ def test_that_typer_echo_renders_errors_correctly(
 
 
 @pytest.mark.parametrize(
-    "typer_echo", [EchoLevel.warn, EchoLevel.info, EchoLevel.debug], indirect=True
+    "typer_echo", [Level.warn, Level.info, Level.debug], indirect=True
 )
 def test_that_typer_echo_renders_warnings_correctly(
     typer_echo: TyperEcho,
@@ -106,7 +104,7 @@ def test_that_typer_echo_renders_warnings_correctly(
     )
 
 
-@pytest.mark.parametrize("typer_echo", [EchoLevel.info, EchoLevel.debug], indirect=True)
+@pytest.mark.parametrize("typer_echo", [Level.info, Level.debug], indirect=True)
 def test_that_typer_echo_renders_info_correctly(
     typer_echo: TyperEcho,
     mock_echo_text: str,
@@ -123,7 +121,7 @@ def test_that_typer_echo_renders_info_correctly(
 
 @pytest.mark.parametrize(
     "typer_echo",
-    [EchoLevel.debug],
+    [Level.debug],
     indirect=True,
 )
 def test_that_typer_echo_renders_debug_messages_correctly(
@@ -139,7 +137,7 @@ def test_that_typer_echo_renders_debug_messages_correctly(
 
 @pytest.mark.parametrize(
     "typer_echo",
-    [EchoLevel.off],
+    [Level.off],
     indirect=True,
 )
 def test_that_typer_echo_suppresses_all_messages_when_off(
@@ -158,7 +156,7 @@ def test_that_typer_echo_suppresses_all_messages_when_off(
 
 @pytest.mark.parametrize(
     "typer_echo",
-    [EchoLevel.off],
+    [Level.off],
     indirect=True,
 )
 def test_that_typer_echo_suppresses_error_messages(
@@ -170,7 +168,7 @@ def test_that_typer_echo_suppresses_error_messages(
 
 @pytest.mark.parametrize(
     "typer_echo",
-    [EchoLevel.error, EchoLevel.off],
+    [Level.error, Level.off],
     indirect=True,
 )
 def test_that_typer_echo_suppresses_warning_messages(
@@ -182,7 +180,7 @@ def test_that_typer_echo_suppresses_warning_messages(
 
 @pytest.mark.parametrize(
     "typer_echo",
-    [EchoLevel.warn, EchoLevel.error, EchoLevel.off],
+    [Level.warn, Level.error, Level.off],
     indirect=True,
 )
 def test_that_typer_echo_suppresses_info_messages(
@@ -194,7 +192,7 @@ def test_that_typer_echo_suppresses_info_messages(
 
 @pytest.mark.parametrize(
     "typer_echo",
-    [EchoLevel.info, EchoLevel.warn, EchoLevel.error, EchoLevel.off],
+    [Level.info, Level.warn, Level.error, Level.off],
     indirect=True,
 )
 def test_that_typer_echo_suppresses_debug_messages(
@@ -206,7 +204,7 @@ def test_that_typer_echo_suppresses_debug_messages(
 
 @pytest.mark.parametrize(
     "typer_echo",
-    [EchoLevel.info],
+    [Level.info],
     indirect=True,
 )
 def test_that_typer_echo_prompts_user_for_confirmation(
@@ -220,7 +218,7 @@ def test_that_typer_echo_prompts_user_for_confirmation(
 
 
 def test_that_typer_echo_implements_prompt_with_default(mock_typer_prompt: MagicMock):
-    typer_echo = TyperEcho(level=EchoLevel.info)
+    typer_echo = TyperEcho(level=Level.info)
     message = "test message"
     default_response = "default user response"
     typer_echo.prompt(message=message, default_response=default_response)
@@ -233,7 +231,7 @@ def test_that_typer_echo_implements_prompt_with_default(mock_typer_prompt: Magic
 def test_that_typer_echo_implements_prompt_without_default(
     mock_typer_prompt: MagicMock,
 ):
-    typer_echo = TyperEcho(level=EchoLevel.info)
+    typer_echo = TyperEcho(level=Level.info)
     message = "test message"
     typer_echo.prompt(message=message)
 

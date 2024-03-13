@@ -1,12 +1,9 @@
 from abc import ABC, abstractmethod
-from enum import Enum
 from typing import IO, Optional
 
 import sys
 import typer
-from secureli.modules.shared.models.echo import Color
-
-from secureli.modules.shared.utilities.logging import EchoLevel
+from secureli.modules.shared.models.echo import Color, Level
 
 
 class EchoAbstraction(ABC):
@@ -18,15 +15,15 @@ class EchoAbstraction(ABC):
     """
 
     def __init__(self, level: str):
-        self.print_enabled = level != EchoLevel.off
-        self.debug_enabled = level == EchoLevel.debug
-        self.info_enabled = level in [EchoLevel.debug, EchoLevel.info]
-        self.warn_enabled = level in [EchoLevel.debug, EchoLevel.info, EchoLevel.warn]
+        self.print_enabled = level != Level.off
+        self.debug_enabled = level == Level.debug
+        self.info_enabled = level in [Level.debug, Level.info]
+        self.warn_enabled = level in [Level.debug, Level.info, Level.warn]
         self.error_enabled = level in [
-            EchoLevel.debug,
-            EchoLevel.info,
-            EchoLevel.warn,
-            EchoLevel.error,
+            Level.debug,
+            Level.info,
+            Level.warn,
+            Level.error,
         ]
 
     @abstractmethod

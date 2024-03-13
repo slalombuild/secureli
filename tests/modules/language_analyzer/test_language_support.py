@@ -37,7 +37,7 @@ def mock_hashlib(mocker: MockerFixture) -> MagicMock:
     mock_md5 = MagicMock()
     mock_hashlib.md5.return_value = mock_md5
     mock_md5.hexdigest.return_value = "mock-hash-code"
-    mocker.patch("secureli.modules.shared.utilities.hash.hashlib", mock_hashlib)
+    mocker.patch("secureli.modules.shared.utilities.hashlib", mock_hashlib)
     return mock_hashlib
 
 
@@ -47,7 +47,7 @@ def mock_hashlib_no_match(mocker: MockerFixture) -> MagicMock:
     mock_md5 = MagicMock()
     mock_hashlib.md5.return_value = mock_md5
     mock_md5.hexdigest.side_effect = ["first-hash-code", "second-hash-code"]
-    mocker.patch("secureli.modules.shared.utilities.hash.hashlib", mock_hashlib)
+    mocker.patch("secureli.modules.shared.utilities.hashlib", mock_hashlib)
     return mock_hashlib
 
 
