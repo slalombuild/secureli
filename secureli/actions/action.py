@@ -154,7 +154,7 @@ class Action(ABC):
             install_languages, always_yes
         )
         language_config_result = (
-            self.action_deps.language_support._build_pre_commit_config(
+            self.action_deps.language_support.build_pre_commit_config(
                 install_languages, lint_languages
             )
         )
