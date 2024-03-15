@@ -9,15 +9,12 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from secureli.abstractions.pre_commit import (
+from secureli.modules.shared.abstractions.pre_commit import (
     InstallResult,
     PreCommitAbstraction,
 )
-from secureli.repositories.settings import (
-    PreCommitSettings,
-    PreCommitRepo,
-    PreCommitHook,
-)
+from secureli.repositories import repo_settings
+
 
 test_folder_path = Path("does-not-matter")
 example_git_sha = "a" * 40
@@ -25,13 +22,13 @@ example_git_sha = "a" * 40
 
 @pytest.fixture()
 def settings_dict() -> dict:
-    return PreCommitSettings(
+    return repo_settings.PreCommitSettings(
         repos=[
-            PreCommitRepo(
+            repo_settings.PreCommitRepo(
                 repo="http://example-repo.com/",
                 rev="master",
                 hooks=[
-                    PreCommitHook(
+                    repo_settings.PreCommitHook(
                         id="hook-id",
                         arguments=None,
                         additional_args=None,
@@ -48,7 +45,7 @@ def mock_hashlib(mocker: MockerFixture) -> MagicMock:
     mock_md5 = MagicMock()
     mock_hashlib.md5.return_value = mock_md5
     mock_md5.hexdigest.return_value = "mock-hash-code"
-    mocker.patch("secureli.utilities.hash.hashlib", mock_hashlib)
+    mocker.patch("secureli.modules.shared.utilities.hashlib", mock_hashlib)
     return mock_hashlib
 
 
@@ -58,7 +55,7 @@ def mock_hashlib_no_match(mocker: MockerFixture) -> MagicMock:
     mock_md5 = MagicMock()
     mock_hashlib.md5.return_value = mock_md5
     mock_md5.hexdigest.side_effect = ["first-hash-code", "second-hash-code"]
-    mocker.patch("secureli.utilities.hash.hashlib", mock_hashlib)
+    mocker.patch("secureli.modules.shared.utilities.hashlib", mock_hashlib)
     return mock_hashlib
 
 
@@ -73,7 +70,9 @@ def mock_data_loader() -> MagicMock:
 def mock_subprocess(mocker: MockerFixture) -> MagicMock:
     mock_subprocess = MagicMock()
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-    mocker.patch("secureli.abstractions.pre_commit.subprocess", mock_subprocess)
+    mocker.patch(
+        "secureli.modules.shared.abstractions.pre_commit.subprocess", mock_subprocess
+    )
     return mock_subprocess
 
 
@@ -431,14 +430,16 @@ def test_check_for_hook_updates_infers_freeze_param_when_not_provided(
     rev_is_sha: bool,
 ):
     with um.patch(
-        "secureli.abstractions.pre_commit.HookRepoRevInfo.from_config"
+        "secureli.modules.shared.abstractions.pre_commit.HookRepoRevInfo.from_config"
     ) as mock_hook_repo_rev_info:
-        pre_commit_config_repo = PreCommitRepo(
+        pre_commit_config_repo = repo_settings.PreCommitRepo(
             repo="http://example-repo.com/",
             rev=rev,
-            hooks=[PreCommitHook(id="hook-id")],
+            hooks=[repo_settings.PreCommitHook(id="hook-id")],
         )
-        pre_commit_config = PreCommitSettings(repos=[pre_commit_config_repo])
+        pre_commit_config = repo_settings.PreCommitSettings(
+            repos=[pre_commit_config_repo]
+        )
         rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
         mock_hook_repo_rev_info.return_value = rev_info_mock
         rev_info_mock.update.return_value = rev_info_mock  # Returning the same revision info on update means the hook will be considered up to date
@@ -454,14 +455,16 @@ def test_check_for_hook_updates_respects_freeze_param_when_false(
     regardless of whether the existing rev is a tag or a commit hash.
     """
     with um.patch(
-        "secureli.abstractions.pre_commit.HookRepoRevInfo.from_config"
+        "secureli.modules.shared.abstractions.pre_commit.HookRepoRevInfo.from_config"
     ) as mock_hook_repo_rev_info:
-        pre_commit_config_repo = PreCommitRepo(
+        pre_commit_config_repo = repo_settings.PreCommitRepo(
             repo="http://example-repo.com/",
             rev=example_git_sha,
-            hooks=[PreCommitHook(id="hook-id")],
+            hooks=[repo_settings.PreCommitHook(id="hook-id")],
         )
-        pre_commit_config = PreCommitSettings(repos=[pre_commit_config_repo])
+        pre_commit_config = repo_settings.PreCommitSettings(
+            repos=[pre_commit_config_repo]
+        )
         rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
         mock_hook_repo_rev_info.return_value = rev_info_mock
         rev_info_mock.update.return_value = rev_info_mock  # Returning the same revision info on update means the hook will be considered up to date
@@ -473,14 +476,16 @@ def test_check_for_hook_updates_respects_freeze_param_when_true(
     pre_commit: PreCommitAbstraction,
 ):
     with um.patch(
-        "secureli.abstractions.pre_commit.HookRepoRevInfo.from_config"
+        "secureli.modules.shared.abstractions.pre_commit.HookRepoRevInfo.from_config"
     ) as mock_hook_repo_rev_info:
-        pre_commit_config_repo = PreCommitRepo(
+        pre_commit_config_repo = repo_settings.PreCommitRepo(
             repo="http://example-repo.com/",
             rev="tag1",
-            hooks=[PreCommitHook(id="hook-id")],
+            hooks=[repo_settings.PreCommitHook(id="hook-id")],
         )
-        pre_commit_config = PreCommitSettings(repos=[pre_commit_config_repo])
+        pre_commit_config = repo_settings.PreCommitSettings(
+            repos=[pre_commit_config_repo]
+        )
         rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
         mock_hook_repo_rev_info.return_value = rev_info_mock
         rev_info_mock.update.return_value = rev_info_mock  # Returning the same revision info on update means the hook will be considered up to date
@@ -492,15 +497,17 @@ def test_check_for_hook_updates_returns_repos_with_new_revs(
     pre_commit: PreCommitAbstraction,
 ):
     with um.patch(
-        "secureli.abstractions.pre_commit.HookRepoRevInfo"
+        "secureli.modules.shared.abstractions.pre_commit.HookRepoRevInfo"
     ) as mock_hook_repo_rev_info:
         repo_urls = ["http://example-repo.com/", "http://example-repo-2.com/"]
         old_rev = "tag1"
         repo_1_new_rev = "tag2"
-        pre_commit_config = PreCommitSettings(
+        pre_commit_config = repo_settings.PreCommitSettings(
             repos=[
-                PreCommitRepo(
-                    repo=repo_url, rev=old_rev, hooks=[PreCommitHook(id="hook-id")]
+                repo_settings.PreCommitRepo(
+                    repo=repo_url,
+                    rev=old_rev,
+                    hooks=[repo_settings.PreCommitHook(id="hook-id")],
                 )
                 for repo_url in repo_urls
             ]

@@ -211,8 +211,8 @@ class LanguageSupportService:
                     else None
                 )
                 data = yaml.safe_load(result.config_data)
+                config_repos += data["repos"] or []
 
-        config_repos += data["repos"] or []
         config = {**existing_data, "repos": config_repos}
         version = hash_config(yaml.dump(config))
 

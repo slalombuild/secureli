@@ -401,7 +401,7 @@ def test_write_pre_commit_configs_writes_successfully(
 
 
 def test_build_pre_commit_displays_error_parsing_existing_config(
-    language_support_service: LanguageSupportService,
+    language_support_service: language_support.LanguageSupportService,
     mock_language_config_service: MagicMock,
     mock_open: MagicMock,
     mock_echo: MagicMock,
@@ -410,10 +410,10 @@ def test_build_pre_commit_displays_error_parsing_existing_config(
         patch("builtins.open", mock_open(read_data="data")),
         patch.object(yaml, "safe_load", side_effect=yaml.YAMLError),
     ):
-        mock_language_config_service.get_language_config.return_value = LanguagePreCommitResult(
+        mock_language_config_service.get_language_config.return_value = language.LanguagePreCommitResult(
             language="Python",
             version="abc123",
-            linter_config=LoadLinterConfigsResult(
+            linter_config=language.LoadLinterConfigsResult(
                 successful=True,
                 linter_data=[{"filename": "test.txt", "settings": {}}],
             ),
