@@ -501,7 +501,7 @@ def test_write_pre_commit_configs_returns_error_messages(
 
     mock_open.assert_called_once()
     mock_open.return_value.write.assert_not_called()
-    assert result == language_support.LinterConfigWriteResult(
+    assert result == language.LinterConfigWriteResult(
         error_messages=[
             f"Failed to write {mock_filename} linter config file for {mock_language}"
         ],
@@ -517,7 +517,7 @@ def test_write_pre_commit_configs_handles_empty_lint_configs(
 
     mock_open.assert_not_called()
     mock_open.return_value.write.assert_not_called()
-    assert result == language_support.LinterConfigWriteResult(
+    assert result == language.LinterConfigWriteResult(
         error_messages=[],
         successful_languages=[],
     )

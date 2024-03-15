@@ -51,3 +51,22 @@ class LanguageMetadata(pydantic.BaseModel):
     version: str
     security_hook_id: Optional[str]
     linter_config_write_errors: Optional[list[str]] = []
+
+
+class BuildConfigResult(pydantic.BaseModel):
+    """Result about building config for all laguages"""
+
+    successful: bool
+    languages_added: list[str]
+    config_data: dict
+    linter_configs: list[LinterConfig]
+    version: str
+
+
+class LinterConfigWriteResult(pydantic.BaseModel):
+    """
+    Result from writing linter config files
+    """
+
+    successful_languages: list[str]
+    error_messages: list[str]
