@@ -112,7 +112,7 @@ def test_that_git_ignore_updates_existing_file_if_block_is_present(
         0
     ]
     assert args[0].find("# existing contents") == 0  # still starts with header
-    assert args[0].find(".secureli") != -1  # .secureli folder now added
+    assert args[0].find(".secureli/logs") != -1  # .secureli folder now added
     assert args[0].find("...") == -1  # initial data now missing
 
 
