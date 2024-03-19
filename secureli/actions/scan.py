@@ -111,7 +111,6 @@ class ScanAction(action.Action):
             return None
         try:
             committed_files = self.git_repo.get_commit_diff()
-            print(committed_files)
             return [Path(file) for file in committed_files]
         except:
             return None
