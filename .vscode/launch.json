@@ -10,7 +10,7 @@
             "stopOnEntry": false,
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["--version"]
+            "args": ["--version", "update"]
         },
         {
             "name": "Python: secureli --help",
@@ -55,6 +55,15 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": ["update"]
+        },
+        {
+            "name": "Debug Tests",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "purpose": ["debug-test"],
+            "console": "integratedTerminal",
+            "justMyCode": false
         }
     ]
 }

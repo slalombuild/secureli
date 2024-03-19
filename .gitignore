@@ -244,5 +244,6 @@ fabric.properties
 *.drawio.dtmp
 
 # Secureli-generated files (do not modify):
-.secureli
+.secureli/logs
+.secureli/repo-config.yaml
 # End Secureli-generated files
