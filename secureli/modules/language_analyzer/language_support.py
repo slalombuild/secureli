@@ -7,6 +7,7 @@ from secureli.modules.shared.models import language
 
 import secureli.repositories.secureli_config as SecureliConfig
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
+from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.modules.language_analyzer import git_ignore, language_config
 from secureli.modules.shared.utilities import hash_config
 
@@ -23,11 +24,13 @@ class LanguageSupportService:
         language_config: language_config.LanguageConfigService,
         git_ignore: git_ignore.GitIgnoreService,
         data_loader: Callable[[str], str],
+        echo: EchoAbstraction,
     ):
         self.git_ignore = git_ignore
         self.pre_commit_hook = pre_commit_hook
         self.language_config = language_config
         self.data_loader = data_loader
+        self.echo = echo
 
     def apply_support(
         self,
@@ -45,8 +48,8 @@ class LanguageSupportService:
         as well as a secret-detection hook ID, if present.
         """
 
-        path_to_pre_commit_file = Path(
-            SecureliConfig.FOLDER_PATH / ".pre-commit-config.yaml"
+        path_to_pre_commit_file: Path = self.pre_commit_hook.get_pre_commit_config_path(
+            SecureliConfig.FOLDER_PATH
         )
 
         linter_config_write_result = self._write_pre_commit_configs(
@@ -129,20 +132,42 @@ class LanguageSupportService:
         return HookConfiguration(repos=repos)
 
     def build_pre_commit_config(
-        self, languages: list[str], lint_languages: Iterable[str]
+        self,
+        languages: list[str],
+        lint_languages: Iterable[str],
+        pre_commit_config_location: Optional[Path] = None,
     ) -> language.BuildConfigResult:
         """
         Builds the final .pre-commit-config.yaml from all supported repo languages. Also returns any and all
         linter configuration data.
         :param languages: list of languages to get calculated configuration for.
         :param lint_languages: list of languages to add lint pre-commit hooks for.
-        :return: BuildConfigResult
+        :return: language.BuildConfigResult
         """
-        config_data = []
+        config_repos = []
+        existing_data = {}
         successful_languages: list[str] = []
         linter_configs: list[LinterConfig] = []
         config_languages = [*languages, "base"]
         config_lint_languages = [*lint_languages, "base"]
+
+        if pre_commit_config_location:
+            with open(pre_commit_config_location) as stream:
+                try:
+                    data = yaml.safe_load(stream)
+                    existing_data = data or {}
+                    config_repos += data["repos"]
+                except yaml.YAMLError:
+                    self.echo.error(
+                        f"There was an issue parsing existing pre-commit-config.yaml."
+                    )
+                    return language.BuildConfigResult(
+                        successful=False,
+                        languages_added=[],
+                        config_data={},
+                        version="",
+                        linter_configs=linter_configs,
+                    )
 
         for config_language in config_languages:
             include_linter = config_language in config_lint_languages
@@ -162,13 +187,13 @@ class LanguageSupportService:
                     else None
                 )
                 data = yaml.safe_load(result.config_data)
-                config_data += data["repos"] or []
+                config_repos += data["repos"] or []
 
-        config = {"repos": config_data}
+        config = {**existing_data, "repos": config_repos}
         version = hash_config(yaml.dump(config))
 
         return language.BuildConfigResult(
-            successful=True if len(config_data) > 0 else False,
+            successful=True if len(config_repos) > 0 else False,
             languages_added=successful_languages,
             config_data=config,
             version=version,

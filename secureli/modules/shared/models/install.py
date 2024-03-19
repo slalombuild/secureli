@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Optional
+from pathlib import Path
 
 import pydantic
 from secureli.modules.shared.models.language import AnalyzeResult
@@ -26,3 +27,4 @@ class VerifyResult(pydantic.BaseModel):
     outcome: VerifyOutcome
     config: Optional[SecureliConfig] = None
     analyze_result: Optional[AnalyzeResult] = None
+    file_path: Optional[Path] = None

@@ -13,7 +13,7 @@ from secureli.modules.shared.models.scan import ScanMode, ScanResult
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
 from secureli.repositories import repo_settings
 from unittest import mock
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from pytest_mock import MockerFixture
 
 import os
@@ -216,13 +216,15 @@ def test_that_scan_repo_does_not_scan_if_not_installed(
     mock_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_echo: MagicMock,
+    mock_language_analyzer: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig()
-    mock_echo.confirm.return_value = False
+    with patch.object(Path, "exists", return_value=False):
+        mock_secureli_config.load.return_value = SecureliConfig()
+        mock_secureli_config.verify.return_value = VerifyConfigOutcome.UP_TO_DATE
+        mock_echo.confirm.return_value = False
 
-    scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
-
-    mock_scanner.scan_repo.assert_not_called()
+        scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
+        mock_scanner.scan_repo.assert_not_called()
 
 
 def test_that_scan_checks_for_updates(
