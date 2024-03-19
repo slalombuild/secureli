@@ -20,7 +20,7 @@ class LanguageAnalyzerService:
         self.repo_files = repo_files
         self.lexer_guesser = lexer_guesser
 
-    def analyze(self, folder_path: Path) -> AnalyzeResult:
+    def analyze(self, folder_path: Path, files: list[Path]) -> AnalyzeResult:
         """
         Analyzes the folder structure and lists languages found
         :param folder_path: The path to the repository to analyze
@@ -29,7 +29,7 @@ class LanguageAnalyzerService:
         40% of the repo is JavaScript, the result will be a dictionary containing keys
         "Python" and "JavaScript" with values 0.6 and 0.4 respectively
         """
-        file_paths = self.repo_files.list_repo_files(folder_path)
+        file_paths = files if files else self.repo_files.list_repo_files(folder_path)
         results = defaultdict(int)
 
         skipped_files = []

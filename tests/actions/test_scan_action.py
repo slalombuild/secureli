@@ -63,6 +63,11 @@ def mock_updater() -> MagicMock:
 
 
 @pytest.fixture()
+def mock_git_repo() -> MagicMock:
+    return MagicMock()
+
+
+@pytest.fixture()
 def mock_get_time_near_epoch(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
         "secureli.actions.scan.time", return_value=1.0
@@ -118,12 +123,14 @@ def action_deps(
 def scan_action(
     action_deps: ActionDependencies,
     mock_logging_service: MagicMock,
+    mock_git_repo: MagicMock,
 ) -> ScanAction:
     return ScanAction(
         action_deps=action_deps,
         echo=action_deps.echo,
         logging=mock_logging_service,
         scanner=action_deps.scanner,
+        git_repo=mock_git_repo,
     )
 
 
@@ -333,3 +340,116 @@ def test_publish_results_on_fail_and_action_not_successful(
 
     mock_post_log.assert_called_once_with("log_str", Settings())
     scan_action.logging.failure.assert_called_once_with(LogAction.publish, "Failure")
+
+
+def test_verify_install_is_called_with_commted_files(
+    scan_action: ScanAction,
+    mock_git_repo: MagicMock,
+    mock_secureli_config: MagicMock,
+    mock_language_analyzer: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang"], version_installed=1
+    )
+
+    mock_files = ["file1.py", "file2.py"]
+
+    mock_git_repo.get_commit_diff.return_value = mock_files
+    scan_action.scan_repo(
+        folder_path=Path(""),
+        scan_mode=ScanMode.STAGED_ONLY,
+        always_yes=True,
+        publish_results_condition=PublishResultsOption.NEVER,
+        specific_test=None,
+        files=None,
+    )
+
+    mock_language_analyzer.analyze.assert_called_once_with(
+        Path("."), [Path(file) for file in mock_files]
+    )
+
+
+def test_verify_install_is_called_with_user_specified_files(
+    scan_action: ScanAction,
+    mock_git_repo: MagicMock,
+    mock_secureli_config: MagicMock,
+    mock_language_analyzer: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang"], version_installed=1
+    )
+
+    mock_files = ["file1.py", "file2.py"]
+
+    mock_git_repo.get_commit_diff.return_value = None
+    scan_action.scan_repo(
+        folder_path=Path(""),
+        scan_mode=ScanMode.STAGED_ONLY,
+        always_yes=True,
+        publish_results_condition=PublishResultsOption.NEVER,
+        specific_test=None,
+        files=mock_files,
+    )
+
+    mock_language_analyzer.analyze.assert_called_once_with(
+        Path("."), [Path(file) for file in mock_files]
+    )
+
+
+def test_verify_install_is_called_with_no_specified_files(
+    scan_action: ScanAction,
+    mock_git_repo: MagicMock,
+    mock_secureli_config: MagicMock,
+    mock_language_analyzer: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang"], version_installed=1
+    )
+
+    mock_git_repo.get_commit_diff.return_value = None
+    scan_action.scan_repo(
+        folder_path=Path(""),
+        scan_mode=ScanMode.STAGED_ONLY,
+        always_yes=True,
+        publish_results_condition=PublishResultsOption.NEVER,
+        specific_test=None,
+        files=None,
+    )
+
+    mock_language_analyzer.analyze.assert_called_once_with(Path("."), None)
+
+
+def test_get_commited_files_returns_commit_diff(
+    scan_action: ScanAction,
+    mock_git_repo: MagicMock,
+    mock_secureli_config: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang"], version_installed=1
+    )
+    mock_files = [Path("file1.py"), Path("file2.py")]
+    mock_git_repo.get_commit_diff.return_value = mock_files
+    result = scan_action.get_commited_files(scan_mode=ScanMode.STAGED_ONLY)
+    assert result == mock_files
+
+
+def test_get_commited_files_returns_none_when_not_installed(
+    scan_action: ScanAction,
+    mock_secureli_config: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=[], version_installed=None
+    )
+    result = scan_action.get_commited_files(scan_mode=ScanMode.STAGED_ONLY)
+    assert result is None
+
+
+def test_get_commited_files_returns_when_scan_mode_is_not_staged_only(
+    scan_action: ScanAction,
+    mock_secureli_config: MagicMock,
+):
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang"], version_installed=1
+    )
+    result = scan_action.get_commited_files(scan_mode=ScanMode.ALL_FILES)
+    assert result is None

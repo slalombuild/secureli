@@ -63,7 +63,7 @@ def test_that_initialize_repo_raises_value_error_without_any_supported_languages
         language_proportions={}, skipped_files=[]
     )
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     mock_echo.error.assert_called_with(
         "seCureLI could not be installed due to an error: No supported languages found in current repository"
@@ -83,7 +83,7 @@ def test_that_initialize_repo_install_flow_selects_both_languages(
         skipped_files=[],
     )
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     mock_echo.print.assert_called_with(
         "seCureLI has been installed successfully for the following language(s): RadLang and CoolLang.\n",
@@ -105,7 +105,7 @@ def test_that_initialize_repo_install_flow_performs_security_analysis(
         skipped_files=[],
     )
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     mock_scanner.scan_repo.assert_called_once()
 
@@ -118,7 +118,7 @@ def test_that_initialize_repo_install_flow_displays_security_analysis_results(
         output="Detect secrets...Failed",
         failures=[ScanFailure(repo="repo", id="id", file="file")],
     )
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     action_deps.echo.print.assert_any_call("Detect secrets...Failed")
 
@@ -140,7 +140,7 @@ def test_that_initialize_repo_install_flow_skips_security_analysis_if_unavailabl
         version="abc123", security_hook_id=None
     )
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     mock_scanner.scan_repo.assert_not_called()
 
@@ -171,7 +171,7 @@ def test_that_initialize_repo_install_flow_warns_about_skipped_files(
         successful=True, backup_hook_path=None
     )
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     assert (
         mock_echo.warning.call_count == 3
@@ -184,7 +184,7 @@ def test_that_initialize_repo_can_be_canceled(
 ):
     mock_echo.confirm.return_value = False
 
-    action.verify_install(test_folder_path, reset=True, always_yes=False)
+    action.verify_install(test_folder_path, reset=True, always_yes=False, files=None)
 
     mock_echo.error.assert_called_with("User canceled install process")
 
@@ -205,7 +205,7 @@ def test_that_initialize_repo_selects_previously_selected_language(
     )
     mock_language_support.version_for_language.return_value = "abc123"
 
-    action.verify_install(test_folder_path, reset=False, always_yes=True)
+    action.verify_install(test_folder_path, reset=False, always_yes=True, files=None)
 
     mock_echo.print.assert_called_with(
         "seCureLI is installed and up-to-date for the following language(s): PreviousLang"
@@ -223,7 +223,7 @@ def test_that_initialize_repo_prompts_to_upgrade_config_if_old_schema(
     mock_language_support.version_for_language.return_value = "xyz987"
     mock_echo.confirm.return_value = False
 
-    action.verify_install(test_folder_path, reset=False, always_yes=False)
+    action.verify_install(test_folder_path, reset=False, always_yes=False, files=None)
 
     mock_echo.error.assert_called_with("seCureLI could not be verified.")
 
@@ -250,7 +250,9 @@ def test_that_initialize_repo_updates_repo_config_if_old_schema(
 
     mock_language_support.version_for_language.return_value = "abc123"
 
-    result = action.verify_install(test_folder_path, reset=False, always_yes=True)
+    result = action.verify_install(
+        test_folder_path, reset=False, always_yes=True, files=None
+    )
 
     assert result.outcome == VerifyOutcome.UP_TO_DATE
 
@@ -265,7 +267,7 @@ def test_that_initialize_repo_reports_errors_when_schema_update_fails(
 
     mock_secureli_config.update.side_effect = Exception
 
-    action.verify_install(test_folder_path, reset=False, always_yes=True)
+    action.verify_install(test_folder_path, reset=False, always_yes=True, files=None)
 
     mock_echo.error.assert_called_with("seCureLI could not be verified.")
 
@@ -280,7 +282,7 @@ def test_that_initialize_repo_is_aborted_by_the_user_if_the_process_is_canceled(
     mock_echo.confirm.return_value = False
     mock_secureli_config.load.return_value = SecureliConfig()  # fresh config
 
-    action.verify_install(test_folder_path, reset=False, always_yes=False)
+    action.verify_install(test_folder_path, reset=False, always_yes=False, files=None)
 
     mock_echo.error.assert_called_with("User canceled install process")
 
@@ -300,7 +302,9 @@ def test_that_initialize_repo_returns_up_to_date_if_the_process_is_canceled_on_e
         language_proportions={"RadLang": 0.5, "CoolLang": 0.5}, skipped_files=[]
     )
 
-    result = action.verify_install(test_folder_path, reset=False, always_yes=False)
+    result = action.verify_install(
+        test_folder_path, reset=False, always_yes=False, files=None
+    )
     assert result.outcome == VerifyOutcome.UP_TO_DATE
 
 
@@ -322,7 +326,7 @@ def test_that_initialize_repo_prints_warnings_for_failed_linter_config_writes(
         successful=True, backup_hook_path=None
     )
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     mock_echo.warning.assert_called_once_with(config_write_error)
 
@@ -341,7 +345,7 @@ def test_that_verify_install_returns_failed_result_on_new_install_language_not_s
     )
 
     verify_result = action.verify_install(
-        test_folder_path, reset=False, always_yes=False
+        test_folder_path, reset=False, always_yes=False, files=None
     )
 
     assert verify_result.outcome == VerifyOutcome.INSTALL_FAILED
@@ -361,7 +365,7 @@ def test_that_verify_install_returns_up_to_date_result_on_existing_install_langu
     )
 
     verify_result = action.verify_install(
-        test_folder_path, reset=False, always_yes=False
+        test_folder_path, reset=False, always_yes=False, files=None
     )
 
     assert verify_result.outcome == VerifyOutcome.UP_TO_DATE
@@ -381,7 +385,7 @@ def test_that_verify_install_returns_up_to_date_result_on_existing_install_no_ne
     )
 
     verify_result = action.verify_install(
-        test_folder_path, reset=False, always_yes=False
+        test_folder_path, reset=False, always_yes=False, files=None
     )
 
     assert verify_result.outcome == VerifyOutcome.UP_TO_DATE
@@ -401,7 +405,7 @@ def test_that_verify_install_returns_success_result_newly_detected_language_inst
     )
 
     verify_result = action.verify_install(
-        test_folder_path, reset=False, always_yes=True
+        test_folder_path, reset=False, always_yes=True, files=None
     )
 
     assert verify_result.outcome == VerifyOutcome.INSTALL_SUCCEEDED
@@ -426,7 +430,7 @@ def test_that_initialize_repo_install_flow_warns_about_overwriting_pre_commit_fi
 
     mock_updater.pre_commit.install.return_value = install_result
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     mock_echo.warning.assert_called_once_with(
         (

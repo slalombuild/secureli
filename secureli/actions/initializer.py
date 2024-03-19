@@ -27,7 +27,7 @@ class InitializerAction(Action):
         :param reset: If true, disregard existing configuration and start fresh
         :param always_yes: Assume "Yes" to all prompts
         """
-        verify_result = self.verify_install(folder_path, reset, always_yes)
+        verify_result = self.verify_install(folder_path, reset, always_yes, files=None)
         if verify_result.outcome in ScanAction.halting_outcomes:
             self.logging.failure(LogAction.init, verify_result.outcome)
         else:
