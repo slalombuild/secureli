@@ -18,8 +18,4 @@ class GitRepo(RepoAbstraction):
     """
 
     def get_commit_diff(self) -> list[str]:
-        repo = git.Repo()
-        try:
-            return repo.head.commit.diff()
-        except:
-            return []
+        return git.Repo().head.commit.diff()

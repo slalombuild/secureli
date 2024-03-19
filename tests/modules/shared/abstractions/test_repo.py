@@ -23,11 +23,3 @@ def test_that_get_commit_diff_returns_file_diff(
     mock_repo.return_value.head.commit.diff.return_value = mock_files
     result = git_repo.get_commit_diff()
     assert result is mock_files
-
-
-def test_that_get_commit_diff_returns_empty_list_on_error(
-    git_repo: GitRepo, mock_repo: MagicMock
-):
-    mock_repo.return_value.head = None
-    result = git_repo.get_commit_diff()
-    assert result == []

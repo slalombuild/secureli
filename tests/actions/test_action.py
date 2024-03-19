@@ -422,7 +422,7 @@ def test_that_verify_install_returns_failure_result_without_re_commit_config_fil
         )
         mock_scanner.pre_commit.migrate_config_file.side_effect = Exception("ERROR")
         verify_result = action.verify_install(
-            test_folder_path, reset=False, always_yes=True
+            test_folder_path, reset=False, always_yes=True, files=None
         )
         mock_echo.error.assert_called_once_with(
             "seCureLI pre-commit-config.yaml could not be updated."
@@ -440,7 +440,7 @@ def test_that_verify_install_continues_after_pre_commit_config_file_moved(
             test_folder_path / ".secureli" / ".pre-commit-config.yaml"
         )
         verify_result = action.verify_install(
-            test_folder_path, reset=False, always_yes=True
+            test_folder_path, reset=False, always_yes=True, files=None
         )
         assert verify_result.outcome == VerifyOutcome.INSTALL_SUCCEEDED
 
