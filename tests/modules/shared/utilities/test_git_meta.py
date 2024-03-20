@@ -10,7 +10,9 @@ from secureli.modules.shared.utilities.git_meta import (
     current_branch_name,
 )
 
-mock_git_origin_url = r"git@github.com:my-org/repo%20with%20spaces.git"
+mock_git_origin_url = (
+    r"git@github.com:my-org/repo%20with%20spaces.git"  # disable-pii-scan
+)
 
 
 @pytest.fixture()
@@ -19,7 +21,9 @@ def mock_subprocess(mocker: MockerFixture) -> MagicMock:
         "secureli.modules.shared.utilities.git_meta.subprocess"
     )
     mock_subprocess.run.return_value = CompletedProcess(
-        args=[], returncode=0, stdout="great.engineer@slalom.com\n".encode("utf8")
+        args=[],
+        returncode=0,
+        stdout="great.engineer@slalom.com\n".encode("utf8"),  # disable-pii-scan
     )
     return mock_subprocess
 
@@ -68,7 +72,9 @@ def test_git_user_email_loads_user_email_via_git_subprocess(mock_subprocess: Mag
     result = git_user_email()
 
     mock_subprocess.run.assert_called_once()
-    assert result == "great.engineer@slalom.com"  # note: without trailing newline
+    assert (
+        result == "great.engineer@slalom.com"  # disable-pii-scan
+    )  # note: without trailing newline
 
 
 def test_origin_url_parses_config_to_get_origin_url(mock_configparser: MagicMock):

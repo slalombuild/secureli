@@ -21,8 +21,9 @@ from secureli.modules.language_analyzer.language_analyzer_services.language_anal
 from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
     LanguageSupportService,
 )
-from secureli.modules.core.core_services.scanner import ScannerService
+from secureli.modules.core.core_services.scanner import HooksScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
+from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
 
 from secureli.modules.shared.utilities.formatter import format_sentence_list
 
@@ -39,7 +40,7 @@ class ActionDependencies:
         echo: EchoAbstraction,
         language_analyzer: LanguageAnalyzerService,
         language_support: LanguageSupportService,
-        scanner: ScannerService,
+        hooks_scanner: HooksScannerService,
         secureli_config: SecureliConfigRepository,
         settings: SecureliRepository,
         updater: UpdaterService,
@@ -47,7 +48,7 @@ class ActionDependencies:
         self.echo = echo
         self.language_analyzer = language_analyzer
         self.language_support = language_support
-        self.scanner = scanner
+        self.hooks_scanner = hooks_scanner
         self.secureli_config = secureli_config
         self.settings = settings
         self.updater = updater
@@ -266,7 +267,7 @@ class Action(ABC):
             )
             self.action_deps.echo.print(f"running {secret_test_id}.")
 
-            scan_result = self.action_deps.scanner.scan_repo(
+            scan_result = self.action_deps.hooks_scanner.scan_repo(
                 folder_path,
                 ScanMode.ALL_FILES,
                 specific_test=secret_test_id,

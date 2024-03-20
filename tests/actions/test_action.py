@@ -21,9 +21,9 @@ test_folder_path = Path("does-not-matter")
 
 
 @pytest.fixture()
-def mock_scanner() -> MagicMock:
-    mock_scanner = MagicMock()
-    return mock_scanner
+def mock_hooks_scanner() -> MagicMock:
+    mock_hooks_scanner = MagicMock()
+    return mock_hooks_scanner
 
 
 @pytest.fixture()
@@ -37,7 +37,7 @@ def action_deps(
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
     mock_language_support: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
     mock_settings: MagicMock,
@@ -46,7 +46,7 @@ def action_deps(
         mock_echo,
         mock_language_analyzer,
         mock_language_support,
-        mock_scanner,
+        mock_hooks_scanner,
         mock_secureli_config,
         mock_settings,
         mock_updater,
@@ -99,7 +99,7 @@ def test_that_initialize_repo_install_flow_selects_both_languages(
 def test_that_initialize_repo_install_flow_performs_security_analysis(
     action: Action,
     mock_language_analyzer: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
 ):
     mock_language_analyzer.analyze.return_value = AnalyzeResult(
         language_proportions={
@@ -111,13 +111,13 @@ def test_that_initialize_repo_install_flow_performs_security_analysis(
 
     action.verify_install(test_folder_path, reset=True, always_yes=True)
 
-    mock_scanner.scan_repo.assert_called_once()
+    mock_hooks_scanner.scan_repo.assert_called_once()
 
 
 def test_that_initialize_repo_install_flow_displays_security_analysis_results(
-    action: Action, action_deps: MagicMock, mock_scanner: MagicMock
+    action: Action, action_deps: MagicMock, mock_hooks_scanner: MagicMock
 ):
-    mock_scanner.scan_repo.return_value = ScanResult(
+    mock_hooks_scanner.scan_repo.return_value = ScanResult(
         successful=False,
         output="Detect secrets...Failed",
         failures=[ScanFailure(repo="repo", id="id", file="file")],
@@ -130,7 +130,7 @@ def test_that_initialize_repo_install_flow_displays_security_analysis_results(
 def test_that_initialize_repo_install_flow_skips_security_analysis_if_unavailable(
     action: Action,
     mock_language_analyzer: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_language_support: MagicMock,
 ):
     mock_language_analyzer.analyze.return_value = AnalyzeResult(
@@ -146,7 +146,7 @@ def test_that_initialize_repo_install_flow_skips_security_analysis_if_unavailabl
 
     action.verify_install(test_folder_path, reset=True, always_yes=True)
 
-    mock_scanner.scan_repo.assert_not_called()
+    mock_hooks_scanner.scan_repo.assert_not_called()
 
 
 def test_that_initialize_repo_install_flow_warns_about_skipped_files(
@@ -597,7 +597,7 @@ def test_that_post_install_scan_ignores_creating_pre_commit_on_existing_install(
 
 
 def test_that_post_install_scan_scans_repo(
-    action: Action, mock_scanner: MagicMock, mock_echo: MagicMock
+    action: Action, mock_hooks_scanner: MagicMock, mock_echo: MagicMock
 ):
     action._run_post_install_scan(
         "test/path",
@@ -606,12 +606,12 @@ def test_that_post_install_scan_scans_repo(
         False,
     )
 
-    mock_scanner.scan_repo.assert_called_once()
+    mock_hooks_scanner.scan_repo.assert_called_once()
     mock_echo.warning.assert_not_called()
 
 
 def test_that_post_install_scan_does_not_scan_repo_when_no_security_hook_id(
-    action: Action, mock_scanner: MagicMock, mock_echo: MagicMock
+    action: Action, mock_hooks_scanner: MagicMock, mock_echo: MagicMock
 ):
     action._run_post_install_scan(
         "test/path",
@@ -620,7 +620,7 @@ def test_that_post_install_scan_does_not_scan_repo_when_no_security_hook_id(
         False,
     )
 
-    mock_scanner.scan_repo.assert_not_called()
+    mock_hooks_scanner.scan_repo.assert_not_called()
     mock_echo.warning.assert_called_once_with(
         "RadLang does not support secrets detection, skipping"
     )

@@ -10,7 +10,7 @@ from secureli.repositories.settings import (
     PreCommitSettings,
 )
 from secureli.modules.core.core_services.scanner import (
-    ScannerService,
+    HooksScannerService,
     OutputParseErrors,
 )
 from pytest_mock import MockerFixture
@@ -118,12 +118,12 @@ def mock_config_no_black(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
-def scanner_service(mock_pre_commit: MagicMock) -> ScannerService:
-    return ScannerService(mock_pre_commit)
+def scanner_service(mock_pre_commit: MagicMock) -> HooksScannerService:
+    return HooksScannerService(mock_pre_commit)
 
 
 def test_that_scanner_service_scans_repositories_with_pre_commit(
-    scanner_service: ScannerService,
+    scanner_service: HooksScannerService,
     mock_pre_commit: MagicMock,
 ):
     scan_result = scanner_service.scan_repo(test_folder_path, ScanMode.ALL_FILES)
@@ -133,7 +133,7 @@ def test_that_scanner_service_scans_repositories_with_pre_commit(
 
 
 def test_that_scanner_service_parses_failures(
-    scanner_service: ScannerService,
+    scanner_service: HooksScannerService,
     mock_pre_commit: MagicMock,
     mock_scan_output_single_failure: MagicMock,
     mock_config_all_repos: MagicMock,
@@ -147,7 +147,7 @@ def test_that_scanner_service_parses_failures(
 
 
 def test_that_scanner_service_parses_multiple_failures(
-    scanner_service: ScannerService,
+    scanner_service: HooksScannerService,
     mock_pre_commit: MagicMock,
     mock_scan_output_double_failure: MagicMock,
     mock_config_all_repos: MagicMock,
@@ -161,7 +161,7 @@ def test_that_scanner_service_parses_multiple_failures(
 
 
 def test_that_scanner_service_parses_when_no_failures(
-    scanner_service: ScannerService,
+    scanner_service: HooksScannerService,
     mock_pre_commit: MagicMock,
     mock_scan_output_no_failure: MagicMock,
     mock_config_all_repos: MagicMock,
@@ -175,7 +175,7 @@ def test_that_scanner_service_parses_when_no_failures(
 
 
 def test_that_scanner_service_handles_error_in_missing_repo(
-    scanner_service: ScannerService,
+    scanner_service: HooksScannerService,
     mock_pre_commit: MagicMock,
     mock_scan_output_double_failure: MagicMock,
     mock_config_no_black: MagicMock,
@@ -188,7 +188,9 @@ def test_that_scanner_service_handles_error_in_missing_repo(
     assert scan_result.failures[1].repo == OutputParseErrors.REPO_NOT_FOUND
 
 
-def test_that_find_repo_from_id_finds_matching_hooks(scanner_service: ScannerService):
+def test_that_find_repo_from_id_finds_matching_hooks(
+    scanner_service: HooksScannerService,
+):
     mock_hook_id = "find_secrets"
     expected_repo = "mock_repo"
     result = scanner_service._find_repo_from_id(
@@ -211,7 +213,7 @@ def test_that_find_repo_from_id_finds_matching_hooks(scanner_service: ScannerSer
 
 
 def test_that_find_repo_from_id_does_not_have_matching_hook_id(
-    scanner_service: ScannerService,
+    scanner_service: HooksScannerService,
 ):
     result = scanner_service._find_repo_from_id(
         "test-hook-id",

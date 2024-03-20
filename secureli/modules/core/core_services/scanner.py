@@ -2,11 +2,15 @@ from enum import Enum
 from typing import Optional
 from pathlib import Path
 
-import pydantic
 import re
 
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
-from secureli.modules.shared.models.scan import ScanFailure, ScanMode, ScanResult
+from secureli.modules.shared.models.scan import (
+    ScanFailure,
+    ScanMode,
+    ScanOutput,
+    ScanResult,
+)
 from secureli.repositories.settings import PreCommitSettings
 
 
@@ -18,15 +22,7 @@ class OutputParseErrors(str, Enum):
     REPO_NOT_FOUND = "repo-not-found"
 
 
-class ScanOuput(pydantic.BaseModel):
-    """
-    Represents the parsed output from a scan
-    """
-
-    failures: list[ScanFailure]
-
-
-class ScannerService:
+class HooksScannerService:
     """
     Scans the repo according to the repo's seCureLI config
     """
@@ -63,13 +59,13 @@ class ScannerService:
             failures=parsed_output.failures,
         )
 
-    def _parse_scan_ouput(self, folder_path: Path, output: str = "") -> ScanOuput:
+    def _parse_scan_ouput(self, folder_path: Path, output: str = "") -> ScanOutput:
         """
         Parses the output from a scan and returns a list of Failure objects representing any
         hook rule failures during a scan.
         :param folder_path: folder containing .pre-commit-config.yaml, usually repository root
         :param output: Raw output from a scan.
-        :return: ScanOuput object representing a list of hook rule Failure objects.
+        :return: ScanOutput object representing a list of hook rule Failure objects.
         """
         failures = []
         failure_indexes = []
@@ -102,7 +98,7 @@ class ScannerService:
             for file in files:
                 failures.append(ScanFailure(id=id, file=file, repo=repo))
 
-        return ScanOuput(failures=failures)
+        return ScanOutput(failures=failures)
 
     def _get_single_failure_output(
         self, failure_start: int, output_by_line: list[str]

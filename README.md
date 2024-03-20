@@ -80,6 +80,24 @@ All you need to do is run:
 
 Running `secureli init` will allow seCureLI to detect the languages in your repo, install pre-commit, install all the appropriate pre-commit hooks for your local repo, run a scan for secrets in your local repo, and update the installed hooks.
 
+## Scan
+
+To manually trigger a scan, run:
+
+```bash
+% secureli scan
+```
+
+This will run through all hooks and the PII scan, unless a `--specific-test` option is used. The default is to scan staged files only. To scan all files instead, use the `--mode all-files` option.
+
+### PII Scan
+
+seCureLI utilizes its own PII scan, rather than using an existing pre-commit hook. To exclude a line from being flagged by the PII scanner, you can use a `disable-pii-scan` marker in a comment to disable the scan for that line.
+
+```
+test_var = "some dummy data I don't want scanned" # disable-pii-scan
+```
+
 # Upgrade
 
 ## Upgrading seCureLI via Homebrew

@@ -1,5 +1,6 @@
 from pathlib import Path
 import re
+import subprocess
 import chardet
 
 from secureli.modules.shared.utilities.patterns import combine_patterns
@@ -37,10 +38,7 @@ class RepoFilesRepository:
         :raises ValueError: The specified path does not exist or is not a git repo
         :return: The visible files within the specified repo as a list of Path objects
         """
-        git_path = folder_path / ".git"
-
-        if not git_path.exists() or not git_path.is_dir():
-            raise ValueError("The current folder is not a Git repository!")
+        self._confirm_is_git_repo(folder_path)
 
         file_paths = [
             f
@@ -117,3 +115,34 @@ class RepoFilesRepository:
             pass
 
         raise ValueError(f"An unknown error occurred loading the file from {file_path}")
+
+    def list_staged_files(self, folder_path: Path) -> list[Path]:
+        """
+        Lists the file paths of all staged files in a repository, or raises ValueError if the provided path
+        is not a git repo
+        :param folder_path: The path to a git repo containing files
+        :raises ValueError: The specified path does not exist or is not a git repo
+        :return: The list of staged file names
+        """
+        self._confirm_is_git_repo(folder_path)
+        git_diff_result = (
+            subprocess.run(
+                ["git", "diff", "--staged", "--name-only"],
+                stdout=subprocess.PIPE,
+                cwd=folder_path,
+            )
+            .stdout.decode("utf8")
+            .split("\n")
+        )
+        return git_diff_result[0:-1]
+
+    def _confirm_is_git_repo(self, folder_path: Path):
+        """
+        Confirms a provided path is a git repo, and if not raises a ValueError
+        :param folder_path: The path to a git repo containing files
+        :raises ValueError: The specified path does not exist or is not a git repo
+        """
+        git_path = folder_path / ".git"
+
+        if not git_path.exists() or not git_path.is_dir():
+            raise ValueError("The current folder is not a Git repository!")

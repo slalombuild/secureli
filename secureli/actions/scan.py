@@ -17,11 +17,11 @@ from secureli.modules.shared.models.result import Result
 from secureli.modules.observability.observability_services.logging import (
     LoggingService,
 )
-from secureli.modules.core.core_services.scanner import (
-    ScannerService,
-)
+from secureli.modules.core.core_services.scanner import HooksScannerService
+from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
 from secureli.modules.shared.models.scan import ScanMode
 from secureli.settings import Settings
+from secureli.modules.shared.utilities.scan import merge_scan_results
 from secureli.modules.shared.utilities.usage_stats import (
     post_log,
     convert_failures_to_failure_count,
@@ -44,10 +44,12 @@ class ScanAction(Action):
         action_deps: ActionDependencies,
         echo: EchoAbstraction,
         logging: LoggingService,
-        scanner: ScannerService,
+        hooks_scanner: HooksScannerService,
+        pii_scanner: PiiScannerService,
     ):
         super().__init__(action_deps)
-        self.scanner = scanner
+        self.hooks_scanner = hooks_scanner
+        self.pii_scanner = pii_scanner
         self.echo = echo
         self.logging = logging
 
@@ -59,9 +61,11 @@ class ScanAction(Action):
         """
 
         self.action_deps.echo.info("Checking for pre-commit hook updates...")
-        pre_commit_config = self.scanner.pre_commit.get_pre_commit_config(folder_path)
+        pre_commit_config = self.hooks_scanner.pre_commit.get_pre_commit_config(
+            folder_path
+        )
 
-        repos_to_update = self.scanner.pre_commit.check_for_hook_updates(
+        repos_to_update = self.hooks_scanner.pre_commit.check_for_hook_updates(
             pre_commit_config
         )
 
@@ -135,9 +139,18 @@ class ScanAction(Action):
         if verify_result.outcome in self.halting_outcomes:
             return
 
-        scan_result = self.scanner.scan_repo(
+        # Execute PII scan (unless `specific_test` is provided, in which case it will be for a hook below)
+        if not specific_test:
+            pii_scan_result = self.pii_scanner.scan_repo(
+                folder_path, scan_mode, files=files
+            )
+
+        # Execute hooks
+        hooks_scan_result = self.hooks_scanner.scan_repo(
             folder_path, scan_mode, specific_test, files=files
         )
+
+        scan_result = merge_scan_results([pii_scan_result, hooks_scan_result])
 
         details = scan_result.output or "Unknown output during scan"
         self.echo.print(details)
