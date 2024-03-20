@@ -2,6 +2,7 @@ from pathlib import Path
 from secureli.modules.shared.abstractions.pre_commit import RevisionPair
 from secureli.actions.action import ActionDependencies
 from secureli.actions.scan import ScanAction
+from secureli.modules.shared.models.echo import Level
 from secureli.modules.shared.models.exit_codes import ExitCode
 from secureli.modules.shared.models.install import VerifyOutcome
 from secureli.modules.shared.models.language import AnalyzeResult
@@ -10,16 +11,9 @@ from secureli.modules.shared.models.publish_results import PublishResultsOption
 from secureli.modules.shared.models.result import Result
 from secureli.modules.shared.models.scan import ScanMode, ScanResult
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
-from secureli.repositories.settings import (
-    PreCommitHook,
-    PreCommitRepo,
-    PreCommitSettings,
-    SecureliFile,
-    EchoSettings,
-    EchoLevel,
-)
+from secureli.repositories import repo_settings
 from unittest import mock
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from pytest_mock import MockerFixture
 
 import os
@@ -41,20 +35,22 @@ def mock_hooks_scanner(mock_pre_commit) -> MagicMock:
 @pytest.fixture()
 def mock_pre_commit() -> MagicMock:
     mock_pre_commit = MagicMock()
-    mock_pre_commit.get_pre_commit_config.return_value = PreCommitSettings(
-        repos=[
-            PreCommitRepo(
-                repo="http://example-repo.com/",
-                rev="master",
-                hooks=[
-                    PreCommitHook(
-                        id="hook-id",
-                        arguments=None,
-                        additional_args=None,
-                    )
-                ],
-            )
-        ]
+    mock_pre_commit.get_pre_commit_config.return_value = (
+        repo_settings.PreCommitSettings(
+            repos=[
+                repo_settings.PreCommitRepo(
+                    repo="http://example-repo.com/",
+                    rev="master",
+                    hooks=[
+                        repo_settings.PreCommitHook(
+                            id="hook-id",
+                            arguments=None,
+                            additional_args=None,
+                        )
+                    ],
+                )
+            ]
+        )
     )
     mock_pre_commit.check_for_hook_updates.return_value = {}
     return mock_pre_commit
@@ -87,8 +83,8 @@ def mock_get_time_far_from_epoch(mocker: MockerFixture) -> MagicMock:
 
 @pytest.fixture()
 def mock_default_settings(mock_settings_repository: MagicMock) -> MagicMock:
-    mock_echo_settings = EchoSettings(level=EchoLevel.info)
-    mock_settings_file = SecureliFile(echo=mock_echo_settings)
+    mock_echo_settings = repo_settings.EchoSettings(level=Level.info)
+    mock_settings_file = repo_settings.SecureliFile(echo=mock_echo_settings)
     mock_settings_repository.load.return_value = mock_settings_file
 
     return mock_settings_repository
@@ -142,7 +138,7 @@ def scan_action(
 
 @pytest.fixture()
 def mock_post_log(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch("secureli.actions.scan.post_log")
+    return mocker.patch("secureli.modules.shared.utilities.post_log")
 
 
 @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
@@ -231,14 +227,17 @@ def test_that_scan_repo_does_not_scan_if_not_installed(
     mock_pii_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_echo: MagicMock,
+    mock_language_analyzer: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig()
-    mock_echo.confirm.return_value = False
+    with patch.object(Path, "exists", return_value=False):
+        mock_secureli_config.load.return_value = SecureliConfig()
+        mock_secureli_config.verify.return_value = VerifyConfigOutcome.UP_TO_DATE
+        mock_echo.confirm.return_value = False
 
-    scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
+        scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
 
-    mock_hooks_scanner.scan_repo.assert_not_called()
-    mock_pii_scanner.scan_repo.assert_not_called()
+        mock_hooks_scanner.scan_repo.assert_not_called()
+        mock_pii_scanner.scan_repo.assert_not_called()
 
 
 def test_that_scan_checks_for_updates(

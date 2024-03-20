@@ -4,28 +4,15 @@ from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.modules.observability.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
 from secureli.modules.shared.models.echo import Color
 from secureli.modules.shared.models.install import VerifyOutcome, VerifyResult
-from secureli.modules.shared.models.language import (
-    LanguageMetadata,
-    LanguageNotSupportedError,
-)
+from secureli.modules.shared.models import language
 from secureli.modules.shared.models.scan import ScanMode
-from secureli.repositories.secureli_config import (
-    SecureliConfig,
-    SecureliConfigRepository,
-    VerifyConfigOutcome,
-)
-from secureli.repositories.settings import SecureliRepository, TelemetrySettings
-from secureli.modules.language_analyzer.language_analyzer_services.language_analyzer import (
-    LanguageAnalyzerService,
-)
-from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
-    LanguageSupportService,
-)
+from secureli.repositories import secureli_config
+from secureli.repositories.repo_settings import SecureliRepository, TelemetrySettings
+from secureli.modules.language_analyzer import language_analyzer, language_support
 from secureli.modules.core.core_services.scanner import HooksScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
-from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
 
-from secureli.modules.shared.utilities.formatter import format_sentence_list
+from secureli.modules.shared.utilities import format_sentence_list
 
 
 class ActionDependencies:
@@ -38,10 +25,10 @@ class ActionDependencies:
     def __init__(
         self,
         echo: EchoAbstraction,
-        language_analyzer: LanguageAnalyzerService,
-        language_support: LanguageSupportService,
+        language_analyzer: language_analyzer.LanguageAnalyzerService,
+        language_support: language_support.LanguageSupportService,
         hooks_scanner: HooksScannerService,
-        secureli_config: SecureliConfigRepository,
+        secureli_config: secureli_config.SecureliConfigRepository,
         settings: SecureliRepository,
         updater: UpdaterService,
     ):
@@ -70,19 +57,43 @@ class Action(ABC):
         :param always_yes: Assume "Yes" to all prompts
         """
 
-        if self.action_deps.secureli_config.verify() == VerifyConfigOutcome.OUT_OF_DATE:
+        if (
+            self.action_deps.secureli_config.verify()
+            == secureli_config.VerifyConfigOutcome.OUT_OF_DATE
+        ):
             update_config = self._update_secureli_config_only(always_yes)
             if update_config.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
-                self.action_deps.echo.error(f"seCureLI could not be verified.")
+                self.action_deps.echo.error("seCureLI could not be verified.")
                 return VerifyResult(
                     outcome=update_config.outcome,
                 )
 
-        config = SecureliConfig() if reset else self.action_deps.secureli_config.load()
+        pre_commit_config_location = self.action_deps.hooks_scanner.pre_commit.get_preferred_pre_commit_config_path(
+            folder_path
+        )
+        if not pre_commit_config_location.exists():
+            update_result: VerifyResult = (
+                self._update_secureli_pre_commit_config_location(
+                    folder_path, always_yes
+                )
+            )
+            pre_commit_config_location = update_result.file_path
+            if update_result.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
+                self.action_deps.echo.error(
+                    "seCureLI pre-commit-config.yaml could not be updated."
+                )
+                return update_result
+
+        config = (
+            secureli_config.SecureliConfig()
+            if reset
+            else self.action_deps.secureli_config.load()
+        )
+        languages = []
 
         try:
             languages = self._detect_languages(folder_path)
-        except (ValueError, LanguageNotSupportedError) as e:
+        except (ValueError, language.LanguageNotSupportedError) as e:
             if config.languages and config.version_installed:
                 self.action_deps.echo.warning(
                     f"Newly detected languages are unsupported by seCureLI"
@@ -107,7 +118,11 @@ class Action(ABC):
             or newly_detected_languages
         ):
             return self._install_secureli(
-                folder_path, languages, newly_detected_languages, always_yes
+                folder_path,
+                languages,
+                newly_detected_languages,
+                always_yes,
+                pre_commit_config_location,
             )
         else:
             self.action_deps.echo.print(
@@ -127,6 +142,7 @@ class Action(ABC):
         detected_languages: list[str],
         install_languages: list[str],
         always_yes: bool,
+        pre_commit_config_location: Path = None,
     ) -> VerifyResult:
         """
         Installs seCureLI into the given folder path and returns the new configuration
@@ -160,8 +176,8 @@ class Action(ABC):
             install_languages, always_yes
         )
         language_config_result = (
-            self.action_deps.language_support._build_pre_commit_config(
-                install_languages, lint_languages
+            self.action_deps.language_support.build_pre_commit_config(
+                install_languages, lint_languages, pre_commit_config_location
             )
         )
         metadata = self.action_deps.language_support.apply_support(
@@ -173,7 +189,7 @@ class Action(ABC):
         for error_msg in metadata.linter_config_write_errors:
             self.action_deps.echo.warning(error_msg)
 
-        config = SecureliConfig(
+        config = secureli_config.SecureliConfig(
             languages=detected_languages,
             version_installed=metadata.version,
         )
@@ -234,8 +250,8 @@ class Action(ABC):
     def _run_post_install_scan(
         self,
         folder_path: Path,
-        config: SecureliConfig,
-        metadata: LanguageMetadata,
+        config: secureli_config.SecureliConfig,
+        metadata: language.LanguageMetadata,
         new_install: bool,
     ):
         """
@@ -381,3 +397,42 @@ class Action(ABC):
             return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
         except:
             return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
+
+    def _update_secureli_pre_commit_config_location(
+        self, folder_path: Path, always_yes: bool
+    ) -> VerifyResult:
+        """
+        In order to provide an upgrade path for existing users of secureli,
+        we will prompt users to move their .pre-commit-config.yaml into the .secureli/ directory.
+        I would consider this particular implementation to be technical debt but it is consistent with
+        an existing pattern for upgrading the secureli config file schema.
+        Once this has existed for awhile, we could remove this function altogether since
+        we make no promises of about backward compatibility with our pre-release versions.
+        Long term, I think there are better ways to implement one-time upgrade migrations
+        to avoid breaking backward compatibility.
+        """
+        self.action_deps.echo.print(
+            "seCureLI's .pre-commit-config.yaml is in a deprecated location."
+        )
+        response = always_yes or self.action_deps.echo.confirm(
+            "Would you like it automatically moved to the .secureli/ directory?",
+            default_response=True,
+        )
+        if response:
+            try:
+                new_file_path = self.action_deps.scanner.pre_commit.migrate_config_file(
+                    folder_path
+                )
+                return VerifyResult(
+                    outcome=VerifyOutcome.UPDATE_SUCCEEDED, file_path=new_file_path
+                )
+            except:
+                return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
+        else:
+            self.action_deps.echo.warning(".pre-commit-config.yaml migration declined")
+            deprecated_location = self.action_deps.scanner.get_pre_commit_config_path(
+                folder_path
+            )
+            return VerifyResult(
+                outcome=VerifyOutcome.UPDATE_CANCELED, file_path=deprecated_location
+            )

@@ -1,4 +1,4 @@
-from secureli.modules.shared.utilities.patterns import combine_patterns
+from secureli.modules.shared.utilities import combine_patterns
 
 
 def test_that_combine_patterns_returns_none_for_empty_list():

@@ -1,4 +1,4 @@
-from secureli.modules.shared.utilities.formatter import format_sentence_list
+from secureli.modules.shared.utilities import format_sentence_list
 
 
 def test_format_sentence_list_handles_missing_list():

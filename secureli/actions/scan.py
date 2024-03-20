@@ -5,32 +5,23 @@ from time import time
 from typing import Optional
 
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
-from secureli.actions.action import (
-    Action,
-    ActionDependencies,
-)
+from secureli.actions import action
 from secureli.modules.shared.models.exit_codes import ExitCode
 from secureli.modules.shared.models.install import VerifyOutcome, VerifyResult
 from secureli.modules.shared.models.logging import LogAction
 from secureli.modules.shared.models.publish_results import PublishResultsOption
 from secureli.modules.shared.models.result import Result
-from secureli.modules.observability.observability_services.logging import (
-    LoggingService,
-)
+from secureli.modules.observability.observability_services.logging import LoggingService
 from secureli.modules.core.core_services.scanner import HooksScannerService
 from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
 from secureli.modules.shared.models.scan import ScanMode
 from secureli.settings import Settings
-from secureli.modules.shared.utilities.scan import merge_scan_results
-from secureli.modules.shared.utilities.usage_stats import (
-    post_log,
-    convert_failures_to_failure_count,
-)
+from secureli.modules.shared import utilities
 
 ONE_WEEK_IN_SECONDS: int = 7 * 24 * 60 * 60
 
 
-class ScanAction(Action):
+class ScanAction(action.Action):
     """The action for the secureli `scan` command, orchestrating services and outputs results"""
 
     """Any verification outcomes that would cause us to not proceed to scan."""
@@ -41,7 +32,7 @@ class ScanAction(Action):
 
     def __init__(
         self,
-        action_deps: ActionDependencies,
+        action_deps: action.ActionDependencies,
         echo: EchoAbstraction,
         logging: LoggingService,
         hooks_scanner: HooksScannerService,
@@ -57,7 +48,7 @@ class ScanAction(Action):
         """
         Queries repositories referenced by pre-commit hooks to check
         if we have the latest revisions listed in the .pre-commit-config.yaml file
-        :param folder_path: The folder path containing the .pre-commit-config.yaml file
+        :param folder_path: The folder path containing the .secureli/ folder
         """
 
         self.action_deps.echo.info("Checking for pre-commit hook updates...")
@@ -70,7 +61,7 @@ class ScanAction(Action):
         )
 
         if not repos_to_update:
-            self.action_deps.echo.info("No hooks to update")
+            self.action_deps.echo.print("No hooks to update")
             return VerifyResult(outcome=VerifyOutcome.UP_TO_DATE)
 
         for repo, revs in repos_to_update.items():
@@ -99,7 +90,7 @@ class ScanAction(Action):
             publish_results_condition == PublishResultsOption.ON_FAIL
             and not action_successful
         ):
-            result = post_log(log_str, Settings())
+            result = utilities.post_log(log_str, Settings())
             self.echo.debug(result.result_message)
 
             if result.result == Result.SUCCESS:
@@ -150,7 +141,7 @@ class ScanAction(Action):
             folder_path, scan_mode, specific_test, files=files
         )
 
-        scan_result = merge_scan_results([pii_scan_result, hooks_scan_result])
+        scan_result = utilities.merge_scan_results([pii_scan_result, hooks_scan_result])
 
         details = scan_result.output or "Unknown output during scan"
         self.echo.print(details)
@@ -160,7 +151,7 @@ class ScanAction(Action):
             [ob.__dict__ for ob in scan_result.failures]
         )
 
-        individual_failure_count = convert_failures_to_failure_count(
+        individual_failure_count = utilities.convert_failures_to_failure_count(
             scan_result.failures
         )
 

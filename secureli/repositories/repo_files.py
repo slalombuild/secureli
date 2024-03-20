@@ -3,7 +3,7 @@ import re
 import subprocess
 import chardet
 
-from secureli.modules.shared.utilities.patterns import combine_patterns
+from secureli.modules.shared.utilities import combine_patterns
 
 
 class BinaryFileError(ValueError):

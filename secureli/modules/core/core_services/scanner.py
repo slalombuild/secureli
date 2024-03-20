@@ -11,7 +11,7 @@ from secureli.modules.shared.models.scan import (
     ScanOutput,
     ScanResult,
 )
-from secureli.repositories.settings import PreCommitSettings
+from secureli.repositories.repo_settings import PreCommitSettings
 
 
 class OutputParseErrors(str, Enum):
@@ -63,7 +63,7 @@ class HooksScannerService:
         """
         Parses the output from a scan and returns a list of Failure objects representing any
         hook rule failures during a scan.
-        :param folder_path: folder containing .pre-commit-config.yaml, usually repository root
+        :param folder_path: folder containing .secureli folder, usually repository root
         :param output: Raw output from a scan.
         :return: ScanOutput object representing a list of hook rule Failure objects.
         """

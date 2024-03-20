@@ -1,9 +1,7 @@
 from typing import Optional
 from pathlib import Path
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
-from secureli.modules.observability.observability_services.logging import (
-    LoggingService,
-)
+from secureli.modules.observability.observability_services.logging import LoggingService
 from secureli.modules.core.core_services.updater import UpdaterService
 from secureli.actions.action import Action, ActionDependencies
 

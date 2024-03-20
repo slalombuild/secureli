@@ -10,25 +10,14 @@ from secureli.actions.build import BuildAction
 from secureli.actions.update import UpdateAction
 from secureli.repositories.repo_files import RepoFilesRepository
 from secureli.repositories.secureli_config import SecureliConfigRepository
-from secureli.repositories.settings import SecureliRepository
+from secureli.repositories.repo_settings import SecureliRepository
 from secureli.modules.shared.resources import read_resource
-from secureli.modules.language_analyzer.language_analyzer_services.git_ignore import (
-    GitIgnoreService,
-)
-from secureli.modules.language_analyzer.language_analyzer_services.language_analyzer import (
-    LanguageAnalyzerService,
-)
-from secureli.modules.language_analyzer.language_analyzer_services.language_support import (
-    LanguageSupportService,
-)
+from secureli.modules import language_analyzer
 from secureli.modules.observability.observability_services.logging import LoggingService
 from secureli.modules.core.core_services.scanner import HooksScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
 from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
 from secureli.modules.secureli_ignore import SecureliIgnoreService
-from secureli.modules.language_analyzer.language_analyzer_services.language_config import (
-    LanguageConfigService,
-)
 from secureli.settings import Settings
 
 
@@ -51,7 +40,7 @@ class Container(containers.DeclarativeContainer):
     )().ignored_file_patterns()
 
     git_ignored_file_patterns = providers.Factory(
-        GitIgnoreService
+        language_analyzer.git_ignore.GitIgnoreService
     )().ignored_file_patterns()
 
     combined_ignored_file_patterns = list(
@@ -91,6 +80,7 @@ class Container(containers.DeclarativeContainer):
     pre_commit_abstraction = providers.Factory(
         PreCommitAbstraction,
         command_timeout_seconds=config.language_support.command_timeout_seconds,
+        echo=echo,
     )
 
     # Services
@@ -101,10 +91,12 @@ class Container(containers.DeclarativeContainer):
     Manages the repository's git ignore file, making sure secureli-managed
     files are ignored
     """
-    git_ignore_service = providers.Factory(GitIgnoreService)
+    git_ignore_service = providers.Factory(
+        language_analyzer.git_ignore.GitIgnoreService
+    )
 
     language_config_service = providers.Factory(
-        LanguageConfigService,
+        language_analyzer.language_config.LanguageConfigService,
         data_loader=read_resource,
         command_timeout_seconds=config.language_support.command_timeout_seconds,
         ignored_file_patterns=secureli_ignored_file_patterns,
@@ -112,16 +104,17 @@ class Container(containers.DeclarativeContainer):
 
     """Identifies the configuration version for the language and installs it"""
     language_support_service = providers.Factory(
-        LanguageSupportService,
+        language_analyzer.language_support.LanguageSupportService,
         pre_commit_hook=pre_commit_abstraction,
         git_ignore=git_ignore_service,
         language_config=language_config_service,
         data_loader=read_resource,
+        echo=echo,
     )
 
     """Analyzes a given repo to try to identify the most common language"""
     language_analyzer_service = providers.Factory(
-        LanguageAnalyzerService,
+        language_analyzer.language_analyzer.LanguageAnalyzerService,
         repo_files=repo_files_repository,
         lexer_guesser=lexer_guesser,
     )
