@@ -9,7 +9,6 @@ PII_CHECK = {
 IGNORED_EXTENSIONS = [
     ".md",
     ".lock",
-    ".yaml",
     ".png",
     ".jpg",
     ".jpeg",
