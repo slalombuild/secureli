@@ -420,8 +420,10 @@ class Action(ABC):
         )
         if response:
             try:
-                new_file_path = self.action_deps.scanner.pre_commit.migrate_config_file(
-                    folder_path
+                new_file_path = (
+                    self.action_deps.hooks_scanner.pre_commit.migrate_config_file(
+                        folder_path
+                    )
                 )
                 return VerifyResult(
                     outcome=VerifyOutcome.UPDATE_SUCCEEDED, file_path=new_file_path
@@ -430,8 +432,8 @@ class Action(ABC):
                 return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
         else:
             self.action_deps.echo.warning(".pre-commit-config.yaml migration declined")
-            deprecated_location = self.action_deps.scanner.get_pre_commit_config_path(
-                folder_path
+            deprecated_location = (
+                self.action_deps.hooks_scanner.get_pre_commit_config_path(folder_path)
             )
             return VerifyResult(
                 outcome=VerifyOutcome.UPDATE_CANCELED, file_path=deprecated_location
