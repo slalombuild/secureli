@@ -325,3 +325,10 @@ A special thanks to everyone that has contributed to seCureLI so far:
 - Caleb Tonn
 - Josh Werner
 - Kevin Orlando
+- Clayton Blonien
+- Kathleen Hogan
+- Isaac Heist
+- Joe Stafford
+- Bob McHenry
+- Corey Knafelz
+- Jordan Heffernan
