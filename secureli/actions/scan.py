@@ -14,7 +14,7 @@ from secureli.modules.shared.models.result import Result
 from secureli.modules.observability.observability_services.logging import LoggingService
 from secureli.modules.core.core_services.scanner import HooksScannerService
 from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
-from secureli.modules.shared.models.scan import ScanMode
+from secureli.modules.shared.models.scan import ScanMode, ScanResult
 from secureli.settings import Settings
 from secureli.modules.shared import utilities
 
@@ -131,6 +131,7 @@ class ScanAction(action.Action):
             return
 
         # Execute PII scan (unless `specific_test` is provided, in which case it will be for a hook below)
+        pii_scan_result: ScanResult | None = None
         if not specific_test:
             pii_scan_result = self.pii_scanner.scan_repo(
                 folder_path, scan_mode, files=files

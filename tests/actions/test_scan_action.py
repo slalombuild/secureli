@@ -176,7 +176,6 @@ def test_that_scan_repo_scans_if_installed(
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
     mock_language_analyzer.analyze.return_value = AnalyzeResult(
@@ -188,10 +187,45 @@ def test_that_scan_repo_scans_if_installed(
     )
     mock_language_support.version_for_language.return_value = "abc123"
 
-    scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
+    scan_action.scan_repo(
+        test_folder_path, ScanMode.STAGED_ONLY, False, None, "detect-secrets"
+    )
 
     mock_hooks_scanner.scan_repo.assert_called_once()
-    mock_pii_scanner.scan_repo.assert_called_once()
+
+
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
+def test_that_scan_repo_conducts_all_scans_and_merges_results(
+    scan_action: ScanAction,
+    mock_secureli_config: MagicMock,
+    mock_language_support: MagicMock,
+    mock_hooks_scanner: MagicMock,
+    mock_pii_scanner: MagicMock,
+    mock_language_analyzer: MagicMock,
+    mock_echo: MagicMock,
+):
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"RadLang": 1.0},
+        skipped_files=[],
+    )
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang"], version_installed="abc123"
+    )
+    mock_language_support.version_for_language.return_value = "abc123"
+    mock_failure_1 = "Hooks scan failure"
+    mock_failure_2 = "PII scan failure"
+    mock_hooks_scanner.scan_repo.return_value = ScanResult(
+        successful=False, failures=[], output=mock_failure_1
+    )
+    mock_pii_scanner.scan_repo.return_value = ScanResult(
+        successful=False, failures=[], output=mock_failure_2
+    )
+
+    with pytest.raises(SystemExit):
+        scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
+        mock_hooks_scanner.scan_repo.assert_called_once()
+        mock_pii_scanner.scan_repo.assert_called_once()
+        mock_echo.print.assert_called_once_with(f"\n{mock_failure_1}\n{mock_failure_2}")
 
 
 @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
@@ -243,7 +277,6 @@ def test_that_scan_repo_does_not_scan_if_not_installed(
 def test_that_scan_checks_for_updates(
     scan_action: ScanAction,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_pass_install_verification: MagicMock,
 ):
@@ -254,7 +287,6 @@ def test_that_scan_checks_for_updates(
 def test_that_scan_only_checks_for_updates_periodically(
     scan_action: ScanAction,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
     mock_get_time_near_epoch: MagicMock,
     mock_secureli_config: MagicMock,
 ):
@@ -267,7 +299,6 @@ def test_that_scan_only_checks_for_updates_periodically(
 def test_that_scan_update_check_uses_pre_commit_config(
     scan_action: ScanAction,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
     mock_secureli_config: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig()
@@ -279,7 +310,6 @@ def test_that_scan_update_check_uses_pre_commit_config(
 def test_scan_update_check_return_value_when_up_to_date(
     scan_action: ScanAction,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
     mock_secureli_config: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig()
@@ -291,7 +321,6 @@ def test_scan_update_check_return_value_when_up_to_date(
 def test_scan_update_check_return_value_when_not_up_to_date(
     scan_action: ScanAction,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
     mock_secureli_config: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig()
@@ -306,7 +335,6 @@ def test_scan_update_check_return_value_when_not_up_to_date(
 def test_that_scan_update_check_updates_last_check_time(
     scan_action: ScanAction,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
     mock_get_time_far_from_epoch: MagicMock,
     mock_secureli_config: MagicMock,
     mock_pass_install_verification: MagicMock,
