@@ -40,7 +40,6 @@ class PiiScannerService:
     ):
         self.repo_files = repo_files
 
-    # TODO435: Need to update README / CONTRIBUTING with this info? ok
     def scan_repo(
         self,
         folder_path: Path,
