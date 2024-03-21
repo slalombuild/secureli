@@ -44,7 +44,7 @@ class PiiScannerService:
         self,
         folder_path: Path,
         scan_mode: ScanMode,
-        files: Optional[str] = None,
+        files: Optional[list[str]] = None,
     ) -> ScanResult:
         """
         Scans the repo for potential PII
@@ -106,7 +106,7 @@ class PiiScannerService:
         self,
         folder_path: Path,
         scan_mode: ScanMode,
-        files: Optional[str] = None,
+        files: Optional[list[str]] = None,
     ) -> list[Path]:
         """
         Gets the list of files to scan based on ScanMode and, if applicable, files provided in arguments
