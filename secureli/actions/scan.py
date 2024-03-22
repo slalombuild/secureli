@@ -3,9 +3,11 @@ import sys
 from pathlib import Path
 from time import time
 from typing import Optional
+from git import Repo
 
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.actions import action
+from secureli.modules.shared.abstractions.repo import GitRepo
 from secureli.modules.shared.models.exit_codes import ExitCode
 from secureli.modules.shared.models.install import VerifyOutcome, VerifyResult
 from secureli.modules.shared.models.logging import LogAction
@@ -37,12 +39,14 @@ class ScanAction(action.Action):
         logging: LoggingService,
         hooks_scanner: HooksScannerService,
         pii_scanner: PiiScannerService,
+        git_repo: GitRepo,
     ):
         super().__init__(action_deps)
         self.hooks_scanner = hooks_scanner
         self.pii_scanner = pii_scanner
         self.echo = echo
         self.logging = logging
+        self.git_repo = git_repo
 
     def _check_secureli_hook_updates(self, folder_path: Path) -> VerifyResult:
         """
@@ -98,6 +102,24 @@ class ScanAction(action.Action):
             else:
                 self.logging.failure(LogAction.publish, result.result_message)
 
+    def get_commited_files(self, scan_mode: ScanMode) -> list[Path]:
+        """
+        Attempts to build a list of commited files for use in language detection if
+        the user is scanning staged files for an existing installation
+        :param scan_mode: Determines which files are scanned in the repo (i.e. staged only or all)
+        :returns: a list of Path objects for the commited files
+        """
+        config = self.get_secureli_config(reset=False)
+        installed = bool(config.languages and config.version_installed)
+
+        if not installed or scan_mode != ScanMode.STAGED_ONLY:
+            return None
+        try:
+            committed_files = self.git_repo.get_commit_diff()
+            return [Path(file) for file in committed_files]
+        except:
+            return None
+
     def scan_repo(
         self,
         folder_path: Path,
@@ -117,7 +139,16 @@ class ScanAction(action.Action):
         :param specific_test: If set, limits scanning to the single pre-commit hook.
         Otherwise, scans with all hooks.
         """
-        verify_result = self.verify_install(folder_path, False, always_yes)
+
+        scan_files = [Path(file) for file in files or []] or self.get_commited_files(
+            scan_mode
+        )
+        verify_result = self.verify_install(
+            folder_path,
+            False,
+            always_yes,
+            scan_files,
+        )
 
         # Check if pre-commit hooks are up-to-date
         secureli_config = self.action_deps.secureli_config.load()
