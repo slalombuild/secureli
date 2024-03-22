@@ -13,7 +13,7 @@ else
     echo "Pulling down the most recent published secureli release v${secureliVersion}"
     gh release download v$secureliVersion
     export secureliSha256=$(sha256sum ./secureli-${secureliVersion}.tar.gz | awk '{print $1}')
-    git config --global user.email "secureli-automation@slalom.com"
+    git config --global user.email "secureli-automation@slalom.com" # disable-pii-scan
     git config --global user.name "Secureli Automation"
     python ./scripts/get-secureli-dependencies.py
     cd homebrew-secureli

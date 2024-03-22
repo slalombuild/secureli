@@ -25,11 +25,11 @@ test_folder_path = Path("does-not-matter")
 
 
 @pytest.fixture()
-def mock_scanner(mock_pre_commit) -> MagicMock:
-    mock_scanner = MagicMock()
-    mock_scanner.scan_repo.return_value = ScanResult(successful=True, failures=[])
-    mock_scanner.pre_commit = mock_pre_commit
-    return mock_scanner
+def mock_hooks_scanner(mock_pre_commit) -> MagicMock:
+    mock_hooks_scanner = MagicMock()
+    mock_hooks_scanner.scan_repo.return_value = ScanResult(successful=True, failures=[])
+    mock_hooks_scanner.pre_commit = mock_pre_commit
+    return mock_hooks_scanner
 
 
 @pytest.fixture()
@@ -54,6 +54,13 @@ def mock_pre_commit() -> MagicMock:
     )
     mock_pre_commit.check_for_hook_updates.return_value = {}
     return mock_pre_commit
+
+
+@pytest.fixture()
+def mock_pii_scanner() -> MagicMock:
+    mock_pii_scanner = MagicMock()
+    mock_pii_scanner.scan_repo.return_value = ScanResult(successful=True, failures=[])
+    return mock_pii_scanner
 
 
 @pytest.fixture()
@@ -103,7 +110,7 @@ def action_deps(
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
     mock_language_support: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_settings_repository: MagicMock,
     mock_updater: MagicMock,
@@ -112,7 +119,7 @@ def action_deps(
         mock_echo,
         mock_language_analyzer,
         mock_language_support,
-        mock_scanner,
+        mock_hooks_scanner,
         mock_secureli_config,
         mock_settings_repository,
         mock_updater,
@@ -123,13 +130,15 @@ def action_deps(
 def scan_action(
     action_deps: ActionDependencies,
     mock_logging_service: MagicMock,
+    mock_pii_scanner: MagicMock,
     mock_git_repo: MagicMock,
 ) -> ScanAction:
     return ScanAction(
         action_deps=action_deps,
         echo=action_deps.echo,
         logging=mock_logging_service,
-        scanner=action_deps.scanner,
+        hooks_scanner=action_deps.hooks_scanner,
+        pii_scanner=mock_pii_scanner,
         git_repo=mock_git_repo,
     )
 
@@ -142,7 +151,8 @@ def mock_post_log(mocker: MockerFixture) -> MagicMock:
 @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_errors_if_not_successful(
     scan_action: ScanAction,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
+    mock_pii_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
@@ -151,7 +161,10 @@ def test_that_scan_repo_errors_if_not_successful(
         language_proportions={f"{mock_language}": 1.0},
         skipped_files=[],
     )
-    mock_scanner.scan_repo.return_value = ScanResult(
+    mock_pii_scanner.scan_repo.return_value = ScanResult(
+        successful=False, output="So much PII", failures=[]
+    )
+    mock_hooks_scanner.scan_repo.return_value = ScanResult(
         successful=False, output="Bad Error", failures=[]
     )
     mock_secureli_config.load.return_value = SecureliConfig(
@@ -169,7 +182,7 @@ def test_that_scan_repo_scans_if_installed(
     scan_action: ScanAction,
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
     mock_language_analyzer.analyze.return_value = AnalyzeResult(
@@ -181,9 +194,45 @@ def test_that_scan_repo_scans_if_installed(
     )
     mock_language_support.version_for_language.return_value = "abc123"
 
-    scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
+    scan_action.scan_repo(
+        test_folder_path, ScanMode.STAGED_ONLY, False, None, "detect-secrets"
+    )
 
-    mock_scanner.scan_repo.assert_called_once()
+    mock_hooks_scanner.scan_repo.assert_called_once()
+
+
+@mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
+def test_that_scan_repo_conducts_all_scans_and_merges_results(
+    scan_action: ScanAction,
+    mock_secureli_config: MagicMock,
+    mock_language_support: MagicMock,
+    mock_hooks_scanner: MagicMock,
+    mock_pii_scanner: MagicMock,
+    mock_language_analyzer: MagicMock,
+    mock_echo: MagicMock,
+):
+    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+        language_proportions={"RadLang": 1.0},
+        skipped_files=[],
+    )
+    mock_secureli_config.load.return_value = SecureliConfig(
+        languages=["RadLang"], version_installed="abc123"
+    )
+    mock_language_support.version_for_language.return_value = "abc123"
+    mock_failure_1 = "Hooks scan failure"
+    mock_failure_2 = "PII scan failure"
+    mock_hooks_scanner.scan_repo.return_value = ScanResult(
+        successful=False, failures=[], output=mock_failure_1
+    )
+    mock_pii_scanner.scan_repo.return_value = ScanResult(
+        successful=False, failures=[], output=mock_failure_2
+    )
+
+    with pytest.raises(SystemExit):
+        scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
+        mock_hooks_scanner.scan_repo.assert_called_once()
+        mock_pii_scanner.scan_repo.assert_called_once()
+        mock_echo.print.assert_called_once_with(f"\n{mock_failure_1}\n{mock_failure_2}")
 
 
 @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
@@ -191,7 +240,8 @@ def test_that_scan_repo_continue_scan_if_upgrade_canceled(
     scan_action: ScanAction,
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
+    mock_pii_scanner: MagicMock,
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
@@ -207,13 +257,15 @@ def test_that_scan_repo_continue_scan_if_upgrade_canceled(
 
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
 
-    mock_scanner.scan_repo.assert_called_once()
+    mock_hooks_scanner.scan_repo.assert_called_once()
+    mock_pii_scanner.scan_repo.assert_called_once()
 
 
 @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_does_not_scan_if_not_installed(
     scan_action: ScanAction,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
+    mock_pii_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
@@ -224,45 +276,47 @@ def test_that_scan_repo_does_not_scan_if_not_installed(
         mock_echo.confirm.return_value = False
 
         scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
-        mock_scanner.scan_repo.assert_not_called()
+
+        mock_hooks_scanner.scan_repo.assert_not_called()
+        mock_pii_scanner.scan_repo.assert_not_called()
 
 
 def test_that_scan_checks_for_updates(
     scan_action: ScanAction,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_pass_install_verification: MagicMock,
 ):
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, always_yes=True)
-    mock_scanner.pre_commit.check_for_hook_updates.assert_called_once()
+    mock_hooks_scanner.pre_commit.check_for_hook_updates.assert_called_once()
 
 
 def test_that_scan_only_checks_for_updates_periodically(
     scan_action: ScanAction,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_get_time_near_epoch: MagicMock,
     mock_secureli_config: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig()
 
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, always_yes=True)
-    mock_scanner.pre_commit.check_for_hook_updates.assert_not_called()
+    mock_hooks_scanner.pre_commit.check_for_hook_updates.assert_not_called()
 
 
 def test_that_scan_update_check_uses_pre_commit_config(
     scan_action: ScanAction,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_secureli_config: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig()
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, always_yes=True)
-    mock_scanner.pre_commit.get_pre_commit_config.assert_called_once()
+    mock_hooks_scanner.pre_commit.get_pre_commit_config.assert_called_once()
 
 
 # Test that _check_secureli_hook_updates returns UP_TO_DATE if no hooks need updating
 def test_scan_update_check_return_value_when_up_to_date(
     scan_action: ScanAction,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_secureli_config: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig()
@@ -273,11 +327,11 @@ def test_scan_update_check_return_value_when_up_to_date(
 # Test that _check_secureli_hook_updates returns UPDATE_CANCELED if hooks need updating
 def test_scan_update_check_return_value_when_not_up_to_date(
     scan_action: ScanAction,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_secureli_config: MagicMock,
 ):
     mock_secureli_config.load.return_value = SecureliConfig()
-    mock_scanner.pre_commit.check_for_hook_updates.return_value = {
+    mock_hooks_scanner.pre_commit.check_for_hook_updates.return_value = {
         "http://example-repo.com/": RevisionPair(oldRev="old-rev", newRev="new-rev")
     }
     result = scan_action._check_secureli_hook_updates(test_folder_path)
@@ -287,7 +341,7 @@ def test_scan_update_check_return_value_when_not_up_to_date(
 # Validate that scan_repo persists changes to the .secureli.yaml file after checking for hook updates
 def test_that_scan_update_check_updates_last_check_time(
     scan_action: ScanAction,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_get_time_far_from_epoch: MagicMock,
     mock_secureli_config: MagicMock,
     mock_pass_install_verification: MagicMock,

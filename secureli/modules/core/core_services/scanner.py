@@ -2,11 +2,10 @@ from enum import Enum
 from typing import Optional
 from pathlib import Path
 
-import pydantic
 import re
 
+import secureli.modules.shared.models.scan as scan
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
-from secureli.modules.shared.models.scan import ScanFailure, ScanMode, ScanResult
 from secureli.repositories.repo_settings import PreCommitSettings
 
 
@@ -18,15 +17,7 @@ class OutputParseErrors(str, Enum):
     REPO_NOT_FOUND = "repo-not-found"
 
 
-class ScanOuput(pydantic.BaseModel):
-    """
-    Represents the parsed output from a scan
-    """
-
-    failures: list[ScanFailure]
-
-
-class ScannerService:
+class HooksScannerService:
     """
     Scans the repo according to the repo's seCureLI config
     """
@@ -37,10 +28,10 @@ class ScannerService:
     def scan_repo(
         self,
         folder_path: Path,
-        scan_mode: ScanMode,
+        scan_mode: scan.ScanMode,
         specific_test: Optional[str] = None,
         files: Optional[str] = None,
-    ) -> ScanResult:
+    ) -> scan.ScanResult:
         """
         Scans the repo according to the repo's seCureLI config
         :param scan_mode: Whether to scan the staged files (i.e., the files about to be
@@ -49,7 +40,7 @@ class ScannerService:
         If None, run all hooks.
         :return: A ScanResult object containing whether we succeeded and any error
         """
-        all_files = True if scan_mode == ScanMode.ALL_FILES else False
+        all_files = True if scan_mode == scan.ScanMode.ALL_FILES else False
         execute_result = self.pre_commit.execute_hooks(
             folder_path, all_files, hook_id=specific_test, files=files
         )
@@ -57,19 +48,19 @@ class ScannerService:
             folder_path, output=execute_result.output
         )
 
-        return ScanResult(
+        return scan.ScanResult(
             successful=execute_result.successful,
             output=execute_result.output,
             failures=parsed_output.failures,
         )
 
-    def _parse_scan_ouput(self, folder_path: Path, output: str = "") -> ScanOuput:
+    def _parse_scan_ouput(self, folder_path: Path, output: str = "") -> scan.ScanOutput:
         """
         Parses the output from a scan and returns a list of Failure objects representing any
         hook rule failures during a scan.
         :param folder_path: folder containing .secureli folder, usually repository root
         :param output: Raw output from a scan.
-        :return: ScanOuput object representing a list of hook rule Failure objects.
+        :return: ScanOutput object representing a list of hook rule Failure objects.
         """
         failures = []
         failure_indexes = []
@@ -100,9 +91,9 @@ class ScannerService:
             files = self._find_file_names(failure_output_list=failure_output_list)
 
             for file in files:
-                failures.append(ScanFailure(id=id, file=file, repo=repo))
+                failures.append(scan.ScanFailure(id=id, file=file, repo=repo))
 
-        return ScanOuput(failures=failures)
+        return scan.ScanOutput(failures=failures)
 
     def _get_single_failure_output(
         self, failure_start: int, output_by_line: list[str]

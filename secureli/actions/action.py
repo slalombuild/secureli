@@ -9,7 +9,7 @@ from secureli.modules.shared.models.scan import ScanMode
 from secureli.repositories import secureli_config
 from secureli.repositories.repo_settings import SecureliRepository, TelemetrySettings
 from secureli.modules.language_analyzer import language_analyzer, language_support
-from secureli.modules.core.core_services.scanner import ScannerService
+from secureli.modules.core.core_services.scanner import HooksScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
 
 from secureli.modules.shared.utilities import format_sentence_list
@@ -27,7 +27,7 @@ class ActionDependencies:
         echo: EchoAbstraction,
         language_analyzer: language_analyzer.LanguageAnalyzerService,
         language_support: language_support.LanguageSupportService,
-        scanner: ScannerService,
+        hooks_scanner: HooksScannerService,
         secureli_config: secureli_config.SecureliConfigRepository,
         settings: SecureliRepository,
         updater: UpdaterService,
@@ -35,7 +35,7 @@ class ActionDependencies:
         self.echo = echo
         self.language_analyzer = language_analyzer
         self.language_support = language_support
-        self.scanner = scanner
+        self.hooks_scanner = hooks_scanner
         self.secureli_config = secureli_config
         self.settings = settings
         self.updater = updater
@@ -76,10 +76,8 @@ class Action(ABC):
                     outcome=update_config.outcome,
                 )
 
-        pre_commit_config_location = (
-            self.action_deps.scanner.pre_commit.get_preferred_pre_commit_config_path(
-                folder_path
-            )
+        pre_commit_config_location = self.action_deps.hooks_scanner.pre_commit.get_preferred_pre_commit_config_path(
+            folder_path
         )
         if not pre_commit_config_location.exists():
             update_result: VerifyResult = (
@@ -289,7 +287,7 @@ class Action(ABC):
             )
             self.action_deps.echo.print(f"running {secret_test_id}.")
 
-            scan_result = self.action_deps.scanner.scan_repo(
+            scan_result = self.action_deps.hooks_scanner.scan_repo(
                 folder_path,
                 ScanMode.ALL_FILES,
                 specific_test=secret_test_id,
@@ -426,8 +424,10 @@ class Action(ABC):
         )
         if response:
             try:
-                new_file_path = self.action_deps.scanner.pre_commit.migrate_config_file(
-                    folder_path
+                new_file_path = (
+                    self.action_deps.hooks_scanner.pre_commit.migrate_config_file(
+                        folder_path
+                    )
                 )
                 return VerifyResult(
                     outcome=VerifyOutcome.UPDATE_SUCCEEDED, file_path=new_file_path
@@ -436,8 +436,8 @@ class Action(ABC):
                 return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
         else:
             self.action_deps.echo.warning(".pre-commit-config.yaml migration declined")
-            deprecated_location = self.action_deps.scanner.get_pre_commit_config_path(
-                folder_path
+            deprecated_location = (
+                self.action_deps.hooks_scanner.get_pre_commit_config_path(folder_path)
             )
             return VerifyResult(
                 outcome=VerifyOutcome.UPDATE_CANCELED, file_path=deprecated_location

@@ -23,6 +23,14 @@ class ScanFailure(pydantic.BaseModel):
     file: str
 
 
+class ScanOutput(pydantic.BaseModel):
+    """
+    Represents the parsed output from a scan
+    """
+
+    failures: list[ScanFailure]
+
+
 class ScanResult(pydantic.BaseModel):
     """
     The results of calling scan_repo

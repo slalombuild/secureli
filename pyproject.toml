@@ -6,7 +6,7 @@ build-backend = "poetry.core.masonry.api"
 name = "secureli"
 version = "0.31.0"
 description = "Secure Project Manager"
-authors = ["Caleb Tonn <caleb.tonn@slalom.com>"]
+authors = ["Caleb Tonn <caleb.tonn@slalom.com>"] # disable-pii-scan
 license = "Apache-2.0"
 readme = "README.md"
 

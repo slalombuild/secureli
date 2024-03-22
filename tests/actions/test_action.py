@@ -17,9 +17,9 @@ test_folder_path = Path("does-not-matter")
 
 
 @pytest.fixture()
-def mock_scanner() -> MagicMock:
-    mock_scanner = MagicMock()
-    return mock_scanner
+def mock_hooks_scanner() -> MagicMock:
+    mock_hooks_scanner = MagicMock()
+    return mock_hooks_scanner
 
 
 @pytest.fixture()
@@ -33,7 +33,7 @@ def action_deps(
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
     mock_language_support: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
     mock_settings: MagicMock,
@@ -42,7 +42,7 @@ def action_deps(
         mock_echo,
         mock_language_analyzer,
         mock_language_support,
-        mock_scanner,
+        mock_hooks_scanner,
         mock_secureli_config,
         mock_settings,
         mock_updater,
@@ -95,7 +95,7 @@ def test_that_initialize_repo_install_flow_selects_both_languages(
 def test_that_initialize_repo_install_flow_performs_security_analysis(
     action: Action,
     mock_language_analyzer: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
 ):
     mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={
@@ -107,13 +107,13 @@ def test_that_initialize_repo_install_flow_performs_security_analysis(
 
     action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
-    mock_scanner.scan_repo.assert_called_once()
+    mock_hooks_scanner.scan_repo.assert_called_once()
 
 
 def test_that_initialize_repo_install_flow_displays_security_analysis_results(
-    action: Action, action_deps: MagicMock, mock_scanner: MagicMock
+    action: Action, action_deps: MagicMock, mock_hooks_scanner: MagicMock
 ):
-    mock_scanner.scan_repo.return_value = ScanResult(
+    mock_hooks_scanner.scan_repo.return_value = ScanResult(
         successful=False,
         output="Detect secrets...Failed",
         failures=[ScanFailure(repo="repo", id="id", file="file")],
@@ -126,7 +126,7 @@ def test_that_initialize_repo_install_flow_displays_security_analysis_results(
 def test_that_initialize_repo_install_flow_skips_security_analysis_if_unavailable(
     action: Action,
     mock_language_analyzer: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_language_support: MagicMock,
 ):
     mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
@@ -142,7 +142,7 @@ def test_that_initialize_repo_install_flow_skips_security_analysis_if_unavailabl
 
     action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
-    mock_scanner.scan_repo.assert_not_called()
+    mock_hooks_scanner.scan_repo.assert_not_called()
 
 
 def test_that_initialize_repo_install_flow_warns_about_skipped_files(
@@ -413,14 +413,16 @@ def test_that_verify_install_returns_success_result_newly_detected_language_inst
 
 def test_that_verify_install_returns_failure_result_without_re_commit_config_file_path(
     action: Action,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_echo: MagicMock,
 ):
     with (patch.object(Path, "exists", return_value=False),):
-        mock_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
+        mock_hooks_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
             test_folder_path / ".secureli" / ".pre-commit-config.yaml"
         )
-        mock_scanner.pre_commit.migrate_config_file.side_effect = Exception("ERROR")
+        mock_hooks_scanner.pre_commit.migrate_config_file.side_effect = Exception(
+            "ERROR"
+        )
         verify_result = action.verify_install(
             test_folder_path, reset=False, always_yes=True, files=None
         )
@@ -432,11 +434,11 @@ def test_that_verify_install_returns_failure_result_without_re_commit_config_fil
 
 def test_that_verify_install_continues_after_pre_commit_config_file_moved(
     action: Action,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_echo: MagicMock,
 ):
     with (patch.object(Path, "exists", return_value=False),):
-        mock_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
+        mock_hooks_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
             test_folder_path / ".secureli" / ".pre-commit-config.yaml"
         )
         verify_result = action.verify_install(
@@ -447,7 +449,7 @@ def test_that_verify_install_continues_after_pre_commit_config_file_moved(
 
 def test_that_update_secureli_pre_commit_config_location_moves_file(
     action: Action,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_echo: MagicMock,
 ):
     update_file_location = test_folder_path / ".secureli" / ".pre-commit-config.yaml"
@@ -457,16 +459,18 @@ def test_that_update_secureli_pre_commit_config_location_moves_file(
     mock_echo.print.assert_called_once_with(
         "seCureLI's .pre-commit-config.yaml is in a deprecated location."
     )
-    mock_scanner.pre_commit.migrate_config_file.assert_called_with(update_file_location)
+    mock_hooks_scanner.pre_commit.migrate_config_file.assert_called_with(
+        update_file_location
+    )
     assert update_result.outcome == VerifyOutcome.UPDATE_SUCCEEDED
 
 
 def test_that_update_secureli_pre_commit_config_fails_on_exception(
     action: Action,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
 ):
     with pytest.raises(Exception):
-        mock_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
+        mock_hooks_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
             test_folder_path / ".secureli" / ".pre-commit-config.yaml"
         )
         update_result = action._update_secureli_pre_commit_config_location(
@@ -478,7 +482,7 @@ def test_that_update_secureli_pre_commit_config_fails_on_exception(
 def test_that_update_secureli_pre_commit_config_location_cancels_on_user_response(
     action: Action,
     mock_echo: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
 ):
     mock_echo.confirm.return_value = False
     update_file_location = test_folder_path / ".secureli" / ".pre-commit-config.yaml"
@@ -489,7 +493,7 @@ def test_that_update_secureli_pre_commit_config_location_cancels_on_user_respons
     mock_echo.warning.assert_called_once_with(
         ".pre-commit-config.yaml migration declined"
     )
-    mock_scanner.pre_commit.migrate_config_file.assert_not_called()
+    mock_hooks_scanner.pre_commit.migrate_config_file.assert_not_called()
     assert update_result.outcome == VerifyOutcome.UPDATE_CANCELED
 
 
@@ -679,7 +683,7 @@ def test_that_post_install_scan_ignores_creating_pre_commit_on_existing_install(
 
 
 def test_that_post_install_scan_scans_repo(
-    action: Action, mock_scanner: MagicMock, mock_echo: MagicMock
+    action: Action, mock_hooks_scanner: MagicMock, mock_echo: MagicMock
 ):
     action._run_post_install_scan(
         "test/path",
@@ -688,12 +692,12 @@ def test_that_post_install_scan_scans_repo(
         False,
     )
 
-    mock_scanner.scan_repo.assert_called_once()
+    mock_hooks_scanner.scan_repo.assert_called_once()
     mock_echo.warning.assert_not_called()
 
 
 def test_that_post_install_scan_does_not_scan_repo_when_no_security_hook_id(
-    action: Action, mock_scanner: MagicMock, mock_echo: MagicMock
+    action: Action, mock_hooks_scanner: MagicMock, mock_echo: MagicMock
 ):
     action._run_post_install_scan(
         "test/path",
@@ -702,7 +706,7 @@ def test_that_post_install_scan_does_not_scan_repo_when_no_security_hook_id(
         False,
     )
 
-    mock_scanner.scan_repo.assert_not_called()
+    mock_hooks_scanner.scan_repo.assert_not_called()
     mock_echo.warning.assert_called_once_with(
         "RadLang does not support secrets detection, skipping"
     )

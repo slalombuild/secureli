@@ -15,8 +15,9 @@ from secureli.repositories.repo_settings import SecureliRepository
 from secureli.modules.shared.resources import read_resource
 from secureli.modules import language_analyzer
 from secureli.modules.observability.observability_services.logging import LoggingService
-from secureli.modules.core.core_services.scanner import ScannerService
+from secureli.modules.core.core_services.scanner import HooksScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
+from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
 from secureli.modules.secureli_ignore import SecureliIgnoreService
 from secureli.settings import Settings
 
@@ -130,9 +131,16 @@ class Container(containers.DeclarativeContainer):
     )
 
     """The service that scans the repository using pre-commit configuration"""
-    scanner_service = providers.Factory(
-        ScannerService,
+    hooks_scanner_service = providers.Factory(
+        HooksScannerService,
         pre_commit=pre_commit_abstraction,
+    )
+
+    """The service that scans the repository for potential PII"""
+    pii_scanner_service = providers.Factory(
+        PiiScannerService,
+        repo_files=repo_files_repository,
+        echo=echo,
     )
 
     updater_service = providers.Factory(
@@ -148,7 +156,7 @@ class Container(containers.DeclarativeContainer):
         echo=echo,
         language_analyzer=language_analyzer_service,
         language_support=language_support_service,
-        scanner=scanner_service,
+        hooks_scanner=hooks_scanner_service,
         secureli_config=secureli_config_repository,
         settings=settings_repository,
         updater=updater_service,
@@ -175,7 +183,8 @@ class Container(containers.DeclarativeContainer):
         action_deps=action_deps,
         echo=echo,
         logging=logging_service,
-        scanner=scanner_service,
+        hooks_scanner=hooks_scanner_service,
+        pii_scanner=pii_scanner_service,
         git_repo=git_repo,
     )
 
