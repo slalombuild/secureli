@@ -8,6 +8,7 @@ from secureli.actions.initializer import InitializerAction
 from secureli.actions.scan import ScanAction
 from secureli.actions.build import BuildAction
 from secureli.actions.update import UpdateAction
+from secureli.modules.shared.abstractions.repo import GitRepo
 from secureli.repositories.repo_files import RepoFilesRepository
 from secureli.repositories.secureli_config import SecureliConfigRepository
 from secureli.repositories.repo_settings import SecureliRepository
@@ -81,6 +82,9 @@ class Container(containers.DeclarativeContainer):
         command_timeout_seconds=config.language_support.command_timeout_seconds,
         echo=echo,
     )
+
+    """Wraps the execution and management of git commands"""
+    git_repo = providers.Factory(GitRepo)
 
     # Services
 
@@ -172,7 +176,7 @@ class Container(containers.DeclarativeContainer):
         echo=echo,
         logging=logging_service,
         scanner=scanner_service,
-        # settings_repository=settings_repository,
+        git_repo=git_repo,
     )
 
     """Update Action, representing what happens when the update command is invoked"""

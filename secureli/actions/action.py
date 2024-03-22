@@ -47,16 +47,24 @@ class Action(ABC):
     def __init__(self, action_deps: ActionDependencies):
         self.action_deps = action_deps
 
+    def get_secureli_config(self, reset: bool) -> secureli_config.SecureliConfig:
+        return (
+            secureli_config.SecureliConfig()
+            if reset
+            else self.action_deps.secureli_config.load()
+        )
+
     def verify_install(
-        self, folder_path: Path, reset: bool, always_yes: bool
+        self, folder_path: Path, reset: bool, always_yes: bool, files: list[Path]
     ) -> VerifyResult:
         """
         Installs, upgrades or verifies the current seCureLI installation
         :param folder_path: The folder path to initialize the repo for
         :param reset: If true, disregard existing configuration and start fresh
         :param always_yes: Assume "Yes" to all prompts
+        :param files: A List of files to scope the install to. This allows language
+        detection to run on only a selected list of files when scanning the repo.
         """
-
         if (
             self.action_deps.secureli_config.verify()
             == secureli_config.VerifyConfigOutcome.OUT_OF_DATE
@@ -86,15 +94,11 @@ class Action(ABC):
                 )
                 return update_result
 
-        config = (
-            secureli_config.SecureliConfig()
-            if reset
-            else self.action_deps.secureli_config.load()
-        )
+        config = self.get_secureli_config(reset=reset)
         languages = []
 
         try:
-            languages = self._detect_languages(folder_path)
+            languages = self._detect_languages(folder_path, files)
         except (ValueError, language.LanguageNotSupportedError) as e:
             if config.languages and config.version_installed:
                 self.action_deps.echo.warning(
@@ -298,14 +302,14 @@ class Action(ABC):
                 f"{format_sentence_list(config.languages)} does not support secrets detection, skipping"
             )
 
-    def _detect_languages(self, folder_path: Path) -> list[str]:
+    def _detect_languages(self, folder_path: Path, files: list[Path]) -> list[str]:
         """
         Detects programming languages present in the repository
         :param folder_path: The folder path to initialize the repo for
         :return: A list of all languages found in the repository
         """
 
-        analyze_result = self.action_deps.language_analyzer.analyze(folder_path)
+        analyze_result = self.action_deps.language_analyzer.analyze(folder_path, files)
 
         if analyze_result.skipped_files:
             self.action_deps.echo.warning(

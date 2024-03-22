@@ -87,7 +87,9 @@ def test_that_language_analyzer_removes_unsupported_languages(
     language_analyzer_bad_lang: language_analyzer.LanguageAnalyzerService,
     folder_path: MagicMock,
 ):
-    percentages_per_language = language_analyzer_bad_lang.analyze(folder_path)
+    percentages_per_language = language_analyzer_bad_lang.analyze(
+        folder_path, files=None
+    )
 
     assert "BadLang" not in percentages_per_language
 
@@ -96,7 +98,7 @@ def test_that_language_analyzer_includes_python(
     language_analyzer_python: language_analyzer.LanguageAnalyzerService,
     folder_path: MagicMock,
 ):
-    analyze_result = language_analyzer_python.analyze(folder_path)
+    analyze_result = language_analyzer_python.analyze(folder_path, files=None)
 
     assert "Python" in analyze_result.language_proportions
     assert analyze_result.language_proportions["Python"] == 1.0
@@ -106,6 +108,6 @@ def test_that_language_analyzer_displays_warnings(
     language_analyzer_with_warnings: language_analyzer.LanguageAnalyzerService,
     folder_path: MagicMock,
 ):
-    analyze_result = language_analyzer_with_warnings.analyze(folder_path)
+    analyze_result = language_analyzer_with_warnings.analyze(folder_path, files=None)
 
     assert len(analyze_result.skipped_files) == 3
