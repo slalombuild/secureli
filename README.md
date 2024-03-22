@@ -88,7 +88,7 @@ To manually trigger a scan, run:
 % secureli scan
 ```
 
-This will run through all hooks and the PII scan, unless a `--specific-test` option is used. The default is to scan staged files only. To scan all files instead, use the `--mode all-files` option.
+This will run through all hooks and custom scans, unless a `--specific-test` option is used. The default is to scan staged files only. To scan all files instead, use the `--mode all-files` option.
 
 ### PII Scan
 
