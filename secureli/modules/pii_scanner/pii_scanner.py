@@ -12,12 +12,8 @@ from typing import Optional
 from pathlib import Path
 import pydantic
 
+import secureli.modules.shared.models.scan as scan
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
-from secureli.modules.shared.models.scan import (
-    ScanFailure,
-    ScanMode,
-    ScanResult,
-)
 from secureli.repositories.repo_files import RepoFilesRepository
 
 
@@ -46,9 +42,9 @@ class PiiScannerService:
     def scan_repo(
         self,
         folder_path: Path,
-        scan_mode: ScanMode,
+        scan_mode: scan.ScanMode,
         files: Optional[list[str]] = None,
-    ) -> ScanResult:
+    ) -> scan.ScanResult:
         """
         Scans the repo for potential PII
         :param folder_path: The folder path to initialize the repo for
@@ -92,7 +88,7 @@ class PiiScannerService:
         scan_failures = self._generate_scan_failures(pii_found_files)
         output = self._generate_scan_output(pii_found, not pii_found)
 
-        return ScanResult(
+        return scan.ScanResult(
             successful=not pii_found,
             output=output,
             failures=scan_failures,
@@ -108,7 +104,7 @@ class PiiScannerService:
     def _get_files_list(
         self,
         folder_path: Path,
-        scan_mode: ScanMode,
+        scan_mode: scan.ScanMode,
         files: Optional[list[str]] = None,
     ) -> list[Path]:
         """
@@ -123,19 +119,21 @@ class PiiScannerService:
         """
         file_paths: list[Path] = []
 
-        if scan_mode == ScanMode.STAGED_ONLY:
+        if scan_mode == scan.ScanMode.STAGED_ONLY:
             file_paths = self.repo_files.list_staged_files(folder_path)
             if files:
                 file_paths = list(filter(lambda file: file in file_paths, files))
 
-        if scan_mode == ScanMode.ALL_FILES:
+        if scan_mode == scan.ScanMode.ALL_FILES:
             file_paths = self.repo_files.list_repo_files(folder_path)
 
         return list(
             filter(lambda file: not self._file_extension_excluded(file), file_paths)
         )
 
-    def _generate_scan_failures(self, pii_found_files: set[str]) -> list[ScanFailure]:
+    def _generate_scan_failures(
+        self, pii_found_files: set[str]
+    ) -> list[scan.ScanFailure]:
         """
         Generates a list of ScanFailures for each file in which potential PII was found
         :param pii_found_files: The set of files in which potential PII was found
@@ -145,7 +143,9 @@ class PiiScannerService:
 
         for pii_found_file in pii_found_files:
             failures.append(
-                ScanFailure(id="pii_scan", file=pii_found_file, repo=SECURELI_GITHUB)
+                scan.ScanFailure(
+                    id="pii_scan", file=pii_found_file, repo=SECURELI_GITHUB
+                )
             )
         return failures
 

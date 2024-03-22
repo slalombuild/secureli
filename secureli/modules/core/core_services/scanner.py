@@ -4,13 +4,8 @@ from pathlib import Path
 
 import re
 
+import secureli.modules.shared.models.scan as scan
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
-from secureli.modules.shared.models.scan import (
-    ScanFailure,
-    ScanMode,
-    ScanOutput,
-    ScanResult,
-)
 from secureli.repositories.repo_settings import PreCommitSettings
 
 
@@ -33,10 +28,10 @@ class HooksScannerService:
     def scan_repo(
         self,
         folder_path: Path,
-        scan_mode: ScanMode,
+        scan_mode: scan.ScanMode,
         specific_test: Optional[str] = None,
         files: Optional[str] = None,
-    ) -> ScanResult:
+    ) -> scan.ScanResult:
         """
         Scans the repo according to the repo's seCureLI config
         :param scan_mode: Whether to scan the staged files (i.e., the files about to be
@@ -45,7 +40,7 @@ class HooksScannerService:
         If None, run all hooks.
         :return: A ScanResult object containing whether we succeeded and any error
         """
-        all_files = True if scan_mode == ScanMode.ALL_FILES else False
+        all_files = True if scan_mode == scan.ScanMode.ALL_FILES else False
         execute_result = self.pre_commit.execute_hooks(
             folder_path, all_files, hook_id=specific_test, files=files
         )
@@ -53,13 +48,13 @@ class HooksScannerService:
             folder_path, output=execute_result.output
         )
 
-        return ScanResult(
+        return scan.ScanResult(
             successful=execute_result.successful,
             output=execute_result.output,
             failures=parsed_output.failures,
         )
 
-    def _parse_scan_ouput(self, folder_path: Path, output: str = "") -> ScanOutput:
+    def _parse_scan_ouput(self, folder_path: Path, output: str = "") -> scan.ScanOutput:
         """
         Parses the output from a scan and returns a list of Failure objects representing any
         hook rule failures during a scan.
@@ -96,9 +91,9 @@ class HooksScannerService:
             files = self._find_file_names(failure_output_list=failure_output_list)
 
             for file in files:
-                failures.append(ScanFailure(id=id, file=file, repo=repo))
+                failures.append(scan.ScanFailure(id=id, file=file, repo=repo))
 
-        return ScanOutput(failures=failures)
+        return scan.ScanOutput(failures=failures)
 
     def _get_single_failure_output(
         self, failure_start: int, output_by_line: list[str]
