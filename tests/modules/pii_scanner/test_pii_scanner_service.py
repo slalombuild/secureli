@@ -19,7 +19,10 @@ def mock_repo_files_repository() -> MagicMock:
 
 @pytest.fixture()
 def mock_open_fn(mocker: MockerFixture) -> MagicMock:
-    # TODO435: mock PII data below
+    # The below data wouldn't ACTUALLY count as PII, but using fake PII here would prevent this code
+    # from being committed (as seCureLi scans itself before commit!)
+    # Instead, we mock the regex search function to pretend we found a PII match so we can assert the
+    # scanner's behavior
     mock_open = mocker.mock_open(
         read_data="""
         fake_email='pantsATpants.com'
@@ -27,6 +30,13 @@ def mock_open_fn(mocker: MockerFixture) -> MagicMock:
       """
     )
     return mocker.patch("builtins.open", mock_open)
+
+
+# Include the below for any tests where you want PII to be "found"
+@pytest.fixture()
+def mock_re(mocker: MockerFixture) -> MagicMock:
+    match_object = mocker.patch("re.Match", lambda *args: True)
+    return mocker.patch("re.search", match_object)
 
 
 @pytest.fixture()
@@ -38,15 +48,16 @@ def test_that_pii_scanner_service_finds_potential_pii(
     pii_scanner_service: PiiScannerService,
     mock_repo_files_repository: MagicMock,
     mock_open_fn: MagicMock,
+    mock_re: MagicMock,
 ):
     scan_result = pii_scanner_service.scan_repo(test_folder_path, ScanMode.STAGED_ONLY)
 
     mock_repo_files_repository.list_staged_files.assert_called_once()
-    # TODO435: uncomment once dummy PII data available
-    # assert scan_result.successful == False
-    # assert len(scan_result.failures) == 1
-    # assert "Email" in scan_result.output
-    # assert "Phone number" in scan_result.output
+
+    assert scan_result.successful == False
+    assert len(scan_result.failures) == 1
+    assert "Email" in scan_result.output
+    assert "Phone number" in scan_result.output
 
 
 def test_that_pii_scanner_service_scans_all_files_when_specified(
@@ -75,6 +86,7 @@ def test_that_pii_scanner_service_only_scans_specific_files_if_provided(
     pii_scanner_service: PiiScannerService,
     mock_repo_files_repository: MagicMock,
     mock_open_fn: MagicMock,
+    mock_re: MagicMock,
 ):
     specified_file = "fake_file_path"
     ignored_file = "not-the-file-we-want"
@@ -86,7 +98,6 @@ def test_that_pii_scanner_service_only_scans_specific_files_if_provided(
         test_folder_path, ScanMode.STAGED_ONLY, [specified_file]
     )
 
-    # TODO435: uncomment once dummy PII data available
-    # assert scan_result.successful == False
-    # assert len(scan_result.failures) == 1
-    # assert scan_result.failures[0].file == specified_file
+    assert scan_result.successful == False
+    assert len(scan_result.failures) == 1
+    assert scan_result.failures[0].file == specified_file
