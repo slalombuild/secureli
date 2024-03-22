@@ -140,6 +140,7 @@ class Container(containers.DeclarativeContainer):
     pii_scanner_service = providers.Factory(
         PiiScannerService,
         repo_files=repo_files_repository,
+        echo=echo,
     )
 
     updater_service = providers.Factory(

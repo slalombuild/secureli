@@ -12,6 +12,7 @@ from typing import Optional
 from pathlib import Path
 import pydantic
 
+from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.modules.shared.models.scan import (
     ScanFailure,
     ScanMode,
@@ -37,8 +38,10 @@ class PiiScannerService:
     def __init__(
         self,
         repo_files: RepoFilesRepository,
+        echo: EchoAbstraction,
     ):
         self.repo_files = repo_files
+        self.echo = echo
 
     def scan_repo(
         self,
@@ -85,7 +88,7 @@ class PiiScannerService:
                 current_line_num = 0
 
             except Exception as e:
-                print(f"Error scanning {file_name}: {e}")
+                self.echo.print(f"Error PII scanning {file_name}: {e}")
         scan_failures = self._generate_scan_failures(pii_found_files)
         output = self._generate_scan_output(pii_found, not pii_found)
 
@@ -125,7 +128,7 @@ class PiiScannerService:
             if files:
                 file_paths = list(filter(lambda file: file in file_paths, files))
 
-        elif scan_mode == ScanMode.ALL_FILES:
+        if scan_mode == ScanMode.ALL_FILES:
             file_paths = self.repo_files.list_repo_files(folder_path)
 
         return list(

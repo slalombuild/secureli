@@ -1,6 +1,8 @@
 import pytest
 from pytest_mock import MockerFixture
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
+import builtins
+import contextlib, io
 from pathlib import Path
 from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
 from secureli.modules.shared.models.scan import ScanMode
@@ -15,6 +17,12 @@ def mock_repo_files_repository() -> MagicMock:
     mock_repo_files_repository.list_staged_files.return_value = ["fake_file_path"]
     mock_repo_files_repository.list_repo_files.return_value = ["fake_file_path"]
     return mock_repo_files_repository
+
+
+@pytest.fixture()
+def mock_echo() -> MagicMock:
+    mock_echo = MagicMock()
+    return mock_echo
 
 
 @pytest.fixture()
@@ -40,8 +48,10 @@ def mock_re(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
-def pii_scanner_service(mock_repo_files_repository: MagicMock) -> PiiScannerService:
-    return PiiScannerService(mock_repo_files_repository)
+def pii_scanner_service(
+    mock_repo_files_repository: MagicMock, mock_echo: MagicMock
+) -> PiiScannerService:
+    return PiiScannerService(mock_repo_files_repository, mock_echo)
 
 
 def test_that_pii_scanner_service_finds_potential_pii(
@@ -74,6 +84,7 @@ def test_that_pii_scanner_service_ignores_excluded_file_extensions(
     pii_scanner_service: PiiScannerService,
     mock_repo_files_repository: MagicMock,
     mock_open_fn: MagicMock,
+    mock_re: MagicMock,
 ):
     mock_repo_files_repository.list_staged_files.return_value = ["fake_file_path.md"]
 
@@ -101,3 +112,18 @@ def test_that_pii_scanner_service_only_scans_specific_files_if_provided(
     assert scan_result.successful == False
     assert len(scan_result.failures) == 1
     assert scan_result.failures[0].file == specified_file
+
+
+def test_that_pii_scanner_prints_when_exceptions_encountered(
+    pii_scanner_service: PiiScannerService,
+    mock_open_fn: MagicMock,
+    mock_echo: MagicMock,
+):
+    mock_open_fn.side_effect = Exception("Oh no")
+    pii_scanner_service.scan_repo(
+        test_folder_path,
+        ScanMode.STAGED_ONLY,
+    )
+
+    mock_echo.print.assert_called_once()
+    assert "Error PII scanning" in mock_echo.print.call_args.args[0]
