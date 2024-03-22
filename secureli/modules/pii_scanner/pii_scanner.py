@@ -52,7 +52,7 @@ class PiiScannerService:
         :param scan_mode: Whether to scan the staged files (i.e., the files about to be
         committed) or the entire repository
         :param files: A specified list of files to scan
-        :return: A ScanResult object containing whether we succeeded and any error
+        :return: A ScanResult object with details of whether the scan succeeded and, if not, details of the failures
         """
 
         file_paths = self._get_files_list(
