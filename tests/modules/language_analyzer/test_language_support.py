@@ -13,6 +13,8 @@ from secureli.modules.shared.models import language
 
 test_folder_path = Path("does-not-matter")
 
+test_folder_path = Path("does-not-matter")
+
 
 @pytest.fixture()
 def mock_open_config(mocker: MockerFixture):

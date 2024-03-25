@@ -66,7 +66,7 @@ jobs:
           poetry install
 
       - name: Install BATS for e2e tests
-        uses: bats-core/bats-action@1.5.5
+        uses: bats-core/bats-action@1.5.6
         with:
           support-path: ${{ github.workspace }}/bats-core/bats-support
           assert-path: ${{ github.workspace }}/bats-core/bats-assert
