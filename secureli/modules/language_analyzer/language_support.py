@@ -156,7 +156,8 @@ class LanguageSupportService:
                 try:
                     data = yaml.safe_load(stream)
                     existing_data = data or {}
-                    config_repos += data["repos"]
+                    config_repos += data.get("repos")
+
                 except yaml.YAMLError:
                     self.echo.error(
                         f"There was an issue parsing existing pre-commit-config.yaml."
@@ -187,7 +188,7 @@ class LanguageSupportService:
                     else None
                 )
                 data = yaml.safe_load(result.config_data)
-                config_repos += data["repos"] or []
+                config_repos += data.get("repos") or []
 
         config = {**existing_data, "repos": config_repos}
         version = hash_config(yaml.dump(config))

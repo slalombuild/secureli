@@ -55,7 +55,12 @@ class Action(ABC):
         )
 
     def verify_install(
-        self, folder_path: Path, reset: bool, always_yes: bool, files: list[Path]
+        self,
+        folder_path: Path,
+        reset: bool,
+        always_yes: bool,
+        files: list[Path],
+        is_retry: bool = False,
     ) -> VerifyResult:
         """
         Installs, upgrades or verifies the current seCureLI installation
@@ -75,22 +80,37 @@ class Action(ABC):
                 return VerifyResult(
                     outcome=update_config.outcome,
                 )
-
-        pre_commit_config_location = self.action_deps.hooks_scanner.pre_commit.get_preferred_pre_commit_config_path(
+        pre_commit_config_location_is_correct = self.action_deps.hooks_scanner.pre_commit.get_pre_commit_config_path_is_correct(
             folder_path
         )
-        if not pre_commit_config_location.exists():
+        preferred_config_path = self.action_deps.hooks_scanner.pre_commit.get_preferred_pre_commit_config_path(
+            folder_path
+        )
+
+        if (
+            self.action_deps.hooks_scanner.pre_commit.pre_commit_config_exists(
+                folder_path
+            )
+            and not pre_commit_config_location_is_correct
+        ):
             update_result: VerifyResult = (
                 self._update_secureli_pre_commit_config_location(
                     folder_path, always_yes
                 )
             )
-            pre_commit_config_location = update_result.file_path
+
             if update_result.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
                 self.action_deps.echo.error(
                     "seCureLI pre-commit-config.yaml could not be updated."
                 )
                 return update_result
+            else:
+                preferred_config_path = update_result.file_path
+        elif not preferred_config_path.exists():
+            self.action_deps.echo.warning(
+                "No pre-commit-config was found, creating new config."
+            )
+            open(preferred_config_path, "w")
 
         config = self.get_secureli_config(reset=reset)
         languages = []
@@ -126,7 +146,11 @@ class Action(ABC):
                 languages,
                 newly_detected_languages,
                 always_yes,
-                pre_commit_config_location,
+                pre_commit_config_location=(
+                    preferred_config_path
+                    if pre_commit_config_location_is_correct
+                    else None
+                ),
             )
         else:
             self.action_deps.echo.print(
@@ -416,7 +440,7 @@ class Action(ABC):
         to avoid breaking backward compatibility.
         """
         self.action_deps.echo.print(
-            "seCureLI's .pre-commit-config.yaml is in a deprecated location."
+            "The .pre-commit-config.yaml is in a deprecated location."
         )
         response = always_yes or self.action_deps.echo.confirm(
             "Would you like it automatically moved to the .secureli/ directory?",
@@ -437,7 +461,9 @@ class Action(ABC):
         else:
             self.action_deps.echo.warning(".pre-commit-config.yaml migration declined")
             deprecated_location = (
-                self.action_deps.hooks_scanner.get_pre_commit_config_path(folder_path)
+                self.action_deps.hooks_scanner.pre_commit.get_pre_commit_config_path(
+                    folder_path
+                )
             )
             return VerifyResult(
                 outcome=VerifyOutcome.UPDATE_CANCELED, file_path=deprecated_location

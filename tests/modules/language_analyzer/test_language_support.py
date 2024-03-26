@@ -475,6 +475,38 @@ def test_build_pre_commit_respects_existing_pre_commit_config(
         }
 
 
+# def test_build_pre_commit_works_without_existing_pre_commit_config(
+#     language_support_service: language_support.LanguageSupportService,
+#     mock_language_config_service: MagicMock,
+#     mock_open: MagicMock,
+# ):
+#     mock_language_config_service.get_language_config.return_value = language.LanguagePreCommitResult(
+#         language="Python",
+#         version="abc123",
+#         linter_config=language.LoadLinterConfigsResult(
+#             successful=True,
+#             linter_data=[{"filename": "test.txt", "settings": {}}],
+#         ),
+#         config_data="""
+#             repos:
+#             """,
+#     )
+#     mock_data_loader.return_value = ""
+#     languages = ["RadLang"]
+#     lint_languages = [*languages]
+#     with (
+#         patch("builtins.open", mock_open(read_data="data")),
+#         patch.object(
+#             yaml, "safe_load", return_value={"repos": [{"autopep8": {"version": 0}}]}
+#         ),
+#     ):
+#         result = language_support_service.build_pre_commit_config(
+#             languages, lint_languages, test_folder_path
+#         )
+#         assert result.successful == True
+#         assert result.config_data == {"repos": []}
+
+
 def test_write_pre_commit_configs_ignores_empty_linter_arr(
     language_support_service: language_support.LanguageSupportService,
     mock_open: MagicMock,
