@@ -173,7 +173,6 @@ class Action(ABC):
 
         # pre-install
         new_install = len(detected_languages) == len(install_languages)
-        self.action_deps.echo.print(f"BINGOOOOOOO, {new_install}")
         should_install = self._prompt_to_install(
             install_languages, always_yes, new_install
         )
