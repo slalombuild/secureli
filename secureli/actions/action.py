@@ -60,7 +60,6 @@ class Action(ABC):
         reset: bool,
         always_yes: bool,
         files: list[Path],
-        is_retry: bool = False,
     ) -> VerifyResult:
         """
         Installs, upgrades or verifies the current seCureLI installation
@@ -146,11 +145,7 @@ class Action(ABC):
                 languages,
                 newly_detected_languages,
                 always_yes,
-                pre_commit_config_location=(
-                    preferred_config_path
-                    if pre_commit_config_location_is_correct
-                    else None
-                ),
+                preferred_config_path,
             )
         else:
             self.action_deps.echo.print(
