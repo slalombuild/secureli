@@ -2,8 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from secureli.services.language_analyzer import AnalyzeResult
-from secureli.services.language_support import LanguageMetadata
+from secureli.modules.shared.models.language import AnalyzeResult, LanguageMetadata
 
 
 # Register generic mocks you'd like available for every test.

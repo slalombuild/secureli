@@ -7,10 +7,9 @@ setup() {
   load "${BATS_LIBS_ROOT}/bats-support/load"
   load "${BATS_LIBS_ROOT}/bats-assert/load"
   mkdir -p $MOCK_REPO
-  echo '# Existing YAML Contents should persist' > $MOCK_REPO/.pre-commit-config.yaml
   echo 'repos:' >> $MOCK_REPO/.pre-commit-config.yaml
   echo '-   repo: https://github.com/hhatto/autopep8' >> $MOCK_REPO/.pre-commit-config.yaml
-  echo '    rev: v2.0.4' >> $MOCK_REPO/.pre-commit-config.yaml
+  echo '    rev: v2.1.0' >> $MOCK_REPO/.pre-commit-config.yaml
   echo '    hooks:' >> $MOCK_REPO/.pre-commit-config.yaml
   echo '    -   id: autopep8' >> $MOCK_REPO/.pre-commit-config.yaml
   echo 'fail_fast: false' >> $MOCK_REPO/.pre-commit-config.yaml

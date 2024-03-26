@@ -3,17 +3,17 @@ from typing import Optional, List
 from typing_extensions import Annotated
 import typer
 from typer import Option
-from secureli.actions.action import VerifyOutcome
 
-from secureli.actions.scan import ScanMode
 from secureli.actions.setup import SetupAction
 from secureli.container import Container
-from secureli.models.echo import Color
-from secureli.models.publish_results import PublishResultsOption
-from secureli.resources import read_resource
+from secureli.modules.shared.models.echo import Color
+from secureli.modules.shared.models.install import VerifyOutcome
+from secureli.modules.shared.models.publish_results import PublishResultsOption
+from secureli.modules.shared.models.scan import ScanMode
+from secureli.modules.shared.resources import read_resource
 from secureli.settings import Settings
 import secureli.repositories.secureli_config as SecureliConfig
-from secureli.utilities.secureli_meta import secureli_version
+from secureli.modules.shared.utilities import secureli_version
 
 # Create SetupAction outside of DI, as it's not yet available.
 setup_action = SetupAction(epilog_template_data=read_resource("epilog.md"))

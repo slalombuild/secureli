@@ -2,10 +2,7 @@ from unittest.mock import MagicMock
 
 from pytest_mock import MockerFixture
 
-from secureli.settings import (
-    Settings,
-    secureli_yaml_settings,
-)
+from secureli import settings
 
 
 def test_that_secureli_yaml_settings_guards_against_missing_yaml_file(
@@ -16,7 +13,7 @@ def test_that_secureli_yaml_settings_guards_against_missing_yaml_file(
     path_class = mocker.patch("secureli.settings.Path")
     path_class.return_value = path_instance
 
-    assert not secureli_yaml_settings(Settings())
+    assert not settings.secureli_yaml_settings(settings.Settings())
 
 
 def test_that_secureli_yaml_settings_processes_present_yaml_file(
@@ -34,6 +31,6 @@ def test_that_secureli_yaml_settings_processes_present_yaml_file(
     )
     mocker.patch("builtins.open", mock_open)
 
-    result = secureli_yaml_settings(Settings())
+    result = settings.secureli_yaml_settings(settings.Settings())
     assert "language_support" in result
     assert result["language_support"]["command_timeout_seconds"] == 12345

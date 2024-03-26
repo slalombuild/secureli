@@ -5,12 +5,7 @@ import pydantic
 import yaml
 
 import secureli.repositories.secureli_config as SecureliConfig
-from secureli.repositories.settings import (
-    RepoFilesSettings,
-    EchoSettings,
-    LanguageSupportSettings,
-    TelemetrySettings,
-)
+from secureli.repositories import repo_settings
 
 
 def secureli_yaml_settings(
@@ -39,10 +34,12 @@ class Settings(pydantic.BaseSettings):
     the .secureli.yaml file.
     """
 
-    repo_files: RepoFilesSettings = RepoFilesSettings()
-    echo: EchoSettings = EchoSettings()
-    language_support: LanguageSupportSettings = LanguageSupportSettings()
-    telemetry: TelemetrySettings = TelemetrySettings()
+    repo_files: repo_settings.RepoFilesSettings = repo_settings.RepoFilesSettings()
+    echo: repo_settings.EchoSettings = repo_settings.EchoSettings()
+    language_support: repo_settings.LanguageSupportSettings = (
+        repo_settings.LanguageSupportSettings()
+    )
+    telemetry: repo_settings.TelemetrySettings = repo_settings.TelemetrySettings()
 
     class Config:
         env_file_encoding = "utf-8"

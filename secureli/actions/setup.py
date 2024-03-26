@@ -1,6 +1,6 @@
 import jinja2
 
-from secureli.services.language_support import supported_languages
+from secureli.modules.shared.consts.language import supported_languages
 
 
 class SetupAction:

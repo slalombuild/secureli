@@ -1,1 +1,0 @@
-from secureli.resources.read_resource import read_resource

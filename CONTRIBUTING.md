@@ -237,6 +237,10 @@ Services do not leverage 3rd Party or External Dependencies directly, not even t
 
 Unit tests of Services are done with mock services and abstractions.
 
+### Scanning Services
+
+Scanning is largely done by way of pre-commit hooks as configured in `.pre-commit-config.yaml`. However, we do also implement our own custom scans in separate Scanner Services, e.g., the PII scan. The results of these multiple scans are then merged together at the Action layer for output.
+
 ## Abstractions
 
 Abstractions are mini-services that are meant to encapsulate a 3rd-party dependency. This allows us to mock interfaces we don’t own easier than leveraging duck typing and magic mocks while testing our own logic. This also allows us to swap out the underlying dependency with less risk of disruption to our entire application.
