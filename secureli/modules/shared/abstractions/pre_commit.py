@@ -344,6 +344,18 @@ class PreCommitAbstraction:
                 f"Could not find pre-commit hooks in .secureli/{self.CONFIG_FILE_NAME}"
             )
 
+    def get_pre_commit_config_path_is_correct(self, folder_path: Path) -> bool:
+        """Returns whether a pre-commit-config exists in a given folder path"""
+        preferred_pre_commit_config_location = (
+            self.get_preferred_pre_commit_config_path(folder_path)
+        )
+        pre_commit_config_path = folder_path / self.CONFIG_FILE_NAME
+        return (
+            preferred_pre_commit_config_location.exists()
+            or pre_commit_config_path.exists()
+            and pre_commit_config_path == preferred_pre_commit_config_location
+        )
+
     def get_pre_commit_config(self, folder_path: Path):
         """
         Gets the contents of the .pre-commit-config file and returns it as a dictionary
@@ -366,7 +378,7 @@ class PreCommitAbstraction:
         Feel free to delete this method after an appropriate period of time (a few months?)
         """
         existing_config_file_path = self.get_pre_commit_config_path(folder_path)
-        new_config_file_path = folder_path / ".secureli" / self.CONFIG_FILE_NAME
+        new_config_file_path = self.get_preferred_pre_commit_config_path(folder_path)
         self.echo.print(
             f"Moving {existing_config_file_path} to {new_config_file_path}..."
         )

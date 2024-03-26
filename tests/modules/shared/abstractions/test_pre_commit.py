@@ -571,3 +571,15 @@ def test_migrate_config_file_moves_pre_commit_conig(
             f"Moving {old_location} to {new_location}..."
         )
         mock_move.assert_called_once()
+
+
+def test_get_pre_commit_config_path_is_correct_returns_expected_values(
+    pre_commit: PreCommitAbstraction,
+):
+    bad_result = pre_commit.get_pre_commit_config_path_is_correct(test_folder_path)
+    assert bad_result == False
+    with (um.patch.object(Path, "exists", return_value=True),):
+        good_result = pre_commit.get_pre_commit_config_path_is_correct(
+            test_folder_path / ".secureli"
+        )
+        assert good_result == True
