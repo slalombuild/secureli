@@ -158,7 +158,7 @@ class LanguageSupportService:
                 try:
                     data = yaml.safe_load(stream)
                     existing_data = data or {}
-                    config_repos += data["repos"] if data else []
+                    config_repos += data["repos"] if data and data.get("repos") else []
 
                 except yaml.YAMLError:
                     self.echo.error(
