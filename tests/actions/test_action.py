@@ -422,7 +422,6 @@ def test_that_verify_install_returns_failure_result_without_pre_commit_config_fi
     mock_hooks_scanner: MagicMock,
     mock_echo: MagicMock,
 ):
-
     with (patch.object(Path, "exists", return_value=False),):
         mock_hooks_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
             test_folder_path / ".secureli" / ".pre-commit-config.yaml"
@@ -458,29 +457,6 @@ def test_that_verify_install_continues_after_pre_commit_config_file_moved(
         verify_result = action.verify_install(
             test_folder_path, reset=False, always_yes=True, files=None
         )
-        assert verify_result.outcome == VerifyOutcome.INSTALL_SUCCEEDED
-
-
-def test_pre_commit_config_created_if_not_exists(
-    action: Action,
-    mock_hooks_scanner: MagicMock,
-    mock_echo: MagicMock,
-):
-    with (
-        patch.object(Path, "exists", return_value=False),
-        patch("builtins.open", mock_open()) as mo,
-    ):
-        mock_hooks_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
-            test_folder_path / ".secureli" / ".pre-commit-config.yaml"
-        )
-        mock_hooks_scanner.pre_commit.pre_commit_config_exists.return_value = False
-        mock_hooks_scanner.pre_commit.get_pre_commit_config_path_is_correct.return_value = (
-            False
-        )
-        verify_result = action.verify_install(
-            test_folder_path, reset=False, always_yes=True, files=None
-        )
-        mo.assert_called_once()
         assert verify_result.outcome == VerifyOutcome.INSTALL_SUCCEEDED
 
 

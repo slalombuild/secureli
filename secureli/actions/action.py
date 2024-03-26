@@ -85,13 +85,13 @@ class Action(ABC):
         preferred_config_path = self.action_deps.hooks_scanner.pre_commit.get_preferred_pre_commit_config_path(
             folder_path
         )
-
-        if (
+        pre_commit_to_preserve = (
             self.action_deps.hooks_scanner.pre_commit.pre_commit_config_exists(
                 folder_path
             )
             and not pre_commit_config_location_is_correct
-        ):
+        )
+        if pre_commit_to_preserve:
             update_result: VerifyResult = (
                 self._update_secureli_pre_commit_config_location(
                     folder_path, always_yes
@@ -105,11 +105,6 @@ class Action(ABC):
                 return update_result
             else:
                 preferred_config_path = update_result.file_path
-        elif not preferred_config_path.exists():
-            self.action_deps.echo.warning(
-                "No pre-commit-config was found, creating new config."
-            )
-            open(preferred_config_path, "w")
 
         config = self.get_secureli_config(reset=reset)
         languages = []
@@ -145,7 +140,7 @@ class Action(ABC):
                 languages,
                 newly_detected_languages,
                 always_yes,
-                preferred_config_path,
+                preferred_config_path if pre_commit_to_preserve else None,
             )
         else:
             self.action_deps.echo.print(
@@ -178,7 +173,7 @@ class Action(ABC):
 
         # pre-install
         new_install = len(detected_languages) == len(install_languages)
-
+        self.action_deps.echo.print(f"BINGOOOOOOO, {new_install}")
         should_install = self._prompt_to_install(
             install_languages, always_yes, new_install
         )

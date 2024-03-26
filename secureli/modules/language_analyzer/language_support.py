@@ -48,8 +48,10 @@ class LanguageSupportService:
         as well as a secret-detection hook ID, if present.
         """
 
-        path_to_pre_commit_file: Path = self.pre_commit_hook.get_pre_commit_config_path(
-            SecureliConfig.FOLDER_PATH
+        path_to_pre_commit_file: Path = (
+            self.pre_commit_hook.get_preferred_pre_commit_config_path(
+                SecureliConfig.FOLDER_PATH
+            )
         )
 
         linter_config_write_result = self._write_pre_commit_configs(
@@ -156,7 +158,7 @@ class LanguageSupportService:
                 try:
                     data = yaml.safe_load(stream)
                     existing_data = data or {}
-                    config_repos += data.get("repos")
+                    config_repos += data["repos"] if data else []
 
                 except yaml.YAMLError:
                     self.echo.error(
@@ -188,7 +190,7 @@ class LanguageSupportService:
                     else None
                 )
                 data = yaml.safe_load(result.config_data)
-                config_repos += data.get("repos") or []
+                config_repos += data["repos"] or []
 
         config = {**existing_data, "repos": config_repos}
         version = hash_config(yaml.dump(config))
