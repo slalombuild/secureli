@@ -438,7 +438,7 @@ def test_that_verify_install_returns_failure_result_without_pre_commit_config_fi
             test_folder_path, reset=False, always_yes=True, files=None
         )
         mock_echo.error.assert_called_once_with(
-            "seCureLI pre-commit-config.yaml could not be updated."
+            "seCureLI .pre-commit-config.yaml could not be moved."
         )
         assert verify_result.outcome == VerifyOutcome.UPDATE_FAILED
 

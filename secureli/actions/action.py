@@ -101,7 +101,7 @@ class Action(ABC):
 
             if update_result.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
                 self.action_deps.echo.error(
-                    "seCureLI pre-commit-config.yaml could not be updated."
+                    "seCureLI .pre-commit-config.yaml could not be moved."
                 )
                 return update_result
             else:

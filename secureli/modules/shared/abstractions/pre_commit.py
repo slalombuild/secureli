@@ -378,7 +378,7 @@ class PreCommitAbstraction:
         Feel free to delete this method after an appropriate period of time (a few months?)
         """
         existing_config_file_path = self.get_pre_commit_config_path(folder_path)
-        new_config_file_path = folder_path / ".secureli" / self.CONFIG_FILE_NAME
+        new_config_file_path = self.get_preferred_pre_commit_config_path(folder_path)
         self.echo.print(
             f"Moving {existing_config_file_path} to {new_config_file_path}..."
         )
