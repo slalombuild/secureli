@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from secureli.actions.build import BuildAction
-from secureli.models.echo import Color
+from secureli.modules.shared.models.echo import Color
 
 
 @pytest.fixture()

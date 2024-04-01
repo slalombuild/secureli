@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from secureli.abstractions.pre_commit import ExecuteResult
+from secureli.modules.shared.abstractions.pre_commit import ExecuteResult
 
 
 # Register generic mocks you'd like available for every test.

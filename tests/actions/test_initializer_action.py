@@ -5,16 +5,16 @@ import pytest
 
 from secureli.actions.action import ActionDependencies
 from secureli.actions.initializer import InitializerAction
-from secureli.services.language_config import LanguageNotSupportedError
-from secureli.services.logging import LogAction
+from secureli.modules.shared.models.language import LanguageNotSupportedError
+from secureli.modules.shared.models.logging import LogAction
 
 test_folder_path = Path("does-not-matter")
 
 
 @pytest.fixture()
-def mock_scanner() -> MagicMock:
-    mock_scanner = MagicMock()
-    return mock_scanner
+def mock_hooks_scanner() -> MagicMock:
+    mock_hooks_scanner = MagicMock()
+    return mock_hooks_scanner
 
 
 @pytest.fixture()
@@ -28,7 +28,7 @@ def action_deps(
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
     mock_language_support: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_settings: MagicMock,
     mock_updater: MagicMock,
@@ -37,7 +37,7 @@ def action_deps(
         mock_echo,
         mock_language_analyzer,
         mock_language_support,
-        mock_scanner,
+        mock_hooks_scanner,
         mock_secureli_config,
         mock_settings,
         mock_updater,

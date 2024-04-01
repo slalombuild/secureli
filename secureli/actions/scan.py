@@ -3,29 +3,27 @@ import sys
 from pathlib import Path
 from time import time
 from typing import Optional
+from git import Repo
 
-from secureli.abstractions.echo import EchoAbstraction
-from secureli.actions.action import (
-    VerifyOutcome,
-    Action,
-    ActionDependencies,
-    VerifyResult,
-)
-from secureli.models.exit_codes import ExitCode
-from secureli.models.publish_results import PublishResultsOption
-from secureli.models.result import Result
-from secureli.services.logging import LoggingService, LogAction
-from secureli.services.scanner import (
-    ScanMode,
-    ScannerService,
-)
+from secureli.modules.shared.abstractions.echo import EchoAbstraction
+from secureli.actions import action
+from secureli.modules.shared.abstractions.repo import GitRepo
+from secureli.modules.shared.models.exit_codes import ExitCode
+from secureli.modules.shared.models.install import VerifyOutcome, VerifyResult
+from secureli.modules.shared.models.logging import LogAction
+from secureli.modules.shared.models.publish_results import PublishResultsOption
+from secureli.modules.shared.models.result import Result
+from secureli.modules.observability.observability_services.logging import LoggingService
+from secureli.modules.core.core_services.scanner import HooksScannerService
+from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
+from secureli.modules.shared.models.scan import ScanMode, ScanResult
 from secureli.settings import Settings
-from secureli.utilities.usage_stats import post_log, convert_failures_to_failure_count
+from secureli.modules.shared import utilities
 
 ONE_WEEK_IN_SECONDS: int = 7 * 24 * 60 * 60
 
 
-class ScanAction(Action):
+class ScanAction(action.Action):
     """The action for the secureli `scan` command, orchestrating services and outputs results"""
 
     """Any verification outcomes that would cause us to not proceed to scan."""
@@ -38,15 +36,19 @@ class ScanAction(Action):
 
     def __init__(
         self,
-        action_deps: ActionDependencies,
+        action_deps: action.ActionDependencies,
         echo: EchoAbstraction,
         logging: LoggingService,
-        scanner: ScannerService,
+        hooks_scanner: HooksScannerService,
+        pii_scanner: PiiScannerService,
+        git_repo: GitRepo,
     ):
         super().__init__(action_deps)
-        self.scanner = scanner
+        self.hooks_scanner = hooks_scanner
+        self.pii_scanner = pii_scanner
         self.echo = echo
         self.logging = logging
+        self.git_repo = git_repo
 
     def _check_secureli_hook_updates(self, folder_path: Path) -> VerifyResult:
         """
@@ -55,10 +57,12 @@ class ScanAction(Action):
         :param folder_path: The folder path containing the .secureli/ folder
         """
 
-        self.action_deps.echo.print("Checking for pre-commit hook updates...")
-        pre_commit_config = self.scanner.pre_commit.get_pre_commit_config(folder_path)
+        self.action_deps.echo.info("Checking for pre-commit hook updates...")
+        pre_commit_config = self.hooks_scanner.pre_commit.get_pre_commit_config(
+            folder_path
+        )
 
-        repos_to_update = self.scanner.pre_commit.check_for_hook_updates(
+        repos_to_update = self.hooks_scanner.pre_commit.check_for_hook_updates(
             pre_commit_config
         )
 
@@ -92,13 +96,31 @@ class ScanAction(Action):
             publish_results_condition == PublishResultsOption.ON_FAIL
             and not action_successful
         ):
-            result = post_log(log_str, Settings())
+            result = utilities.post_log(log_str, Settings())
             self.echo.debug(result.result_message)
 
             if result.result == Result.SUCCESS:
                 self.logging.success(LogAction.publish)
             else:
                 self.logging.failure(LogAction.publish, result.result_message)
+
+    def get_commited_files(self, scan_mode: ScanMode) -> list[Path]:
+        """
+        Attempts to build a list of commited files for use in language detection if
+        the user is scanning staged files for an existing installation
+        :param scan_mode: Determines which files are scanned in the repo (i.e. staged only or all)
+        :returns: a list of Path objects for the commited files
+        """
+        config = self.get_secureli_config(reset=False)
+        installed = bool(config.languages and config.version_installed)
+
+        if not installed or scan_mode != ScanMode.STAGED_ONLY:
+            return None
+        try:
+            committed_files = self.git_repo.get_commit_diff()
+            return [Path(file) for file in committed_files]
+        except:
+            return None
 
     def scan_repo(
         self,
@@ -119,7 +141,16 @@ class ScanAction(Action):
         :param specific_test: If set, limits scanning to the single pre-commit hook.
         Otherwise, scans with all hooks.
         """
-        verify_result = self.verify_install(folder_path, False, always_yes)
+
+        scan_files = [Path(file) for file in files or []] or self.get_commited_files(
+            scan_mode
+        )
+        verify_result = self.verify_install(
+            folder_path,
+            False,
+            always_yes,
+            scan_files,
+        )
 
         # Check if pre-commit hooks are up-to-date
         secureli_config = self.action_deps.secureli_config.load()
@@ -132,9 +163,19 @@ class ScanAction(Action):
         if verify_result.outcome in self.halting_outcomes:
             return
 
-        scan_result = self.scanner.scan_repo(
+        # Execute PII scan (unless `specific_test` is provided, in which case it will be for a hook below)
+        pii_scan_result: ScanResult | None = None
+        if not specific_test:
+            pii_scan_result = self.pii_scanner.scan_repo(
+                folder_path, scan_mode, files=files
+            )
+
+        # Execute hooks
+        hooks_scan_result = self.hooks_scanner.scan_repo(
             folder_path, scan_mode, specific_test, files=files
         )
+
+        scan_result = utilities.merge_scan_results([pii_scan_result, hooks_scan_result])
 
         details = scan_result.output or "Unknown output during scan"
         self.echo.print(details)
@@ -144,7 +185,7 @@ class ScanAction(Action):
             [ob.__dict__ for ob in scan_result.failures]
         )
 
-        individual_failure_count = convert_failures_to_failure_count(
+        individual_failure_count = utilities.convert_failures_to_failure_count(
             scan_result.failures
         )
 
