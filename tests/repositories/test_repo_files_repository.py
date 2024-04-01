@@ -3,8 +3,16 @@ from unittest.mock import MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
+from subprocess import CompletedProcess
 
 from secureli.repositories.repo_files import RepoFilesRepository
+
+
+@pytest.fixture()
+def mock_subprocess(mocker: MockerFixture) -> MagicMock:
+    mock_subprocess = MagicMock()
+    mocker.patch("secureli.repositories.repo_files.subprocess", mock_subprocess)
+    return mock_subprocess
 
 
 @pytest.fixture()
@@ -143,6 +151,22 @@ def test_that_list_repo_files_raises_value_error_without_git_repo(
 ):
     with pytest.raises(ValueError):
         repo_files_repository.list_repo_files(git_not_exists_folder_path)
+
+
+def test_that_list_staged_files_returns_list_of_staged_files(
+    repo_files_repository: RepoFilesRepository,
+    mock_subprocess: MagicMock,
+):
+    fake_file_1 = "i/am/staged"
+    fake_file_2 = "also/staged"
+    mock_subprocess.run.return_value = CompletedProcess(
+        args=[],
+        returncode=0,
+        stdout=f"{fake_file_1}\n{fake_file_2}\n".encode("utf8"),
+    )
+
+    result = repo_files_repository.list_staged_files(Path("."))
+    assert result == [fake_file_1, fake_file_2]
 
 
 def test_that_list_repo_files_raises_value_error_if_dot_git_is_a_file_somehow(

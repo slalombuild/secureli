@@ -1,25 +1,25 @@
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, mock_open
 
 import pytest
-from secureli.abstractions.pre_commit import InstallResult
+from secureli.modules.shared.abstractions.pre_commit import InstallResult
 
-from secureli.actions.action import Action, ActionDependencies, VerifyOutcome
-from secureli.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
-from secureli.models.echo import Color
+from secureli.actions.action import Action, ActionDependencies
+from secureli.modules.observability.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
+from secureli.modules.shared.models.echo import Color
+from secureli.modules.shared.models.install import VerifyOutcome
+from secureli.modules.shared.models import language
+from secureli.modules.shared.models.scan import ScanFailure, ScanResult
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
-from secureli.services.language_analyzer import AnalyzeResult, SkippedFile
-from secureli.services.language_support import LanguageMetadata
-from secureli.services.scanner import ScanResult, Failure
-from secureli.services.updater import UpdateResult
+from secureli.modules.core.core_services.updater import UpdateResult
 
 test_folder_path = Path("does-not-matter")
 
 
 @pytest.fixture()
-def mock_scanner() -> MagicMock:
-    mock_scanner = MagicMock()
-    return mock_scanner
+def mock_hooks_scanner() -> MagicMock:
+    mock_hooks_scanner = MagicMock()
+    return mock_hooks_scanner
 
 
 @pytest.fixture()
@@ -33,7 +33,7 @@ def action_deps(
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
     mock_language_support: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
     mock_settings: MagicMock,
@@ -42,7 +42,7 @@ def action_deps(
         mock_echo,
         mock_language_analyzer,
         mock_language_support,
-        mock_scanner,
+        mock_hooks_scanner,
         mock_secureli_config,
         mock_settings,
         mock_updater,
@@ -59,11 +59,11 @@ def test_that_initialize_repo_raises_value_error_without_any_supported_languages
     mock_language_analyzer: MagicMock,
     mock_echo: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={}, skipped_files=[]
     )
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     mock_echo.error.assert_called_with(
         "seCureLI could not be installed due to an error: No supported languages found in current repository"
@@ -75,7 +75,7 @@ def test_that_initialize_repo_install_flow_selects_both_languages(
     mock_language_analyzer: MagicMock,
     mock_echo: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={
             "RadLang": 0.75,
             "CoolLang": 0.25,
@@ -83,7 +83,7 @@ def test_that_initialize_repo_install_flow_selects_both_languages(
         skipped_files=[],
     )
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     mock_echo.print.assert_called_with(
         "seCureLI has been installed successfully for the following language(s): RadLang and CoolLang.\n",
@@ -95,9 +95,9 @@ def test_that_initialize_repo_install_flow_selects_both_languages(
 def test_that_initialize_repo_install_flow_performs_security_analysis(
     action: Action,
     mock_language_analyzer: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={
             "RadLang": 0.75,
             "BadLang": 0.25,
@@ -105,20 +105,20 @@ def test_that_initialize_repo_install_flow_performs_security_analysis(
         skipped_files=[],
     )
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
-    mock_scanner.scan_repo.assert_called_once()
+    mock_hooks_scanner.scan_repo.assert_called_once()
 
 
 def test_that_initialize_repo_install_flow_displays_security_analysis_results(
-    action: Action, action_deps: MagicMock, mock_scanner: MagicMock
+    action: Action, action_deps: MagicMock, mock_hooks_scanner: MagicMock
 ):
-    mock_scanner.scan_repo.return_value = ScanResult(
+    mock_hooks_scanner.scan_repo.return_value = ScanResult(
         successful=False,
         output="Detect secrets...Failed",
-        failures=[Failure(repo="repo", id="id", file="file")],
+        failures=[ScanFailure(repo="repo", id="id", file="file")],
     )
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     action_deps.echo.print.assert_any_call("Detect secrets...Failed")
 
@@ -126,23 +126,23 @@ def test_that_initialize_repo_install_flow_displays_security_analysis_results(
 def test_that_initialize_repo_install_flow_skips_security_analysis_if_unavailable(
     action: Action,
     mock_language_analyzer: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_language_support: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={
             "RadLang": 0.75,
             "BadLang": 0.25,
         },
         skipped_files=[],
     )
-    mock_language_support.apply_support.return_value = LanguageMetadata(
+    mock_language_support.apply_support.return_value = language.LanguageMetadata(
         version="abc123", security_hook_id=None
     )
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
-    mock_scanner.scan_repo.assert_not_called()
+    mock_hooks_scanner.scan_repo.assert_not_called()
 
 
 def test_that_initialize_repo_install_flow_warns_about_skipped_files(
@@ -151,17 +151,17 @@ def test_that_initialize_repo_install_flow_warns_about_skipped_files(
     mock_echo: MagicMock,
     mock_updater: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={
             "RadLang": 0.75,
             "BadLang": 0.25,
         },
         skipped_files=[
-            SkippedFile(
+            language.SkippedFile(
                 file_path=Path("./file.wacky-extension"),
                 error_message="What a wacky extension!",
             ),
-            SkippedFile(
+            language.SkippedFile(
                 file_path=Path("./file2.huge"), error_message="What a huge file!"
             ),
         ],
@@ -171,7 +171,7 @@ def test_that_initialize_repo_install_flow_warns_about_skipped_files(
         successful=True, backup_hook_path=None
     )
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     assert (
         mock_echo.warning.call_count == 3
@@ -181,12 +181,18 @@ def test_that_initialize_repo_install_flow_warns_about_skipped_files(
 def test_that_initialize_repo_can_be_canceled(
     action: Action,
     mock_echo: MagicMock,
+    mock_hooks_scanner: MagicMock,
 ):
     mock_echo.confirm.return_value = False
+    mock_hooks_scanner.pre_commit.get_pre_commit_config_path_is_correct.return_value = (
+        True
+    )
+    with (patch.object(Path, "exists", return_value=True),):
+        action.verify_install(
+            test_folder_path, reset=True, always_yes=False, files=None
+        )
 
-    action.verify_install(test_folder_path, reset=True, always_yes=False)
-
-    mock_echo.error.assert_called_with("User canceled install process")
+        mock_echo.error.assert_called_with("User canceled install process")
 
 
 def test_that_initialize_repo_selects_previously_selected_language(
@@ -196,7 +202,7 @@ def test_that_initialize_repo_selects_previously_selected_language(
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={"PreviousLang": 1.0},
         skipped_files=[],
     )
@@ -205,7 +211,7 @@ def test_that_initialize_repo_selects_previously_selected_language(
     )
     mock_language_support.version_for_language.return_value = "abc123"
 
-    action.verify_install(test_folder_path, reset=False, always_yes=True)
+    action.verify_install(test_folder_path, reset=False, always_yes=True, files=None)
 
     mock_echo.print.assert_called_with(
         "seCureLI is installed and up-to-date for the following language(s): PreviousLang"
@@ -223,7 +229,7 @@ def test_that_initialize_repo_prompts_to_upgrade_config_if_old_schema(
     mock_language_support.version_for_language.return_value = "xyz987"
     mock_echo.confirm.return_value = False
 
-    action.verify_install(test_folder_path, reset=False, always_yes=False)
+    action.verify_install(test_folder_path, reset=False, always_yes=False, files=None)
 
     mock_echo.error.assert_called_with("seCureLI could not be verified.")
 
@@ -234,7 +240,7 @@ def test_that_initialize_repo_updates_repo_config_if_old_schema(
     mock_language_support: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={"PreviousLang": 1.0},
         skipped_files=[],
     )
@@ -250,7 +256,9 @@ def test_that_initialize_repo_updates_repo_config_if_old_schema(
 
     mock_language_support.version_for_language.return_value = "abc123"
 
-    result = action.verify_install(test_folder_path, reset=False, always_yes=True)
+    result = action.verify_install(
+        test_folder_path, reset=False, always_yes=True, files=None
+    )
 
     assert result.outcome == VerifyOutcome.UP_TO_DATE
 
@@ -265,7 +273,7 @@ def test_that_initialize_repo_reports_errors_when_schema_update_fails(
 
     mock_secureli_config.update.side_effect = Exception
 
-    action.verify_install(test_folder_path, reset=False, always_yes=True)
+    action.verify_install(test_folder_path, reset=False, always_yes=True, files=None)
 
     mock_echo.error.assert_called_with("seCureLI could not be verified.")
 
@@ -280,7 +288,7 @@ def test_that_initialize_repo_is_aborted_by_the_user_if_the_process_is_canceled(
     mock_echo.confirm.return_value = False
     mock_secureli_config.load.return_value = SecureliConfig()  # fresh config
 
-    action.verify_install(test_folder_path, reset=False, always_yes=False)
+    action.verify_install(test_folder_path, reset=False, always_yes=False, files=None)
 
     mock_echo.error.assert_called_with("User canceled install process")
 
@@ -296,11 +304,13 @@ def test_that_initialize_repo_returns_up_to_date_if_the_process_is_canceled_on_e
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={"RadLang": 0.5, "CoolLang": 0.5}, skipped_files=[]
     )
 
-    result = action.verify_install(test_folder_path, reset=False, always_yes=False)
+    result = action.verify_install(
+        test_folder_path, reset=False, always_yes=False, files=None
+    )
     assert result.outcome == VerifyOutcome.UP_TO_DATE
 
 
@@ -312,7 +322,7 @@ def test_that_initialize_repo_prints_warnings_for_failed_linter_config_writes(
 ):
     config_write_error = "Failed to write config file for RadLang"
 
-    mock_language_support.apply_support.return_value = LanguageMetadata(
+    mock_language_support.apply_support.return_value = language.LanguageMetadata(
         version="abc123",
         security_hook_id="test_hook_id",
         linter_config_write_errors=[config_write_error],
@@ -322,7 +332,7 @@ def test_that_initialize_repo_prints_warnings_for_failed_linter_config_writes(
         successful=True, backup_hook_path=None
     )
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     mock_echo.warning.assert_called_once_with(config_write_error)
 
@@ -336,12 +346,12 @@ def test_that_verify_install_returns_failed_result_on_new_install_language_not_s
         languages=[], version_installed=None
     )
 
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={}, skipped_files=[]
     )
 
     verify_result = action.verify_install(
-        test_folder_path, reset=False, always_yes=False
+        test_folder_path, reset=False, always_yes=False, files=None
     )
 
     assert verify_result.outcome == VerifyOutcome.INSTALL_FAILED
@@ -356,12 +366,12 @@ def test_that_verify_install_returns_up_to_date_result_on_existing_install_langu
         languages=["RadLang"], version_installed="abc123"
     )
 
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={}, skipped_files=[]
     )
 
     verify_result = action.verify_install(
-        test_folder_path, reset=False, always_yes=False
+        test_folder_path, reset=False, always_yes=False, files=None
     )
 
     assert verify_result.outcome == VerifyOutcome.UP_TO_DATE
@@ -376,12 +386,12 @@ def test_that_verify_install_returns_up_to_date_result_on_existing_install_no_ne
         languages=["RadLang"], version_installed="abc123"
     )
 
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={"RadLang": 1.0}, skipped_files=[]
     )
 
     verify_result = action.verify_install(
-        test_folder_path, reset=False, always_yes=False
+        test_folder_path, reset=False, always_yes=False, files=None
     )
 
     assert verify_result.outcome == VerifyOutcome.UP_TO_DATE
@@ -396,54 +406,63 @@ def test_that_verify_install_returns_success_result_newly_detected_language_inst
         languages=["RadLang"], version_installed="abc123"
     )
 
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={"RadLang": 0.5, "CoolLang": 0.5}, skipped_files=[]
     )
 
     verify_result = action.verify_install(
-        test_folder_path, reset=False, always_yes=True
+        test_folder_path, reset=False, always_yes=True, files=None
     )
 
     assert verify_result.outcome == VerifyOutcome.INSTALL_SUCCEEDED
 
 
-def test_that_verify_install_returns_failure_result_without_re_commit_config_file_path(
+def test_that_verify_install_returns_failure_result_without_pre_commit_config_file_path(
     action: Action,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_echo: MagicMock,
 ):
     with (patch.object(Path, "exists", return_value=False),):
-        mock_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
+        mock_hooks_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
             test_folder_path / ".secureli" / ".pre-commit-config.yaml"
         )
-        mock_scanner.pre_commit.migrate_config_file.side_effect = Exception("ERROR")
+        mock_hooks_scanner.pre_commit.get_pre_commit_config_path_is_correct.return_value = (
+            False
+        )
+        mock_hooks_scanner.pre_commit.migrate_config_file.side_effect = Exception(
+            "ERROR"
+        )
+
         verify_result = action.verify_install(
-            test_folder_path, reset=False, always_yes=True
+            test_folder_path, reset=False, always_yes=True, files=None
         )
         mock_echo.error.assert_called_once_with(
-            "seCureLI pre-commit-config.yaml could not be updated."
+            "seCureLI .pre-commit-config.yaml could not be moved."
         )
         assert verify_result.outcome == VerifyOutcome.UPDATE_FAILED
 
 
 def test_that_verify_install_continues_after_pre_commit_config_file_moved(
     action: Action,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_echo: MagicMock,
 ):
-    with (patch.object(Path, "exists", return_value=False),):
-        mock_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
+    with (patch.object(Path, "exists", return_value=True),):
+        mock_hooks_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
             test_folder_path / ".secureli" / ".pre-commit-config.yaml"
         )
+        mock_hooks_scanner.pre_commit.get_pre_commit_config_path_is_correct.return_value = (
+            False
+        )
         verify_result = action.verify_install(
-            test_folder_path, reset=False, always_yes=True
+            test_folder_path, reset=False, always_yes=True, files=None
         )
         assert verify_result.outcome == VerifyOutcome.INSTALL_SUCCEEDED
 
 
 def test_that_update_secureli_pre_commit_config_location_moves_file(
     action: Action,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
     mock_echo: MagicMock,
 ):
     update_file_location = test_folder_path / ".secureli" / ".pre-commit-config.yaml"
@@ -451,30 +470,33 @@ def test_that_update_secureli_pre_commit_config_location_moves_file(
         update_file_location, True
     )
     mock_echo.print.assert_called_once_with(
-        "seCureLI's .pre-commit-config.yaml is in a deprecated location."
+        "The .pre-commit-config.yaml is in a deprecated location."
     )
-    mock_scanner.pre_commit.migrate_config_file.assert_called_with(update_file_location)
+    mock_hooks_scanner.pre_commit.migrate_config_file.assert_called_with(
+        update_file_location
+    )
     assert update_result.outcome == VerifyOutcome.UPDATE_SUCCEEDED
+    # assert update_result.file_path == update_file_location
 
 
 def test_that_update_secureli_pre_commit_config_fails_on_exception(
     action: Action,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
 ):
-    with pytest.raises(Exception):
-        mock_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
-            test_folder_path / ".secureli" / ".pre-commit-config.yaml"
-        )
-        update_result = action._update_secureli_pre_commit_config_location(
-            test_folder_path, True
-        )
-        assert update_result.outcome == VerifyOutcome.UPDATE_FAILED
+    mock_hooks_scanner.pre_commit.migrate_config_file.side_effect = Exception("ERROR")
+    mock_hooks_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
+        test_folder_path / ".secureli" / ".pre-commit-config.yaml"
+    )
+    update_result = action._update_secureli_pre_commit_config_location(
+        test_folder_path, True
+    )
+    assert update_result.outcome == VerifyOutcome.UPDATE_FAILED
 
 
 def test_that_update_secureli_pre_commit_config_location_cancels_on_user_response(
     action: Action,
     mock_echo: MagicMock,
-    mock_scanner: MagicMock,
+    mock_hooks_scanner: MagicMock,
 ):
     mock_echo.confirm.return_value = False
     update_file_location = test_folder_path / ".secureli" / ".pre-commit-config.yaml"
@@ -485,7 +507,7 @@ def test_that_update_secureli_pre_commit_config_location_cancels_on_user_respons
     mock_echo.warning.assert_called_once_with(
         ".pre-commit-config.yaml migration declined"
     )
-    mock_scanner.pre_commit.migrate_config_file.assert_not_called()
+    mock_hooks_scanner.pre_commit.migrate_config_file.assert_not_called()
     assert update_result.outcome == VerifyOutcome.UPDATE_CANCELED
 
 
@@ -495,7 +517,7 @@ def test_that_initialize_repo_install_flow_warns_about_overwriting_pre_commit_fi
     mock_echo: MagicMock,
     mock_updater: MagicMock,
 ):
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={
             "RadLang": 0.75,
         },
@@ -508,7 +530,7 @@ def test_that_initialize_repo_install_flow_warns_about_overwriting_pre_commit_fi
 
     mock_updater.pre_commit.install.return_value = install_result
 
-    action.verify_install(test_folder_path, reset=True, always_yes=True)
+    action.verify_install(test_folder_path, reset=True, always_yes=True, files=None)
 
     mock_echo.warning.assert_called_once_with(
         (
@@ -658,7 +680,7 @@ def test_that_post_install_scan_creates_pre_commit_on_new_install(
     action: Action, mock_updater: MagicMock
 ):
     action._run_post_install_scan(
-        "test/path", SecureliConfig(), LanguageMetadata(version="0.03"), True
+        "test/path", SecureliConfig(), language.LanguageMetadata(version="0.03"), True
     )
 
     mock_updater.pre_commit.install.assert_called_once()
@@ -668,37 +690,37 @@ def test_that_post_install_scan_ignores_creating_pre_commit_on_existing_install(
     action: Action, mock_updater: MagicMock
 ):
     action._run_post_install_scan(
-        "test/path", SecureliConfig(), LanguageMetadata(version="0.03"), False
+        "test/path", SecureliConfig(), language.LanguageMetadata(version="0.03"), False
     )
 
     mock_updater.pre_commit.install.assert_not_called()
 
 
 def test_that_post_install_scan_scans_repo(
-    action: Action, mock_scanner: MagicMock, mock_echo: MagicMock
+    action: Action, mock_hooks_scanner: MagicMock, mock_echo: MagicMock
 ):
     action._run_post_install_scan(
         "test/path",
         SecureliConfig(),
-        LanguageMetadata(version="0.03", security_hook_id="secrets-hook"),
+        language.LanguageMetadata(version="0.03", security_hook_id="secrets-hook"),
         False,
     )
 
-    mock_scanner.scan_repo.assert_called_once()
+    mock_hooks_scanner.scan_repo.assert_called_once()
     mock_echo.warning.assert_not_called()
 
 
 def test_that_post_install_scan_does_not_scan_repo_when_no_security_hook_id(
-    action: Action, mock_scanner: MagicMock, mock_echo: MagicMock
+    action: Action, mock_hooks_scanner: MagicMock, mock_echo: MagicMock
 ):
     action._run_post_install_scan(
         "test/path",
         SecureliConfig(languages=["RadLang"]),
-        LanguageMetadata(version="0.03"),
+        language.LanguageMetadata(version="0.03"),
         False,
     )
 
-    mock_scanner.scan_repo.assert_not_called()
+    mock_hooks_scanner.scan_repo.assert_not_called()
     mock_echo.warning.assert_called_once_with(
         "RadLang does not support secrets detection, skipping"
     )
@@ -707,7 +729,7 @@ def test_that_post_install_scan_does_not_scan_repo_when_no_security_hook_id(
 def test_that_install_saves_settings(
     action: Action, mock_language_analyzer: MagicMock, mock_settings: MagicMock
 ):
-    mock_language_analyzer.analyze.return_value = AnalyzeResult(
+    mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
         language_proportions={"PreviousLang": 1.0},
         skipped_files=[],
     )
