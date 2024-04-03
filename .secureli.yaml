@@ -3,6 +3,7 @@ echo:
 repo_files:
   exclude_file_patterns:
   - .idea/
+  - tests/end-to-end/test-data/
   ignored_file_extensions:
   - .pyc
   - .drawio
