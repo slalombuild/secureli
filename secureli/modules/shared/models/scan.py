@@ -39,3 +39,11 @@ class ScanResult(pydantic.BaseModel):
     successful: bool
     output: Optional[str] = None
     failures: list[ScanFailure]
+
+
+class OutputParseErrors(str, Enum):
+    """
+    Possible errors when parsing scan output
+    """
+
+    REPO_NOT_FOUND = "repo-not-found"

@@ -1,18 +1,9 @@
 from typing import Optional
 from pathlib import Path
-import pydantic
 
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
+from secureli.modules.shared.models.update import UpdateResult
 from secureli.repositories.secureli_config import SecureliConfigRepository
-
-
-class UpdateResult(pydantic.BaseModel):
-    """
-    The results of calling scan_repo
-    """
-
-    successful: bool
-    output: Optional[str] = None
 
 
 class UpdaterService:
