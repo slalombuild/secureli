@@ -1,5 +1,0 @@
-Resources:
-  HelloWorld:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: "hello-world-bucket"
