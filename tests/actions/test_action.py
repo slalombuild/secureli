@@ -11,7 +11,7 @@ from secureli.modules.shared.models.install import VerifyOutcome
 from secureli.modules.shared.models import language
 from secureli.modules.shared.models.scan import ScanFailure, ScanResult
 from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
-from secureli.modules.core.core_services.updater import UpdateResult
+from secureli.modules.shared.models.update import UpdateResult
 
 test_folder_path = Path("does-not-matter")
 
