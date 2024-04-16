@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 from time import time
 from typing import Optional
-from git import Repo
 
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.actions import action
@@ -50,36 +49,6 @@ class ScanAction(action.Action):
         self.logging = logging
         self.git_repo = git_repo
 
-    def _check_secureli_hook_updates(self, folder_path: Path) -> VerifyResult:
-        """
-        Queries repositories referenced by pre-commit hooks to check
-        if we have the latest revisions listed in the .pre-commit-config.yaml file
-        :param folder_path: The folder path containing the .secureli/ folder
-        """
-
-        self.action_deps.echo.info("Checking for pre-commit hook updates...")
-        pre_commit_config = self.hooks_scanner.pre_commit.get_pre_commit_config(
-            folder_path
-        )
-
-        repos_to_update = self.hooks_scanner.pre_commit.check_for_hook_updates(
-            pre_commit_config
-        )
-
-        if not repos_to_update:
-            self.action_deps.echo.print("No hooks to update")
-            return VerifyResult(outcome=VerifyOutcome.UP_TO_DATE)
-
-        for repo, revs in repos_to_update.items():
-            self.action_deps.echo.debug(
-                f"Found update for {repo}: {revs.oldRev} -> {revs.newRev}"
-            )
-        self.action_deps.echo.warning(
-            "You have out-of-date pre-commit hooks. Run `secureli update` to update them."
-        )
-        # Since we don't actually perform the updates here, return an outcome of UPDATE_CANCELLED
-        return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)
-
     def publish_results(
         self,
         publish_results_condition: PublishResultsOption,
@@ -104,24 +73,6 @@ class ScanAction(action.Action):
             else:
                 self.logging.failure(LogAction.publish, result.result_message)
 
-    def get_commited_files(self, scan_mode: ScanMode) -> list[Path]:
-        """
-        Attempts to build a list of commited files for use in language detection if
-        the user is scanning staged files for an existing installation
-        :param scan_mode: Determines which files are scanned in the repo (i.e. staged only or all)
-        :returns: a list of Path objects for the commited files
-        """
-        config = self.get_secureli_config(reset=False)
-        installed = bool(config.languages and config.version_installed)
-
-        if not installed or scan_mode != ScanMode.STAGED_ONLY:
-            return None
-        try:
-            committed_files = self.git_repo.get_commit_diff()
-            return [Path(file) for file in committed_files]
-        except:
-            return None
-
     def scan_repo(
         self,
         folder_path: Path,
@@ -142,7 +93,7 @@ class ScanAction(action.Action):
         Otherwise, scans with all hooks.
         """
 
-        scan_files = [Path(file) for file in files or []] or self.get_commited_files(
+        scan_files = [Path(file) for file in files or []] or self._get_commited_files(
             scan_mode
         )
         verify_result = self.verify_install(
@@ -208,3 +159,51 @@ class ScanAction(action.Action):
             self.echo.print("Scan executed successfully and detected no issues!")
         else:
             sys.exit(ExitCode.SCAN_ISSUES_DETECTED.value)
+
+    def _check_secureli_hook_updates(self, folder_path: Path) -> VerifyResult:
+        """
+        Queries repositories referenced by pre-commit hooks to check
+        if we have the latest revisions listed in the .pre-commit-config.yaml file
+        :param folder_path: The folder path containing the .secureli/ folder
+        """
+
+        self.action_deps.echo.info("Checking for pre-commit hook updates...")
+        pre_commit_config = self.hooks_scanner.pre_commit.get_pre_commit_config(
+            folder_path
+        )
+
+        repos_to_update = self.hooks_scanner.pre_commit.check_for_hook_updates(
+            pre_commit_config
+        )
+
+        if not repos_to_update:
+            self.action_deps.echo.print("No hooks to update")
+            return VerifyResult(outcome=VerifyOutcome.UP_TO_DATE)
+
+        for repo, revs in repos_to_update.items():
+            self.action_deps.echo.debug(
+                f"Found update for {repo}: {revs.oldRev} -> {revs.newRev}"
+            )
+        self.action_deps.echo.warning(
+            "You have out-of-date pre-commit hooks. Run `secureli update` to update them."
+        )
+        # Since we don't actually perform the updates here, return an outcome of UPDATE_CANCELLED
+        return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)
+
+    def _get_commited_files(self, scan_mode: ScanMode) -> list[Path]:
+        """
+        Attempts to build a list of commited files for use in language detection if
+        the user is scanning staged files for an existing installation
+        :param scan_mode: Determines which files are scanned in the repo (i.e. staged only or all)
+        :returns: a list of Path objects for the commited files
+        """
+        config = self.get_secureli_config(reset=False)
+        installed = bool(config.languages and config.version_installed)
+
+        if not installed or scan_mode != ScanMode.STAGED_ONLY:
+            return None
+        try:
+            committed_files = self.git_repo.get_commit_diff()
+            return [Path(file) for file in committed_files]
+        except:
+            return None

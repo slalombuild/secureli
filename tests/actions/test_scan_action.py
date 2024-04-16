@@ -485,7 +485,7 @@ def test_get_commited_files_returns_commit_diff(
     )
     mock_files = [Path("file1.py"), Path("file2.py")]
     mock_git_repo.get_commit_diff.return_value = mock_files
-    result = scan_action.get_commited_files(scan_mode=ScanMode.STAGED_ONLY)
+    result = scan_action._get_commited_files(scan_mode=ScanMode.STAGED_ONLY)
     assert result == mock_files
 
 
@@ -496,7 +496,7 @@ def test_get_commited_files_returns_none_when_not_installed(
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=[], version_installed=None
     )
-    result = scan_action.get_commited_files(scan_mode=ScanMode.STAGED_ONLY)
+    result = scan_action._get_commited_files(scan_mode=ScanMode.STAGED_ONLY)
     assert result is None
 
 
@@ -507,5 +507,5 @@ def test_get_commited_files_returns_when_scan_mode_is_not_staged_only(
     mock_secureli_config.load.return_value = SecureliConfig(
         languages=["RadLang"], version_installed=1
     )
-    result = scan_action.get_commited_files(scan_mode=ScanMode.ALL_FILES)
+    result = scan_action._get_commited_files(scan_mode=ScanMode.ALL_FILES)
     assert result is None
