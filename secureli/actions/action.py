@@ -14,6 +14,7 @@ from secureli.modules.shared.utilities import format_sentence_list
 from secureli.repositories.repo_settings import SecureliRepository
 import secureli.repositories.secureli_config as secureli_config
 import secureli.modules.shared.models.repository as RepositoryModels
+import secureli.modules.shared.models.config as ConfigModels
 
 
 class ActionDependencies:
@@ -48,9 +49,9 @@ class Action(ABC):
     def __init__(self, action_deps: ActionDependencies):
         self.action_deps = action_deps
 
-    def get_secureli_config(self, reset: bool) -> RepositoryModels.SecureliConfig:
+    def get_secureli_config(self, reset: bool) -> ConfigModels.SecureliConfig:
         return (
-            RepositoryModels.SecureliConfig()
+            ConfigModels.SecureliConfig()
             if reset
             else self.action_deps.secureli_config.load()
         )
@@ -72,7 +73,7 @@ class Action(ABC):
         """
         if (
             self.action_deps.secureli_config.verify()
-            == RepositoryModels.VerifyConfigOutcome.OUT_OF_DATE
+            == ConfigModels.VerifyConfigOutcome.OUT_OF_DATE
         ):
             update_config = self._update_secureli_config_only(always_yes)
             if update_config.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
@@ -207,7 +208,7 @@ class Action(ABC):
         for error_msg in metadata.linter_config_write_errors:
             self.action_deps.echo.warning(error_msg)
 
-        config = RepositoryModels.SecureliConfig(
+        config = ConfigModels.SecureliConfig(
             languages=detected_languages,
             version_installed=metadata.version,
         )
@@ -268,7 +269,7 @@ class Action(ABC):
     def _run_post_install_scan(
         self,
         folder_path: Path,
-        config: RepositoryModels.SecureliConfig,
+        config: ConfigModels.SecureliConfig,
         metadata: language.LanguageMetadata,
         new_install: bool,
     ):

@@ -10,6 +10,7 @@ from secureli.modules.shared.models.echo import Color
 from secureli.modules.shared.models.install import VerifyOutcome
 from secureli.modules.shared.models import language
 import secureli.modules.shared.models.repository as RepositoryModels
+import secureli.modules.shared.models.config as ConfigModels
 from secureli.modules.shared.models.scan import ScanFailure, ScanResult
 from secureli.modules.shared.models.update import UpdateResult
 
@@ -206,7 +207,7 @@ def test_that_initialize_repo_selects_previously_selected_language(
         language_proportions={"PreviousLang": 1.0},
         skipped_files=[],
     )
-    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
+    mock_secureli_config.load.return_value = ConfigModels.SecureliConfig(
         languages=["PreviousLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "abc123"
@@ -225,7 +226,7 @@ def test_that_initialize_repo_prompts_to_upgrade_config_if_old_schema(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.verify.return_value = (
-        RepositoryModels.VerifyConfigOutcome.OUT_OF_DATE
+        ConfigModels.VerifyConfigOutcome.OUT_OF_DATE
     )
 
     mock_language_support.version_for_language.return_value = "xyz987"
@@ -247,14 +248,14 @@ def test_that_initialize_repo_updates_repo_config_if_old_schema(
         skipped_files=[],
     )
     mock_secureli_config.verify.return_value = (
-        RepositoryModels.VerifyConfigOutcome.OUT_OF_DATE
+        ConfigModels.VerifyConfigOutcome.OUT_OF_DATE
     )
 
-    mock_secureli_config.update.return_value = RepositoryModels.SecureliConfig(
+    mock_secureli_config.update.return_value = ConfigModels.SecureliConfig(
         languages=["PreviousLang"], version_installed="abc123"
     )
 
-    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
+    mock_secureli_config.load.return_value = ConfigModels.SecureliConfig(
         languages=["PreviousLang"], version_installed="abc123"
     )
 
@@ -274,7 +275,7 @@ def test_that_initialize_repo_reports_errors_when_schema_update_fails(
     mock_echo: MagicMock,
 ):
     mock_secureli_config.verify.return_value = (
-        RepositoryModels.VerifyConfigOutcome.OUT_OF_DATE
+        ConfigModels.VerifyConfigOutcome.OUT_OF_DATE
     )
 
     mock_secureli_config.update.side_effect = Exception
@@ -293,7 +294,7 @@ def test_that_initialize_repo_is_aborted_by_the_user_if_the_process_is_canceled(
     # User elects to cancel the process, overridden if yes=True on the initializer
     mock_echo.confirm.return_value = False
     mock_secureli_config.load.return_value = (
-        RepositoryModels.SecureliConfig()
+        ConfigModels.SecureliConfig()
     )  # fresh config
 
     action.verify_install(test_folder_path, reset=False, always_yes=False, files=None)
@@ -309,7 +310,7 @@ def test_that_initialize_repo_returns_up_to_date_if_the_process_is_canceled_on_e
 ):
     # User elects to cancel the process
     mock_echo.confirm.return_value = False
-    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
+    mock_secureli_config.load.return_value = ConfigModels.SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
     mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
@@ -350,7 +351,7 @@ def test_that_verify_install_returns_failed_result_on_new_install_language_not_s
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
+    mock_secureli_config.load.return_value = ConfigModels.SecureliConfig(
         languages=[], version_installed=None
     )
 
@@ -370,7 +371,7 @@ def test_that_verify_install_returns_up_to_date_result_on_existing_install_langu
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
+    mock_secureli_config.load.return_value = ConfigModels.SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
 
@@ -390,7 +391,7 @@ def test_that_verify_install_returns_up_to_date_result_on_existing_install_no_ne
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
+    mock_secureli_config.load.return_value = ConfigModels.SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
 
@@ -410,7 +411,7 @@ def test_that_verify_install_returns_success_result_newly_detected_language_inst
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
+    mock_secureli_config.load.return_value = ConfigModels.SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
 
@@ -689,7 +690,7 @@ def test_that_post_install_scan_creates_pre_commit_on_new_install(
 ):
     action._run_post_install_scan(
         "test/path",
-        RepositoryModels.SecureliConfig(),
+        ConfigModels.SecureliConfig(),
         language.LanguageMetadata(version="0.03"),
         True,
     )
@@ -702,7 +703,7 @@ def test_that_post_install_scan_ignores_creating_pre_commit_on_existing_install(
 ):
     action._run_post_install_scan(
         "test/path",
-        RepositoryModels.SecureliConfig(),
+        ConfigModels.SecureliConfig(),
         language.LanguageMetadata(version="0.03"),
         False,
     )
@@ -715,7 +716,7 @@ def test_that_post_install_scan_scans_repo(
 ):
     action._run_post_install_scan(
         "test/path",
-        RepositoryModels.SecureliConfig(),
+        ConfigModels.SecureliConfig(),
         language.LanguageMetadata(version="0.03", security_hook_id="secrets-hook"),
         False,
     )
@@ -729,7 +730,7 @@ def test_that_post_install_scan_does_not_scan_repo_when_no_security_hook_id(
 ):
     action._run_post_install_scan(
         "test/path",
-        RepositoryModels.SecureliConfig(languages=["RadLang"]),
+        ConfigModels.SecureliConfig(languages=["RadLang"]),
         language.LanguageMetadata(version="0.03"),
         False,
     )

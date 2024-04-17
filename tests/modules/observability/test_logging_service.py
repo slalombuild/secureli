@@ -7,7 +7,7 @@ from secureli.modules.shared.models.config import HookConfiguration
 from secureli.modules.shared.models.logging import LogAction
 
 from secureli.modules.observability.observability_services import logging
-from secureli.modules.shared.models.repository import SecureliConfig
+from secureli.modules.shared.models.config import SecureliConfig
 
 
 @pytest.fixture()

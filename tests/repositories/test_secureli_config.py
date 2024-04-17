@@ -4,6 +4,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 import secureli.modules.shared.models.repository as RepositoryModels
+import secureli.modules.shared.models.config as ConfigModels
 from secureli.repositories import secureli_config
 
 
@@ -110,7 +111,7 @@ def test_that_repo_saves_config(
     mock_open: MagicMock,
     secureli_config_fixture: secureli_config.SecureliConfigRepository,
 ):
-    config = RepositoryModels.SecureliConfig(languages=["AwesomeLang"])
+    config = ConfigModels.SecureliConfig(languages=["AwesomeLang"])
     secureli_config_fixture.save(config)
 
     mock_open.assert_called_once()
@@ -122,7 +123,7 @@ def test_that_repo_validates_most_current_schema(
 ):
     result = secureli_config_fixture.verify()
 
-    assert result == RepositoryModels.VerifyConfigOutcome.UP_TO_DATE
+    assert result == ConfigModels.VerifyConfigOutcome.UP_TO_DATE
 
 
 def test_that_repo_catches_deprecated_schema(
@@ -131,7 +132,7 @@ def test_that_repo_catches_deprecated_schema(
 ):
     result = secureli_config_fixture.verify()
 
-    assert result == RepositoryModels.VerifyConfigOutcome.OUT_OF_DATE
+    assert result == ConfigModels.VerifyConfigOutcome.OUT_OF_DATE
 
 
 def test_that_repo_does_not_validate_with_missing_config(
@@ -140,7 +141,7 @@ def test_that_repo_does_not_validate_with_missing_config(
 ):
     result = secureli_config_fixture.verify()
 
-    assert result == RepositoryModels.VerifyConfigOutcome.MISSING
+    assert result == ConfigModels.VerifyConfigOutcome.MISSING
 
 
 def test_that_repo_updates_config(
@@ -158,4 +159,4 @@ def test_that_update_returns_empty_config_if_missing_config_file(
 ):
     result = secureli_config_fixture.update()
 
-    assert result == RepositoryModels.SecureliConfig()
+    assert result == ConfigModels.SecureliConfig()

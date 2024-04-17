@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pydantic
 from secureli.modules.shared.models.language import AnalyzeResult
-from secureli.modules.shared.models.repository import SecureliConfig
+from secureli.modules.shared.models.config import SecureliConfig
 
 
 class VerifyOutcome(str, Enum):
