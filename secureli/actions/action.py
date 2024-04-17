@@ -6,13 +6,14 @@ from secureli.modules.shared.models.echo import Color
 from secureli.modules.shared.models.install import VerifyOutcome, VerifyResult
 from secureli.modules.shared.models import language
 from secureli.modules.shared.models.scan import ScanMode
-from secureli.repositories import secureli_config
-from secureli.repositories.repo_settings import SecureliRepository, TelemetrySettings
 from secureli.modules.language_analyzer import language_analyzer, language_support
 from secureli.modules.core.core_services.scanner import HooksScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
 
 from secureli.modules.shared.utilities import format_sentence_list
+from secureli.repositories.repo_settings import SecureliRepository
+import secureli.repositories.secureli_config as secureli_config
+import secureli.modules.shared.models.repository as RepositoryModels
 
 
 class ActionDependencies:
@@ -47,9 +48,9 @@ class Action(ABC):
     def __init__(self, action_deps: ActionDependencies):
         self.action_deps = action_deps
 
-    def get_secureli_config(self, reset: bool) -> secureli_config.SecureliConfig:
+    def get_secureli_config(self, reset: bool) -> RepositoryModels.SecureliConfig:
         return (
-            secureli_config.SecureliConfig()
+            RepositoryModels.SecureliConfig()
             if reset
             else self.action_deps.secureli_config.load()
         )
@@ -71,7 +72,7 @@ class Action(ABC):
         """
         if (
             self.action_deps.secureli_config.verify()
-            == secureli_config.VerifyConfigOutcome.OUT_OF_DATE
+            == RepositoryModels.VerifyConfigOutcome.OUT_OF_DATE
         ):
             update_config = self._update_secureli_config_only(always_yes)
             if update_config.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
@@ -206,13 +207,13 @@ class Action(ABC):
         for error_msg in metadata.linter_config_write_errors:
             self.action_deps.echo.warning(error_msg)
 
-        config = secureli_config.SecureliConfig(
+        config = RepositoryModels.SecureliConfig(
             languages=detected_languages,
             version_installed=metadata.version,
         )
         self.action_deps.secureli_config.save(config)
 
-        settings.telemetry = TelemetrySettings(
+        settings.telemetry = RepositoryModels.TelemetrySettings(
             api_url=self._prompt_get_telemetry_api_url(always_yes)
         )
         self.action_deps.settings.save(settings)
@@ -267,7 +268,7 @@ class Action(ABC):
     def _run_post_install_scan(
         self,
         folder_path: Path,
-        config: secureli_config.SecureliConfig,
+        config: RepositoryModels.SecureliConfig,
         metadata: language.LanguageMetadata,
         new_install: bool,
     ):

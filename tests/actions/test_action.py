@@ -9,8 +9,8 @@ from secureli.modules.observability.consts.logging import TELEMETRY_DEFAULT_ENDP
 from secureli.modules.shared.models.echo import Color
 from secureli.modules.shared.models.install import VerifyOutcome
 from secureli.modules.shared.models import language
+import secureli.modules.shared.models.repository as RepositoryModels
 from secureli.modules.shared.models.scan import ScanFailure, ScanResult
-from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
 from secureli.modules.shared.models.update import UpdateResult
 
 test_folder_path = Path("does-not-matter")
@@ -206,7 +206,7 @@ def test_that_initialize_repo_selects_previously_selected_language(
         language_proportions={"PreviousLang": 1.0},
         skipped_files=[],
     )
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["PreviousLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "abc123"
@@ -224,7 +224,9 @@ def test_that_initialize_repo_prompts_to_upgrade_config_if_old_schema(
     mock_language_support: MagicMock,
     mock_echo: MagicMock,
 ):
-    mock_secureli_config.verify.return_value = VerifyConfigOutcome.OUT_OF_DATE
+    mock_secureli_config.verify.return_value = (
+        RepositoryModels.VerifyConfigOutcome.OUT_OF_DATE
+    )
 
     mock_language_support.version_for_language.return_value = "xyz987"
     mock_echo.confirm.return_value = False
@@ -244,13 +246,15 @@ def test_that_initialize_repo_updates_repo_config_if_old_schema(
         language_proportions={"PreviousLang": 1.0},
         skipped_files=[],
     )
-    mock_secureli_config.verify.return_value = VerifyConfigOutcome.OUT_OF_DATE
+    mock_secureli_config.verify.return_value = (
+        RepositoryModels.VerifyConfigOutcome.OUT_OF_DATE
+    )
 
-    mock_secureli_config.update.return_value = SecureliConfig(
+    mock_secureli_config.update.return_value = RepositoryModels.SecureliConfig(
         languages=["PreviousLang"], version_installed="abc123"
     )
 
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["PreviousLang"], version_installed="abc123"
     )
 
@@ -269,7 +273,9 @@ def test_that_initialize_repo_reports_errors_when_schema_update_fails(
     mock_language_support: MagicMock,
     mock_echo: MagicMock,
 ):
-    mock_secureli_config.verify.return_value = VerifyConfigOutcome.OUT_OF_DATE
+    mock_secureli_config.verify.return_value = (
+        RepositoryModels.VerifyConfigOutcome.OUT_OF_DATE
+    )
 
     mock_secureli_config.update.side_effect = Exception
 
@@ -286,7 +292,9 @@ def test_that_initialize_repo_is_aborted_by_the_user_if_the_process_is_canceled(
 ):
     # User elects to cancel the process, overridden if yes=True on the initializer
     mock_echo.confirm.return_value = False
-    mock_secureli_config.load.return_value = SecureliConfig()  # fresh config
+    mock_secureli_config.load.return_value = (
+        RepositoryModels.SecureliConfig()
+    )  # fresh config
 
     action.verify_install(test_folder_path, reset=False, always_yes=False, files=None)
 
@@ -301,7 +309,7 @@ def test_that_initialize_repo_returns_up_to_date_if_the_process_is_canceled_on_e
 ):
     # User elects to cancel the process
     mock_echo.confirm.return_value = False
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
     mock_language_analyzer.analyze.return_value = language.AnalyzeResult(
@@ -342,7 +350,7 @@ def test_that_verify_install_returns_failed_result_on_new_install_language_not_s
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=[], version_installed=None
     )
 
@@ -362,7 +370,7 @@ def test_that_verify_install_returns_up_to_date_result_on_existing_install_langu
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
 
@@ -382,7 +390,7 @@ def test_that_verify_install_returns_up_to_date_result_on_existing_install_no_ne
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
 
@@ -402,7 +410,7 @@ def test_that_verify_install_returns_success_result_newly_detected_language_inst
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
 
@@ -680,7 +688,10 @@ def test_that_post_install_scan_creates_pre_commit_on_new_install(
     action: Action, mock_updater: MagicMock
 ):
     action._run_post_install_scan(
-        "test/path", SecureliConfig(), language.LanguageMetadata(version="0.03"), True
+        "test/path",
+        RepositoryModels.SecureliConfig(),
+        language.LanguageMetadata(version="0.03"),
+        True,
     )
 
     mock_updater.pre_commit.install.assert_called_once()
@@ -690,7 +701,10 @@ def test_that_post_install_scan_ignores_creating_pre_commit_on_existing_install(
     action: Action, mock_updater: MagicMock
 ):
     action._run_post_install_scan(
-        "test/path", SecureliConfig(), language.LanguageMetadata(version="0.03"), False
+        "test/path",
+        RepositoryModels.SecureliConfig(),
+        language.LanguageMetadata(version="0.03"),
+        False,
     )
 
     mock_updater.pre_commit.install.assert_not_called()
@@ -701,7 +715,7 @@ def test_that_post_install_scan_scans_repo(
 ):
     action._run_post_install_scan(
         "test/path",
-        SecureliConfig(),
+        RepositoryModels.SecureliConfig(),
         language.LanguageMetadata(version="0.03", security_hook_id="secrets-hook"),
         False,
     )
@@ -715,7 +729,7 @@ def test_that_post_install_scan_does_not_scan_repo_when_no_security_hook_id(
 ):
     action._run_post_install_scan(
         "test/path",
-        SecureliConfig(languages=["RadLang"]),
+        RepositoryModels.SecureliConfig(languages=["RadLang"]),
         language.LanguageMetadata(version="0.03"),
         False,
     )

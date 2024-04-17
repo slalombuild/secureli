@@ -4,8 +4,9 @@ from typing import Any
 import pydantic
 import yaml
 
+from secureli.modules.shared.models.language import LanguageSupportSettings
+import secureli.modules.shared.models.repository as repo_settings
 import secureli.repositories.secureli_config as SecureliConfig
-from secureli.repositories import repo_settings
 
 
 def secureli_yaml_settings(
@@ -36,9 +37,7 @@ class Settings(pydantic.BaseSettings):
 
     repo_files: repo_settings.RepoFilesSettings = repo_settings.RepoFilesSettings()
     echo: repo_settings.EchoSettings = repo_settings.EchoSettings()
-    language_support: repo_settings.LanguageSupportSettings = (
-        repo_settings.LanguageSupportSettings()
-    )
+    language_support: LanguageSupportSettings = LanguageSupportSettings()
     telemetry: repo_settings.TelemetrySettings = repo_settings.TelemetrySettings()
 
     class Config:

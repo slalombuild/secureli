@@ -6,8 +6,8 @@ from pytest_mock import MockerFixture
 from secureli.modules.shared.models.config import HookConfiguration
 from secureli.modules.shared.models.logging import LogAction
 
-from secureli.repositories.secureli_config import SecureliConfig
 from secureli.modules.observability.observability_services import logging
+from secureli.modules.shared.models.repository import SecureliConfig
 
 
 @pytest.fixture()

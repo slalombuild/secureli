@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
+from secureli.modules.shared.models.repository import EchoSettings
 from secureli.repositories import repo_settings
 from secureli.modules.shared.models.echo import Level
 
@@ -85,7 +86,7 @@ def test_that_repo_saves_config(
     mock_open: MagicMock,
     settings_repository: repo_settings.SecureliRepository,
 ):
-    echo_level = repo_settings.EchoSettings(level=Level.info)
+    echo_level = EchoSettings(level=Level.info)
     settings_file = repo_settings.SecureliFile(echo=echo_level)
     settings_repository.save(settings_file)
 

@@ -1,38 +1,16 @@
 from pathlib import Path
-from typing import Optional
-from enum import Enum
+
 import yaml
 
-from pydantic import BaseModel
+from secureli.modules.shared.models import repository
 
 FOLDER_PATH = Path(".")
-
-
-class SecureliConfig(BaseModel):
-    languages: Optional[list[str]] = None
-    version_installed: Optional[str] = None
-    last_hook_update_check: Optional[int] = 0
-
-
-class DeprecatedSecureliConfig(BaseModel):
-    """
-    Represents a model containing all current and past options for repo-config.yaml
-    """
-
-    overall_language: Optional[str]
-    version_installed: Optional[str]
-
-
-class VerifyConfigOutcome(str, Enum):
-    UP_TO_DATE = ("up-to-date",)
-    OUT_OF_DATE = ("out-of-date",)
-    MISSING = "missing"
 
 
 class SecureliConfigRepository:
     """Save and retrieve the seCureLI configuration"""
 
-    def save(self, secureli_config: SecureliConfig):
+    def save(self, secureli_config: repository.SecureliConfig):
         """
         Save the specified configuration to the .secureli folder
         :param secureli_config: The populated configuration to save
@@ -42,7 +20,7 @@ class SecureliConfigRepository:
         with open(secureli_config_path, "w") as f:
             yaml.dump(secureli_config.dict(), f)
 
-    def load(self) -> SecureliConfig:
+    def load(self) -> repository.SecureliConfig:
         """
         Load the seCureLI config from the expected configuration file path or return a new
         configuration object, capable of being modified and saved via the `save` method
@@ -51,25 +29,25 @@ class SecureliConfigRepository:
         secureli_config_path = secureli_folder_path / "repo-config.yaml"
 
         if not secureli_config_path.exists():
-            return SecureliConfig()
+            return repository.SecureliConfig()
 
         with open(secureli_config_path, "r") as f:
             data = yaml.safe_load(f)
-            return SecureliConfig.parse_obj(data)
+            return repository.SecureliConfig.parse_obj(data)
 
-    def verify(self) -> VerifyConfigOutcome:
+    def verify(self) -> repository.VerifyConfigOutcome:
         """
         Check secureli config and verify that it matches most current schema.
         """
         secureli_folder_path = self._initialize_secureli_directory()
         secureli_config_path = secureli_folder_path / "repo-config.yaml"
         if not secureli_config_path.exists():
-            return VerifyConfigOutcome.MISSING
+            return repository.VerifyConfigOutcome.MISSING
 
         with open(secureli_config_path, "r") as f:
             current_data = yaml.safe_load(f)
 
-        expected_config_schema = SecureliConfig.schema()
+        expected_config_schema = repository.SecureliConfig.schema()
 
         expected_keys = []
 
@@ -78,27 +56,27 @@ class SecureliConfigRepository:
 
         for key in current_data:
             if key not in expected_keys:
-                return VerifyConfigOutcome.OUT_OF_DATE
+                return repository.VerifyConfigOutcome.OUT_OF_DATE
 
-        return VerifyConfigOutcome.UP_TO_DATE
+        return repository.VerifyConfigOutcome.UP_TO_DATE
 
-    def update(self) -> SecureliConfig:
+    def update(self) -> repository.SecureliConfig:
         """
         Update any older config version to match most current config.
         """
         secureli_folder_path = self._initialize_secureli_directory()
         secureli_config_path = secureli_folder_path / "repo-config.yaml"
         if not secureli_config_path.exists():
-            return SecureliConfig()
+            return repository.SecureliConfig()
 
         with open(secureli_config_path, "r") as f:
             data = yaml.safe_load(f)
-            old_config = DeprecatedSecureliConfig.parse_obj(data)
+            old_config = repository.DeprecatedSecureliConfig.parse_obj(data)
         languages: list[str] | None = (
             [old_config.overall_language] if old_config.overall_language else None
         )
 
-        return SecureliConfig(
+        return repository.SecureliConfig(
             languages=languages,
             version_installed=old_config.version_installed,
         )

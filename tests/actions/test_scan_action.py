@@ -8,9 +8,9 @@ from secureli.modules.shared.models.install import VerifyOutcome
 from secureli.modules.shared.models.language import AnalyzeResult
 from secureli.modules.shared.models.logging import LogAction
 from secureli.modules.shared.models.publish_results import PublishResultsOption
+import secureli.modules.shared.models.repository as RepositoryModels
 from secureli.modules.shared.models.result import Result
 from secureli.modules.shared.models.scan import ScanMode, ScanResult
-from secureli.repositories.secureli_config import SecureliConfig, VerifyConfigOutcome
 from secureli.repositories import repo_settings
 from unittest import mock
 from unittest.mock import MagicMock, patch
@@ -36,13 +36,13 @@ def mock_hooks_scanner(mock_pre_commit) -> MagicMock:
 def mock_pre_commit() -> MagicMock:
     mock_pre_commit = MagicMock()
     mock_pre_commit.get_pre_commit_config.return_value = (
-        repo_settings.PreCommitSettings(
+        RepositoryModels.PreCommitSettings(
             repos=[
-                repo_settings.PreCommitRepo(
+                RepositoryModels.PreCommitRepo(
                     repo="http://example-repo.com/",
                     rev="master",
                     hooks=[
-                        repo_settings.PreCommitHook(
+                        RepositoryModels.PreCommitHook(
                             id="hook-id",
                             arguments=None,
                             additional_args=None,
@@ -88,7 +88,7 @@ def mock_get_time_far_from_epoch(mocker: MockerFixture) -> MagicMock:
 
 @pytest.fixture()
 def mock_default_settings(mock_settings_repository: MagicMock) -> MagicMock:
-    mock_echo_settings = repo_settings.EchoSettings(level=Level.info)
+    mock_echo_settings = RepositoryModels.EchoSettings(level=Level.info)
     mock_settings_file = repo_settings.SecureliFile(echo=mock_echo_settings)
     mock_settings_repository.load.return_value = mock_settings_file
 
@@ -99,7 +99,7 @@ def mock_default_settings(mock_settings_repository: MagicMock) -> MagicMock:
 def mock_pass_install_verification(
     mock_secureli_config: MagicMock, mock_language_support: MagicMock
 ):
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "abc123"
@@ -167,7 +167,7 @@ def test_that_scan_repo_errors_if_not_successful(
     mock_hooks_scanner.scan_repo.return_value = ScanResult(
         successful=False, output="Bad Error", failures=[]
     )
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=[mock_language], version_installed="abc123"
     )
 
@@ -189,7 +189,7 @@ def test_that_scan_repo_scans_if_installed(
         language_proportions={"RadLang": 1.0},
         skipped_files=[],
     )
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "abc123"
@@ -215,7 +215,7 @@ def test_that_scan_repo_conducts_all_scans_and_merges_results(
         language_proportions={"RadLang": 1.0},
         skipped_files=[],
     )
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "abc123"
@@ -249,7 +249,7 @@ def test_that_scan_repo_continue_scan_if_upgrade_canceled(
         language_proportions={"RadLang": 1.0},
         skipped_files=[],
     )
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang"], version_installed="abc123"
     )
     mock_language_support.version_for_language.return_value = "xyz987"
@@ -271,8 +271,10 @@ def test_that_scan_repo_does_not_scan_if_not_installed(
     mock_language_analyzer: MagicMock,
 ):
     with patch.object(Path, "exists", return_value=False):
-        mock_secureli_config.load.return_value = SecureliConfig()
-        mock_secureli_config.verify.return_value = VerifyConfigOutcome.UP_TO_DATE
+        mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig()
+        mock_secureli_config.verify.return_value = (
+            RepositoryModels.VerifyConfigOutcome.UP_TO_DATE
+        )
         mock_echo.confirm.return_value = False
 
         scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
@@ -297,7 +299,7 @@ def test_that_scan_only_checks_for_updates_periodically(
     mock_get_time_near_epoch: MagicMock,
     mock_secureli_config: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig()
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig()
 
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, always_yes=True)
     mock_hooks_scanner.pre_commit.check_for_hook_updates.assert_not_called()
@@ -308,7 +310,7 @@ def test_that_scan_update_check_uses_pre_commit_config(
     mock_hooks_scanner: MagicMock,
     mock_secureli_config: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig()
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig()
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, always_yes=True)
     mock_hooks_scanner.pre_commit.get_pre_commit_config.assert_called_once()
 
@@ -319,7 +321,7 @@ def test_scan_update_check_return_value_when_up_to_date(
     mock_hooks_scanner: MagicMock,
     mock_secureli_config: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig()
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig()
     result = scan_action._check_secureli_hook_updates(test_folder_path)
     assert result.outcome == VerifyOutcome.UP_TO_DATE
 
@@ -330,7 +332,7 @@ def test_scan_update_check_return_value_when_not_up_to_date(
     mock_hooks_scanner: MagicMock,
     mock_secureli_config: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig()
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig()
     mock_hooks_scanner.pre_commit.check_for_hook_updates.return_value = {
         "http://example-repo.com/": RevisionPair(oldRev="old-rev", newRev="new-rev")
     }
@@ -346,10 +348,12 @@ def test_that_scan_update_check_updates_last_check_time(
     mock_secureli_config: MagicMock,
     mock_pass_install_verification: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang", "BadLang"], version_installed="abc123"
     )
-    mock_secureli_config.verify.return_value = VerifyConfigOutcome.UP_TO_DATE
+    mock_secureli_config.verify.return_value = (
+        RepositoryModels.VerifyConfigOutcome.UP_TO_DATE
+    )
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, always_yes=True)
     mock_secureli_config.save.assert_called_once()
     assert mock_secureli_config.save.call_args.args[0].last_hook_update_check == 1e6
@@ -404,7 +408,7 @@ def test_verify_install_is_called_with_commted_files(
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang"], version_installed=1
     )
 
@@ -431,7 +435,7 @@ def test_verify_install_is_called_with_user_specified_files(
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang"], version_installed=1
     )
 
@@ -458,7 +462,7 @@ def test_verify_install_is_called_with_no_specified_files(
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang"], version_installed=1
     )
 
@@ -480,7 +484,7 @@ def test_get_commited_files_returns_commit_diff(
     mock_git_repo: MagicMock,
     mock_secureli_config: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang"], version_installed=1
     )
     mock_files = [Path("file1.py"), Path("file2.py")]
@@ -493,7 +497,7 @@ def test_get_commited_files_returns_none_when_not_installed(
     scan_action: ScanAction,
     mock_secureli_config: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=[], version_installed=None
     )
     result = scan_action._get_commited_files(scan_mode=ScanMode.STAGED_ONLY)
@@ -504,7 +508,7 @@ def test_get_commited_files_returns_when_scan_mode_is_not_staged_only(
     scan_action: ScanAction,
     mock_secureli_config: MagicMock,
 ):
-    mock_secureli_config.load.return_value = SecureliConfig(
+    mock_secureli_config.load.return_value = RepositoryModels.SecureliConfig(
         languages=["RadLang"], version_installed=1
     )
     result = scan_action._get_commited_files(scan_mode=ScanMode.ALL_FILES)
