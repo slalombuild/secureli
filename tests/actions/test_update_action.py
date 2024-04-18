@@ -4,7 +4,7 @@ import pytest
 
 from secureli.actions.action import ActionDependencies
 from secureli.actions.update import UpdateAction
-from secureli.modules.core.core_services.updater import UpdateResult
+from secureli.modules.shared.models.update import UpdateResult
 
 test_folder_path = Path("does-not-matter")
 

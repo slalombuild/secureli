@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Optional
 from pathlib import Path
 
@@ -7,14 +6,6 @@ import re
 import secureli.modules.shared.models.scan as scan
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
 from secureli.repositories.repo_settings import PreCommitSettings
-
-
-class OutputParseErrors(str, Enum):
-    """
-    Possible errors when parsing scan output
-    """
-
-    REPO_NOT_FOUND = "repo-not-found"
 
 
 class HooksScannerService:
@@ -157,4 +148,4 @@ class HooksScannerService:
                 if hook.id == hook_id:
                     return repo_str
 
-        return OutputParseErrors.REPO_NOT_FOUND
+        return scan.OutputParseErrors.REPO_NOT_FOUND

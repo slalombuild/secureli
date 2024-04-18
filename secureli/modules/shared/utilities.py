@@ -1,6 +1,7 @@
 import configparser
 import hashlib
 import os
+from uuid import uuid4
 import requests
 import subprocess
 
@@ -174,3 +175,12 @@ def merge_scan_results(results: list[ScanResult]):
     return ScanResult(
         successful=final_successful, output=final_output, failures=final_failures
     )
+
+
+def generate_unique_id() -> str:
+    """
+    A unique identifier representing the log entry, including various
+    bits specific to the user and environment
+    """
+    origin_email_branch = f"{origin_url()}|{git_user_email()}|{current_branch_name()}"
+    return f"{uuid4()}|{origin_email_branch}"

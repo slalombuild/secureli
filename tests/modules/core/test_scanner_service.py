@@ -3,12 +3,9 @@ from pathlib import Path
 import pytest
 
 from secureli.modules.shared.abstractions.pre_commit import ExecuteResult
-from secureli.modules.shared.models.scan import ScanMode
+from secureli.modules.shared.models.scan import OutputParseErrors, ScanMode
 from secureli.repositories import repo_settings
-from secureli.modules.core.core_services.scanner import (
-    HooksScannerService,
-    OutputParseErrors,
-)
+from secureli.modules.core.core_services.scanner import HooksScannerService
 from pytest_mock import MockerFixture
 
 test_folder_path = Path(".")
