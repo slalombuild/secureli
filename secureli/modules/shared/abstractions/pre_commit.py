@@ -296,8 +296,6 @@ class PreCommitAbstraction:
         subprocess_args = [
             "pre-commit",
             "gc",
-            "--config",
-            self.get_pre_commit_config_path(folder_path),
             "--color",
             "always",
         ]
