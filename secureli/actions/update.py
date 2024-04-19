@@ -39,14 +39,13 @@ class UpdateAction(Action):
                     update_result.output
                     or "Unknown output while updating hooks to latest version"
                 )
+                progress.stop()
                 self.echo.print(details)
                 if not update_result.successful:
                     self.echo.print(details)
-                    progress.stop()
                     self.logging.failure(LogAction.update, details)
                 else:
                     self.echo.print("Hooks successfully updated to latest version")
-                    progress.stop()
                     self.logging.success(LogAction.update)
             else:
                 self.echo.print("Beginning update...")
@@ -55,12 +54,11 @@ class UpdateAction(Action):
                 details = (
                     install_result.output or "Unknown output during hook installation"
                 )
+                progress.stop()
                 self.echo.print(details)
                 if not install_result.successful:
                     self.echo.print(details)
-                    progress.stop()
                     self.logging.failure(LogAction.update, details)
                 else:
                     self.echo.print("Update executed successfully.")
-                    progress.stop()
                     self.logging.success(LogAction.update)
