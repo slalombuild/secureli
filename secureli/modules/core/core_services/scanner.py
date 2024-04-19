@@ -3,9 +3,9 @@ from pathlib import Path
 
 import re
 
+from secureli.modules.shared.models.repository import PreCommitSettings
 import secureli.modules.shared.models.scan as scan
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
-from secureli.repositories.repo_settings import PreCommitSettings
 
 
 class HooksScannerService:

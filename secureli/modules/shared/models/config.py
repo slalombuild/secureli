@@ -1,4 +1,5 @@
-from typing import Any
+from enum import Enum
+from typing import Any, Optional
 import pydantic
 
 
@@ -28,3 +29,24 @@ class LinterConfigData(pydantic.BaseModel):
 class LinterConfig(pydantic.BaseModel):
     language: str
     linter_data: list[LinterConfigData]
+
+
+class SecureliConfig(pydantic.BaseModel):
+    languages: Optional[list[str]] = None
+    version_installed: Optional[str] = None
+    last_hook_update_check: Optional[int] = 0
+
+
+class DeprecatedSecureliConfig(pydantic.BaseModel):
+    """
+    Represents a model containing all current and past options for repo-config.yaml
+    """
+
+    overall_language: Optional[str]
+    version_installed: Optional[str]
+
+
+class VerifyConfigOutcome(str, Enum):
+    UP_TO_DATE = ("up-to-date",)
+    OUT_OF_DATE = ("out-of-date",)
+    MISSING = "missing"

@@ -50,35 +50,25 @@ class RepoFilesRepository:
         ]
         return file_paths
 
-    def _file_is_not_ignored(self, file_path: Path):
+    def list_staged_files(self, folder_path: Path) -> list[Path]:
         """
-        True if the file does not match on patterns within secureliignore or gitignore
-        :param file_path: The file in question
-        :return: True if the file is not ignored, otherwise False
+        Lists the file paths of all staged files in a repository, or raises ValueError if the provided path
+        is not a git repo
+        :param folder_path: The path to a git repo containing files
+        :raises ValueError: The specified path does not exist or is not a git repo
+        :return: The list of staged file names
         """
-
-        combined_ignore_pattern = combine_patterns(self.ignored_file_patterns)
-        return not combined_ignore_pattern or not re.findall(
-            combined_ignore_pattern, str(file_path)
+        self._confirm_is_git_repo(folder_path)
+        git_diff_result = (
+            subprocess.run(
+                ["git", "diff", "--staged", "--name-only"],
+                stdout=subprocess.PIPE,
+                cwd=folder_path,
+            )
+            .stdout.decode("utf8")
+            .split("\n")
         )
-
-    def _file_extension_not_ignored(self, file_path: Path):
-        """
-        True if the file's extension isn't ignored by secureli
-        :param file_path: The file in question
-        :return: True if the file's extension isn't ignored by secureli, otherwise False
-        """
-        return file_path.suffix not in self.ignored_file_extensions
-
-    def _no_part_is_invisible(self, file_path: Path):
-        """
-        True if the file itself and any of its folders respective to the working
-        directory are visible
-        :param file_path: The file in question
-        :return: True if the file itself and any of its folders respective to the
-        working directory are visible. Otherwise False
-        """
-        return not [p for p in file_path.parts if p[0] == "."]
+        return git_diff_result[0:-1]
 
     def load_file(self, file_path: Path) -> str:
         """
@@ -116,25 +106,35 @@ class RepoFilesRepository:
 
         raise ValueError(f"An unknown error occurred loading the file from {file_path}")
 
-    def list_staged_files(self, folder_path: Path) -> list[Path]:
+    def _file_is_not_ignored(self, file_path: Path):
         """
-        Lists the file paths of all staged files in a repository, or raises ValueError if the provided path
-        is not a git repo
-        :param folder_path: The path to a git repo containing files
-        :raises ValueError: The specified path does not exist or is not a git repo
-        :return: The list of staged file names
+        True if the file does not match on patterns within secureliignore or gitignore
+        :param file_path: The file in question
+        :return: True if the file is not ignored, otherwise False
         """
-        self._confirm_is_git_repo(folder_path)
-        git_diff_result = (
-            subprocess.run(
-                ["git", "diff", "--staged", "--name-only"],
-                stdout=subprocess.PIPE,
-                cwd=folder_path,
-            )
-            .stdout.decode("utf8")
-            .split("\n")
+
+        combined_ignore_pattern = combine_patterns(self.ignored_file_patterns)
+        return not combined_ignore_pattern or not re.findall(
+            combined_ignore_pattern, str(file_path)
         )
-        return git_diff_result[0:-1]
+
+    def _file_extension_not_ignored(self, file_path: Path):
+        """
+        True if the file's extension isn't ignored by secureli
+        :param file_path: The file in question
+        :return: True if the file's extension isn't ignored by secureli, otherwise False
+        """
+        return file_path.suffix not in self.ignored_file_extensions
+
+    def _no_part_is_invisible(self, file_path: Path):
+        """
+        True if the file itself and any of its folders respective to the working
+        directory are visible
+        :param file_path: The file in question
+        :return: True if the file itself and any of its folders respective to the
+        working directory are visible. Otherwise False
+        """
+        return not [p for p in file_path.parts if p[0] == "."]
 
     def _confirm_is_git_repo(self, folder_path: Path):
         """

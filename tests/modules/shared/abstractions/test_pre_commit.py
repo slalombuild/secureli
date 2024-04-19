@@ -1,6 +1,7 @@
 import datetime
 import shutil
 
+from typing import List
 import unittest.mock as um
 from pathlib import Path, PosixPath
 from subprocess import CompletedProcess
@@ -9,12 +10,8 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from secureli.modules.shared.abstractions.pre_commit import (
-    InstallResult,
-    PreCommitAbstraction,
-)
-from secureli.repositories import repo_settings
-
+import secureli.modules.shared.abstractions.pre_commit as PreCommitAbstractionModels
+import secureli.modules.shared.models.repository as RepositoryModels
 
 test_folder_path = Path("does-not-matter")
 example_git_sha = "a" * 40
@@ -22,13 +19,13 @@ example_git_sha = "a" * 40
 
 @pytest.fixture()
 def settings_dict() -> dict:
-    return repo_settings.PreCommitSettings(
+    return RepositoryModels.PreCommitSettings(
         repos=[
-            repo_settings.PreCommitRepo(
+            RepositoryModels.PreCommitRepo(
                 repo="http://example-repo.com/",
                 rev="master",
                 hooks=[
-                    repo_settings.PreCommitHook(
+                    RepositoryModels.PreCommitHook(
                         id="hook-id",
                         arguments=None,
                         additional_args=None,
@@ -89,12 +86,14 @@ def pre_commit(
     mock_hashlib: MagicMock,
     mock_open: MagicMock,
     mock_subprocess: MagicMock,
-) -> PreCommitAbstraction:
-    return PreCommitAbstraction(command_timeout_seconds=300, echo=mock_echo)
+) -> PreCommitAbstractionModels.PreCommitAbstraction:
+    return PreCommitAbstractionModels.PreCommitAbstraction(
+        command_timeout_seconds=300, echo=mock_echo
+    )
 
 
 def test_that_pre_commit_executes_hooks_successfully(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     with (um.patch.object(Path, "exists") as mock_exists,):
@@ -107,7 +106,7 @@ def test_that_pre_commit_executes_hooks_successfully(
 
 
 def test_that_pre_commit_executes_hooks_successfully_including_all_files(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     with (um.patch.object(Path, "exists") as mock_exists,):
@@ -120,7 +119,7 @@ def test_that_pre_commit_executes_hooks_successfully_including_all_files(
 
 
 def test_that_pre_commit_executes_hooks_and_reports_failures(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     with (um.patch.object(Path, "exists") as mock_exists,):
@@ -132,7 +131,7 @@ def test_that_pre_commit_executes_hooks_and_reports_failures(
 
 
 def test_that_pre_commit_executes_a_single_hook_if_specified(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     with (um.patch.object(Path, "exists") as mock_exists,):
@@ -144,7 +143,8 @@ def test_that_pre_commit_executes_a_single_hook_if_specified(
 
 
 def test_that_pre_commit_executes_hooks_on_specified_files(
-    pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
+    mock_subprocess: MagicMock,
 ):
     with (um.patch.object(Path, "exists") as mock_exists,):
         files = ["test_file.py", "test-file.js"]
@@ -155,14 +155,15 @@ def test_that_pre_commit_executes_hooks_on_specified_files(
             files=files,
         )
 
-        sub_process_args: [str] = mock_subprocess.run.call_args_list[0].args[0]
+        sub_process_args: List[str] = mock_subprocess.run.call_args_list[0].args[0]
         files_arg_idx = sub_process_args.index("--files")
 
         assert " ".join(files) == sub_process_args[files_arg_idx + 1]
 
 
 def test_that_pre_commit_does_not_execute_hooks_on_specified_files_if_not_included(
-    pre_commit: PreCommitAbstraction, mock_subprocess: MagicMock
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
+    mock_subprocess: MagicMock,
 ):
     with (um.patch.object(Path, "exists") as mock_exists,):
         mock_subprocess.return_value = CompletedProcess(args=[], returncode=0)
@@ -170,13 +171,13 @@ def test_that_pre_commit_does_not_execute_hooks_on_specified_files_if_not_includ
             test_folder_path,
             hook_id="detect-secrets",
         )
-        sub_process_args: [str] = mock_subprocess.run.call_args_list[0].args[0]
+        sub_process_args: List[str] = mock_subprocess.run.call_args_list[0].args[0]
         assert "--files" not in sub_process_args
 
 
 ##### autoupdate_hooks #####
 def test_that_pre_commit_autoupdate_hooks_executes_successfully(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     with (um.patch.object(Path, "exists") as mock_exists,):
@@ -188,7 +189,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully(
 
 
 def test_that_pre_commit_autoupdate_hooks_properly_handles_failed_executions(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     with (um.patch.object(Path, "exists") as mock_exists,):
@@ -200,7 +201,7 @@ def test_that_pre_commit_autoupdate_hooks_properly_handles_failed_executions(
 
 
 def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_bleeding_edge(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     with (um.patch.object(Path, "exists") as mock_exists,):
@@ -215,7 +216,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_bleeding_ed
 
 
 def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_freeze(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     with (um.patch.object(Path, "exists") as mock_exists,):
@@ -228,7 +229,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_freeze(
 
 
 def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_repos(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     test_repos = ["some-repo-url"]
@@ -242,7 +243,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_repos(
 
 
 def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_multiple_repos(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     test_repos = ["some-repo-url", "some-other-repo-url"]
@@ -260,7 +261,7 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_multiple_re
 
 
 def test_that_pre_commit_autoupdate_hooks_fails_with_repos_containing_non_strings(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     test_repos = [{"something": "something-else"}]
@@ -273,7 +274,7 @@ def test_that_pre_commit_autoupdate_hooks_fails_with_repos_containing_non_string
 
 
 def test_that_pre_commit_autoupdate_hooks_ignores_repos_when_repos_is_a_dict(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     test_repos = {}
@@ -287,7 +288,7 @@ def test_that_pre_commit_autoupdate_hooks_ignores_repos_when_repos_is_a_dict(
 
 
 def test_that_pre_commit_autoupdate_hooks_converts_repos_when_repos_is_a_string(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     test_repos = "string"
@@ -302,7 +303,7 @@ def test_that_pre_commit_autoupdate_hooks_converts_repos_when_repos_is_a_string(
 
 ##### update #####
 def test_that_pre_commit_update_executes_successfully(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
@@ -314,7 +315,7 @@ def test_that_pre_commit_update_executes_successfully(
 
 
 def test_that_pre_commit_update_properly_handles_failed_executions(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
@@ -327,7 +328,7 @@ def test_that_pre_commit_update_properly_handles_failed_executions(
 
 ##### remove_unused_hooks #####
 def test_that_pre_commit_remove_unused_hookss_executes_successfully(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
@@ -339,7 +340,7 @@ def test_that_pre_commit_remove_unused_hookss_executes_successfully(
 
 
 def test_that_pre_commit_remove_unused_hooks_properly_handles_failed_executions(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
@@ -351,7 +352,7 @@ def test_that_pre_commit_remove_unused_hooks_properly_handles_failed_executions(
 
 
 def test_that_pre_commit_install_creates_pre_commit_hook_for_secureli(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
 ):
     with (
         um.patch("builtins.open", um.mock_open()) as mock_open,
@@ -368,14 +369,16 @@ def test_that_pre_commit_install_creates_pre_commit_hook_for_secureli(
 
         result = pre_commit.install(test_folder_path)
 
-        assert result == InstallResult(successful=True, backup_hook_path=None)
+        assert result == PreCommitAbstractionModels.InstallResult(
+            successful=True, backup_hook_path=None
+        )
         mock_open.assert_called_once()
         mock_chmod.assert_called_once()
         mock_copy.assert_not_called()
 
 
 def test_that_pre_commit_install_creates_backup_file_when_already_exists(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
 ):
     mock_backup_datetime = datetime.datetime(2024, 1, 1, 6, 30, 45)
     with (
@@ -400,7 +403,7 @@ def test_that_pre_commit_install_creates_backup_file_when_already_exists(
 
 
 def test_pre_commit_config_file_is_deserialized_correctly(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
 ):
     with (
         um.patch("builtins.open", um.mock_open()) as mock_open,
@@ -425,19 +428,19 @@ def test_pre_commit_config_file_is_deserialized_correctly(
     argnames=["rev", "rev_is_sha"], argvalues=[("tag1", False), (example_git_sha, True)]
 )
 def test_check_for_hook_updates_infers_freeze_param_when_not_provided(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     rev: str,
     rev_is_sha: bool,
 ):
     with um.patch(
         "secureli.modules.shared.abstractions.pre_commit.HookRepoRevInfo.from_config"
     ) as mock_hook_repo_rev_info:
-        pre_commit_config_repo = repo_settings.PreCommitRepo(
+        pre_commit_config_repo = RepositoryModels.PreCommitRepo(
             repo="http://example-repo.com/",
             rev=rev,
-            hooks=[repo_settings.PreCommitHook(id="hook-id")],
+            hooks=[RepositoryModels.PreCommitHook(id="hook-id")],
         )
-        pre_commit_config = repo_settings.PreCommitSettings(
+        pre_commit_config = RepositoryModels.PreCommitSettings(
             repos=[pre_commit_config_repo]
         )
         rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
@@ -448,7 +451,7 @@ def test_check_for_hook_updates_infers_freeze_param_when_not_provided(
 
 
 def test_check_for_hook_updates_respects_freeze_param_when_false(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
 ):
     """
     When freeze is explicitly provided, the rev_info.update() method respect that value
@@ -457,12 +460,12 @@ def test_check_for_hook_updates_respects_freeze_param_when_false(
     with um.patch(
         "secureli.modules.shared.abstractions.pre_commit.HookRepoRevInfo.from_config"
     ) as mock_hook_repo_rev_info:
-        pre_commit_config_repo = repo_settings.PreCommitRepo(
+        pre_commit_config_repo = RepositoryModels.PreCommitRepo(
             repo="http://example-repo.com/",
             rev=example_git_sha,
-            hooks=[repo_settings.PreCommitHook(id="hook-id")],
+            hooks=[RepositoryModels.PreCommitHook(id="hook-id")],
         )
-        pre_commit_config = repo_settings.PreCommitSettings(
+        pre_commit_config = RepositoryModels.PreCommitSettings(
             repos=[pre_commit_config_repo]
         )
         rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
@@ -473,17 +476,17 @@ def test_check_for_hook_updates_respects_freeze_param_when_false(
 
 
 def test_check_for_hook_updates_respects_freeze_param_when_true(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
 ):
     with um.patch(
         "secureli.modules.shared.abstractions.pre_commit.HookRepoRevInfo.from_config"
     ) as mock_hook_repo_rev_info:
-        pre_commit_config_repo = repo_settings.PreCommitRepo(
+        pre_commit_config_repo = RepositoryModels.PreCommitRepo(
             repo="http://example-repo.com/",
             rev="tag1",
-            hooks=[repo_settings.PreCommitHook(id="hook-id")],
+            hooks=[RepositoryModels.PreCommitHook(id="hook-id")],
         )
-        pre_commit_config = repo_settings.PreCommitSettings(
+        pre_commit_config = RepositoryModels.PreCommitSettings(
             repos=[pre_commit_config_repo]
         )
         rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
@@ -494,7 +497,7 @@ def test_check_for_hook_updates_respects_freeze_param_when_true(
 
 
 def test_check_for_hook_updates_returns_repos_with_new_revs(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
 ):
     with um.patch(
         "secureli.modules.shared.abstractions.pre_commit.HookRepoRevInfo"
@@ -502,12 +505,12 @@ def test_check_for_hook_updates_returns_repos_with_new_revs(
         repo_urls = ["http://example-repo.com/", "http://example-repo-2.com/"]
         old_rev = "tag1"
         repo_1_new_rev = "tag2"
-        pre_commit_config = repo_settings.PreCommitSettings(
+        pre_commit_config = RepositoryModels.PreCommitSettings(
             repos=[
-                repo_settings.PreCommitRepo(
+                RepositoryModels.PreCommitRepo(
                     repo=repo_url,
                     rev=old_rev,
-                    hooks=[repo_settings.PreCommitHook(id="hook-id")],
+                    hooks=[RepositoryModels.PreCommitHook(id="hook-id")],
                 )
                 for repo_url in repo_urls
             ]
@@ -528,20 +531,24 @@ def test_check_for_hook_updates_returns_repos_with_new_revs(
         assert updated_repos[repo_urls[0]].newRev == "tag2"
 
 
-def test_pre_commit_config_exists(pre_commit: PreCommitAbstraction):
+def test_pre_commit_config_exists(
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
+):
     with um.patch.object(Path, "exists", return_value=True):
         pre_commit_exists = pre_commit.pre_commit_config_exists(test_folder_path)
         assert pre_commit_exists == True
 
 
-def test_pre_commit_config_does_not_exist(pre_commit: PreCommitAbstraction):
+def test_pre_commit_config_does_not_exist(
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
+):
     with um.patch.object(Path, "exists", return_value=False):
         pre_commit_exists = pre_commit.pre_commit_config_exists(test_folder_path)
         assert pre_commit_exists == False
 
 
 def test_get_pre_commit_config_path_returns_correct_location(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
 ):
     with um.patch.object(Path, "exists", return_value=True):
         pre_commit_config_path = pre_commit.get_pre_commit_config_path(test_folder_path)
@@ -551,14 +558,14 @@ def test_get_pre_commit_config_path_returns_correct_location(
 
 
 def test_get_pre_commit_config_path_errors_without_file(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
 ):
     with pytest.raises(FileNotFoundError):
         pre_commit.get_pre_commit_config_path(test_folder_path)
 
 
 def test_migrate_config_file_moves_pre_commit_conig(
-    pre_commit: PreCommitAbstraction, mock_echo: MagicMock
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction, mock_echo: MagicMock
 ):
     with (
         um.patch.object(shutil, "move") as mock_move,
@@ -574,7 +581,7 @@ def test_migrate_config_file_moves_pre_commit_conig(
 
 
 def test_get_pre_commit_config_path_is_correct_returns_expected_values(
-    pre_commit: PreCommitAbstraction,
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
 ):
     bad_result = pre_commit.get_pre_commit_config_path_is_correct(test_folder_path)
     assert bad_result == False
