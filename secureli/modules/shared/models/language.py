@@ -70,3 +70,11 @@ class LinterConfigWriteResult(pydantic.BaseModel):
 
     successful_languages: list[str]
     error_messages: list[str]
+
+
+class LanguageSupportSettings(pydantic.BaseSettings):
+    """
+    Settings that affect how seCureLI performs language analysis and support.
+    """
+
+    command_timeout_seconds: int = pydantic.Field(default=300)

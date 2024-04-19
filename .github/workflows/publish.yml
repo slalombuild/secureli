@@ -142,11 +142,11 @@ jobs:
         run: ./scripts/secureli-deployment.sh
 
 
-  integration-testing:
-    name: Integration Testing
+  smoke-testing:
+    name: Smoke Testing
     needs: [ build-test, secureli-release, secureli-publish, deploy ]
     if: |
       always() &&
       (needs.secureli-publish.result == 'success' || needs.secureli-publish.result == 'skipped') &&
       (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
-    uses: ./.github/workflows/integration_testing.yml
+    uses: ./.github/workflows/smoke_testing.yml

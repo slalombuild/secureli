@@ -1,7 +1,7 @@
 import pytest
 
 from secureli.modules.secureli_ignore import SecureliIgnoreService
-from secureli.repositories import repo_settings
+import secureli.modules.shared.models.repository as repo_settings
 from secureli.settings import Settings
 
 

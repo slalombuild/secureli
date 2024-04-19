@@ -14,8 +14,8 @@ import stat
 import subprocess
 import yaml
 
-from secureli.repositories.repo_settings import PreCommitSettings
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
+from secureli.modules.shared.models.repository import PreCommitSettings
 
 
 class InstallFailedError(Exception):
