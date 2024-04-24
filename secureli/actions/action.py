@@ -2,6 +2,7 @@ from abc import ABC
 from pathlib import Path
 from rich.progress import Progress
 
+from secureli.modules.observability.observability_services.logging import LoggingService
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.modules.observability.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
 from secureli.modules.shared.models.echo import Color
@@ -36,6 +37,7 @@ class ActionDependencies:
         secureli_config: secureli_config.SecureliConfigRepository,
         settings: SecureliRepository,
         updater: UpdaterService,
+        logging: LoggingService,
     ):
         self.echo = echo
         self.language_analyzer = language_analyzer
@@ -44,6 +46,7 @@ class ActionDependencies:
         self.secureli_config = secureli_config
         self.settings = settings
         self.updater = updater
+        self.logging = logging
 
 
 class Action(ABC):
@@ -480,9 +483,9 @@ class Action(ABC):
             progress.stop()
             self.action_deps.echo.print(details)
             if not update_result.successful:
-                self.logging.failure(LogAction.update, details)
+                self.action_deps.logging.failure(LogAction.update, details)
             else:
                 self.action_deps.echo.print(
                     "Hooks successfully updated to latest version"
                 )
-                self.logging.success(LogAction.update)
+                self.action_deps.logging.success(LogAction.update)

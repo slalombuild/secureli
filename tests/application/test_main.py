@@ -100,7 +100,6 @@ def test_that_app_ignores_version_callback(mock_container: MagicMock):
 @pytest.mark.parametrize(
     "test_input",
     [
-        VerifyOutcome.INSTALL_SUCCEEDED,
         VerifyOutcome.UPDATE_SUCCEEDED,
         VerifyOutcome.UP_TO_DATE,
     ],

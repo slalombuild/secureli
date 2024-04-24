@@ -36,8 +36,6 @@ class ScanAction(action.Action):
     def __init__(
         self,
         action_deps: action.ActionDependencies,
-        echo: EchoAbstraction,
-        logging: LoggingService,
         hooks_scanner: HooksScannerService,
         pii_scanner: PiiScannerService,
         git_repo: GitRepo,
@@ -45,8 +43,6 @@ class ScanAction(action.Action):
         super().__init__(action_deps)
         self.hooks_scanner = hooks_scanner
         self.pii_scanner = pii_scanner
-        self.echo = echo
-        self.logging = logging
         self.git_repo = git_repo
 
     def publish_results(
@@ -66,12 +62,14 @@ class ScanAction(action.Action):
             and not action_successful
         ):
             result = utilities.post_log(log_str, Settings())
-            self.echo.debug(result.result_message)
+            self.action_deps.echo.debug(result.result_message)
 
             if result.result == Result.SUCCESS:
-                self.logging.success(LogAction.publish)
+                self.action_deps.logging.success(LogAction.publish)
             else:
-                self.logging.failure(LogAction.publish, result.result_message)
+                self.action_deps.logging.failure(
+                    LogAction.publish, result.result_message
+                )
 
     def scan_repo(
         self,
@@ -129,7 +127,7 @@ class ScanAction(action.Action):
         scan_result = utilities.merge_scan_results([pii_scan_result, hooks_scan_result])
 
         details = scan_result.output or "Unknown output during scan"
-        self.echo.print(details)
+        self.action_deps.echo.print(details)
 
         failure_count = len(scan_result.failures)
         scan_result_failures_json_string = json.dumps(
@@ -141,9 +139,9 @@ class ScanAction(action.Action):
         )
 
         log_data = (
-            self.logging.success(LogAction.scan)
+            self.action_deps.logging.success(LogAction.scan)
             if scan_result.successful
-            else self.logging.failure(
+            else self.action_deps.logging.failure(
                 LogAction.scan,
                 scan_result_failures_json_string,
                 failure_count,
@@ -156,7 +154,9 @@ class ScanAction(action.Action):
             log_str=log_data.json(exclude_none=True),
         )
         if scan_result.successful:
-            self.echo.print("Scan executed successfully and detected no issues!")
+            self.action_deps.echo.print(
+                "Scan executed successfully and detected no issues!"
+            )
         else:
             sys.exit(ExitCode.SCAN_ISSUES_DETECTED.value)
 
