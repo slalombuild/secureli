@@ -3,6 +3,10 @@ setup() {
   load "${BATS_LIBS_ROOT}/bats-assert/load"
 }
 
+# Tests currently commented out as they have a dependency on test data which will be workied on in a future ticket. In order to run them currently, you would need to go into
+# each one of the language repo folder under test-data folder and git initialize them. In the future we wish to automate the creation and git initialization of each one of these
+# folders
+
 #@test "can detect C# language" {
 #    run python secureli/main.py init -ryd tests/end-to-end/test-data/Csharp_Sample/
 #    assert_output --partial '[seCureLI] The following language(s) support secrets detection: C#'
