@@ -32,6 +32,7 @@ def action_deps(
     mock_secureli_config: MagicMock,
     mock_settings: MagicMock,
     mock_updater: MagicMock,
+    mock_logging_service: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -41,19 +42,17 @@ def action_deps(
         mock_secureli_config,
         mock_settings,
         mock_updater,
+        mock_logging_service,
     )
 
 
 @pytest.fixture()
 def update_action(
     action_deps: ActionDependencies,
-    mock_logging_service: MagicMock,
     mock_updater: MagicMock,
 ) -> UpdateAction:
     return UpdateAction(
         action_deps=action_deps,
-        echo=action_deps.echo,
-        logging=mock_logging_service,
         updater=mock_updater,
     )
 

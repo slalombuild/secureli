@@ -101,7 +101,6 @@ def init(
         Path(directory), reset, yes
     )
     if init_result.outcome in [
-        VerifyOutcome.INSTALL_SUCCEEDED,
         VerifyOutcome.UP_TO_DATE,
         VerifyOutcome.UPDATE_SUCCEEDED,
     ]:

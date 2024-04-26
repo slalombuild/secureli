@@ -1,10 +1,14 @@
 from abc import ABC
 from pathlib import Path
+from rich.progress import Progress
+
+from secureli.modules.observability.observability_services.logging import LoggingService
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.modules.observability.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
 from secureli.modules.shared.models.echo import Color
 from secureli.modules.shared.models.install import VerifyOutcome, VerifyResult
 from secureli.modules.shared.models import language
+from secureli.modules.shared.models.logging import LogAction
 from secureli.modules.shared.models.scan import ScanMode
 from secureli.modules.language_analyzer import language_analyzer, language_support
 from secureli.modules.core.core_services.scanner import HooksScannerService
@@ -33,6 +37,7 @@ class ActionDependencies:
         secureli_config: secureli_config.SecureliConfigRepository,
         settings: SecureliRepository,
         updater: UpdaterService,
+        logging: LoggingService,
     ):
         self.echo = echo
         self.language_analyzer = language_analyzer
@@ -41,6 +46,7 @@ class ActionDependencies:
         self.secureli_config = secureli_config
         self.settings = settings
         self.updater = updater
+        self.logging = logging
 
 
 class Action(ABC):
@@ -296,6 +302,9 @@ class Action(ABC):
                     )
                 )
 
+        # Updated hooks prior to initial scan
+        self._initial_hooks_update(folder_path)
+
         if secret_test_id := metadata.security_hook_id:
             self.action_deps.echo.print(
                 f"The following language(s) support secrets detection: {format_sentence_list(config.languages)}"
@@ -459,3 +468,24 @@ class Action(ABC):
             return VerifyResult(
                 outcome=VerifyOutcome.UPDATE_CANCELED, file_path=deprecated_location
             )
+
+    def _initial_hooks_update(self, folder_path: Path):
+        with Progress(transient=True) as progress:
+            self.action_deps.echo.print(
+                "Updating hooks to the latest version prior to initial scan..."
+            )
+            progress.add_task("Updating...", start=False, total=None)
+            update_result = self.action_deps.updater.update_hooks(folder_path)
+            details = (
+                update_result.output
+                or "Unknown output while updating hooks to latest version"
+            )
+            progress.stop()
+            self.action_deps.echo.print(details)
+            if not update_result.successful:
+                self.action_deps.logging.failure(LogAction.update, details)
+            else:
+                self.action_deps.echo.print(
+                    "Hooks successfully updated to latest version"
+                )
+                self.action_deps.logging.success(LogAction.update)

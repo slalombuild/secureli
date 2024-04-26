@@ -57,7 +57,7 @@ def test_that_app_implements_version_option(
     result = CliRunner().invoke(secureli.main.app, [test_input])
     mock_container = request.getfixturevalue("mock_container")
 
-    assert result.exit_code is 0
+    assert result.exit_code == 0
     assert secureli_version() in result.stdout
     mock_container.init_resources.assert_not_called()
     mock_container.wire.assert_not_called()
@@ -70,7 +70,7 @@ def test_that_version_callback_does_not_return_hook_versions_if_no_config(
     with patch.object(Path, "exists", return_value=False):
         result = CliRunner().invoke(secureli.main.app, [test_input])
 
-        assert result.exit_code is 0
+        assert result.exit_code == 0
         assert secureli_version() in result.stdout
         assert "\nHook Versions:" not in result.stdout
 
@@ -82,7 +82,7 @@ def test_that_version_callback_returns_hook_versions_if_config(
     with patch.object(Path, "exists", return_value=True):
         result = CliRunner().invoke(secureli.main.app, [test_input])
 
-        assert result.exit_code is 0
+        assert result.exit_code == 0
         assert secureli_version() in result.stdout
         assert "\nHook Versions:" in result.stdout
         assert "--------------" in result.stdout
@@ -91,7 +91,7 @@ def test_that_version_callback_returns_hook_versions_if_config(
 def test_that_app_ignores_version_callback(mock_container: MagicMock):
     result = CliRunner().invoke(secureli.main.app, ["scan"])
 
-    assert result.exit_code is 0
+    assert result.exit_code == 0
     assert secureli_version() not in result.stdout
     mock_container.init_resources.assert_called_once()
     mock_container.wire.assert_called_once()
@@ -100,7 +100,6 @@ def test_that_app_ignores_version_callback(mock_container: MagicMock):
 @pytest.mark.parametrize(
     "test_input",
     [
-        VerifyOutcome.INSTALL_SUCCEEDED,
         VerifyOutcome.UPDATE_SUCCEEDED,
         VerifyOutcome.UP_TO_DATE,
     ],
@@ -138,7 +137,7 @@ def test_that_unsuccessful_init_does_not_run_update(
 
 def test_that_scan_implements_file_arg(mock_container: MagicMock):
     result = CliRunner().invoke(secureli.main.app, ["scan", "--file", "test.py"])
-    assert result.exit_code is 0
+    assert result.exit_code == 0
     assert result.stdout == ""
     mock_container.init_resources.assert_called_once()
     mock_container.scan_action.return_value.scan_repo.assert_called_once_with(
@@ -155,7 +154,7 @@ def test_that_scan_implements_multiple_file_args(mock_container: MagicMock):
     result = CliRunner().invoke(
         secureli.main.app, ["scan", "--file", "test.py", "--file", "test2.py"]
     )
-    assert result.exit_code is 0
+    assert result.exit_code == 0
     assert result.stdout == ""
     mock_container.init_resources.assert_called_once()
     mock_container.scan_action.return_value.scan_repo.assert_called_once_with(

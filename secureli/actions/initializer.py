@@ -13,10 +13,8 @@ class InitializerAction(Action):
     def __init__(
         self,
         action_deps: ActionDependencies,
-        logging: LoggingService,
     ):
         super().__init__(action_deps)
-        self.logging = logging
 
     def initialize_repo(
         self, folder_path: Path, reset: bool, always_yes: bool
@@ -29,8 +27,8 @@ class InitializerAction(Action):
         """
         verify_result = self.verify_install(folder_path, reset, always_yes, files=None)
         if verify_result.outcome in ScanAction.halting_outcomes:
-            self.logging.failure(LogAction.init, verify_result.outcome)
+            self.action_deps.logging.failure(LogAction.init, verify_result.outcome)
         else:
-            self.logging.success(LogAction.init)
+            self.action_deps.logging.success(LogAction.init)
 
         return verify_result

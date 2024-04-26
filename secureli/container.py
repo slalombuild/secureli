@@ -160,6 +160,7 @@ class Container(containers.DeclarativeContainer):
         secureli_config=secureli_config_repository,
         settings=settings_repository,
         updater=updater_service,
+        logging=logging_service,
     )
 
     """The Build Action, used to render the build_data using the echo"""
@@ -174,15 +175,12 @@ class Container(containers.DeclarativeContainer):
     initializer_action = providers.Factory(
         InitializerAction,
         action_deps=action_deps,
-        logging=logging_service,
     )
 
     """Scan Action, representing what happens when the scan command is invoked"""
     scan_action = providers.Factory(
         ScanAction,
         action_deps=action_deps,
-        echo=echo,
-        logging=logging_service,
         hooks_scanner=hooks_scanner_service,
         pii_scanner=pii_scanner_service,
         git_repo=git_repo,
@@ -192,7 +190,5 @@ class Container(containers.DeclarativeContainer):
     update_action = providers.Factory(
         UpdateAction,
         action_deps=action_deps,
-        echo=echo,
-        logging=logging_service,
         updater=updater_service,
     )

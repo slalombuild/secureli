@@ -115,6 +115,7 @@ def action_deps(
     mock_secureli_config: MagicMock,
     mock_settings_repository: MagicMock,
     mock_updater: MagicMock,
+    mock_logging_service: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -124,20 +125,18 @@ def action_deps(
         mock_secureli_config,
         mock_settings_repository,
         mock_updater,
+        mock_logging_service,
     )
 
 
 @pytest.fixture()
 def scan_action(
     action_deps: ActionDependencies,
-    mock_logging_service: MagicMock,
     mock_pii_scanner: MagicMock,
     mock_git_repo: MagicMock,
 ) -> ScanAction:
     return ScanAction(
         action_deps=action_deps,
-        echo=action_deps.echo,
-        logging=mock_logging_service,
         hooks_scanner=action_deps.hooks_scanner,
         pii_scanner=mock_pii_scanner,
         git_repo=mock_git_repo,
@@ -371,7 +370,7 @@ def test_publish_results_always(scan_action: ScanAction, mock_post_log: MagicMoc
     )
 
     mock_post_log.assert_called_once_with("log_str", Settings())
-    scan_action.logging.success.assert_called_once_with(LogAction.publish)
+    scan_action.action_deps.logging.success.assert_called_once_with(LogAction.publish)
 
 
 def test_publish_results_on_fail_and_action_successful(
@@ -384,7 +383,7 @@ def test_publish_results_on_fail_and_action_successful(
     )
 
     mock_post_log.assert_not_called()
-    scan_action.logging.success.assert_not_called()
+    scan_action.action_deps.logging.success.assert_not_called()
 
 
 def test_publish_results_on_fail_and_action_not_successful(
@@ -400,7 +399,9 @@ def test_publish_results_on_fail_and_action_not_successful(
     )
 
     mock_post_log.assert_called_once_with("log_str", Settings())
-    scan_action.logging.failure.assert_called_once_with(LogAction.publish, "Failure")
+    scan_action.action_deps.logging.failure.assert_called_once_with(
+        LogAction.publish, "Failure"
+    )
 
 
 def test_verify_install_is_called_with_commted_files(

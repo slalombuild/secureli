@@ -32,6 +32,7 @@ def action_deps(
     mock_secureli_config: MagicMock,
     mock_settings: MagicMock,
     mock_updater: MagicMock,
+    mock_logging_service: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -41,41 +42,38 @@ def action_deps(
         mock_secureli_config,
         mock_settings,
         mock_updater,
+        mock_logging_service,
     )
 
 
 @pytest.fixture()
 def initializer_action(
     action_deps: ActionDependencies,
-    mock_logging_service: MagicMock,
 ) -> InitializerAction:
     return InitializerAction(
         action_deps=action_deps,
-        logging=mock_logging_service,
     )
 
 
 def test_that_initialize_repo_does_not_load_config_when_resetting(
     initializer_action: InitializerAction,
     mock_secureli_config: MagicMock,
-    mock_echo: MagicMock,
-    mock_logging_service: MagicMock,
 ):
     initializer_action.initialize_repo(test_folder_path, True, True)
 
     mock_secureli_config.load.assert_not_called()
 
-    mock_logging_service.success.assert_called_once_with(LogAction.init)
+    initializer_action.action_deps.logging.success.assert_called_with(LogAction.init)
 
 
 def test_that_initialize_repo_logs_failure_when_failing_to_verify(
     initializer_action: InitializerAction,
-    mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
-    mock_logging_service: MagicMock,
 ):
     mock_language_analyzer.analyze.side_effect = LanguageNotSupportedError
 
     initializer_action.initialize_repo(test_folder_path, True, True)
 
-    mock_logging_service.failure.assert_called_once_with(LogAction.init, ANY)
+    initializer_action.action_deps.logging.failure.assert_called_once_with(
+        LogAction.init, ANY
+    )

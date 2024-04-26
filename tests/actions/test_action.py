@@ -9,6 +9,7 @@ from secureli.modules.observability.consts.logging import TELEMETRY_DEFAULT_ENDP
 from secureli.modules.shared.models.echo import Color
 from secureli.modules.shared.models.install import VerifyOutcome
 from secureli.modules.shared.models import language
+from secureli.modules.shared.models.logging import LogAction
 import secureli.modules.shared.models.repository as RepositoryModels
 import secureli.modules.shared.models.config as ConfigModels
 from secureli.modules.shared.models.scan import ScanFailure, ScanResult
@@ -38,6 +39,7 @@ def action_deps(
     mock_secureli_config: MagicMock,
     mock_updater: MagicMock,
     mock_settings: MagicMock,
+    mock_logging_service: MagicMock,
 ) -> ActionDependencies:
     return ActionDependencies(
         mock_echo,
@@ -47,6 +49,7 @@ def action_deps(
         mock_secureli_config,
         mock_settings,
         mock_updater,
+        mock_logging_service,
     )
 
 
@@ -768,3 +771,18 @@ def test_that_prompt_get_telemetry_api_url_returns_prompt_response(
     result = action._prompt_get_telemetry_api_url(False)
 
     assert result is mock_api_endpoint
+
+
+def test_that_unsuccessful_initial_hooks_update_logs_details(
+    action: Action, action_deps: ActionDependencies
+):
+    action_deps.updater.update_hooks.return_value = UpdateResult(
+        successful=False, output="Update failed"
+    )
+
+    action._initial_hooks_update(Path("test/path"))
+
+    logging_result = action_deps.logging
+
+    assert logging_result.failure
+    logging_result.failure.assert_called_once_with(LogAction.update, "Update failed")
