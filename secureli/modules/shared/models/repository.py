@@ -49,7 +49,7 @@ class PreCommitRepo(BaseModel):
     """
 
     url: str = Field(alias="repo")
-    rev: str
+    rev: Optional[str]
     hooks: list[PreCommitHook] = Field(default=[])
     suppressed_hook_ids: list[str] = Field(default=[])
 

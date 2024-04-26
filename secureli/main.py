@@ -37,7 +37,7 @@ def version_callback(value: bool):
             config = pre_commit_abstr.get_pre_commit_config(path)
 
             all_repos = [
-                (hook.id, repo.rev.lstrip("v"))
+                (hook.id, repo.rev.lstrip("v") if repo.rev else None)
                 for repo in config.repos
                 for hook in repo.hooks
             ]
