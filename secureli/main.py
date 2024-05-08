@@ -183,13 +183,27 @@ def update(
             help="Run secureli against a specific directory",
         ),
     ] = Path("."),
+    new_pattern: Annotated[str, Option("--new-pattern", "-n", help="Add a new Regex to \
+                                       the custom scan pattern list")] = None
 ):
     """
-    Update linters, configuration, and all else needed to maintain a secure repository.
+    Update linters, configuration, custom scan patterns and all else needed to maintain a secure repository.
     """
-    SecureliConfig.FOLDER_PATH = Path(directory)
-    container.update_action().update_hooks(Path(directory), latest)
+    if new_pattern is not None:
+        container.update_action().add_pattern(new_pattern)
+    else:
+        SecureliConfig.FOLDER_PATH = Path(directory)
+        container.update_action().update_hooks(Path(directory), latest)
 
+#Add new command
+#add_scan_pattern
+
+#or add as option to scan or update?
+#update doesn't seem to make much sense - it solely updates hooks
+# add an update --hooks -hk (does this conflict with help?) or --new-pattern --np flag?
+# Seems like there should be a way to delete the pattern as well --remove-pattern -rp
+
+#scan doesn't make much sense either, unless we wanted the ability to add the pattern and immediately scan for it
 
 if __name__ == "__main__":
     app()

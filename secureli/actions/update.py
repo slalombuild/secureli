@@ -1,3 +1,4 @@
+import re
 from typing import Optional
 from pathlib import Path
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
@@ -60,3 +61,15 @@ class UpdateAction(Action):
                 else:
                     self.action_deps.echo.print("Update executed successfully.")
                     self.action_deps.logging.success(LogAction.update)
+
+    def add_pattern(self, new_pattern: str):
+        print(new_pattern)
+        try:
+            re.compile(new_pattern)
+        except:
+            exit() #Invalid regex
+        else:
+            pass #store regex in yaml
+        #check pattern is a valid regex
+        #if so, 
+        #if not, exit with relevant message
