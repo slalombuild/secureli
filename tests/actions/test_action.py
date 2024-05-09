@@ -472,6 +472,28 @@ def test_that_verify_install_continues_after_pre_commit_config_file_moved(
         assert verify_result.outcome == VerifyOutcome.INSTALL_SUCCEEDED
 
 
+def test_that_verify_install_returns_failure_without_pre_commit_file(
+    action: Action,
+    mock_hooks_scanner: MagicMock,
+    mock_echo: MagicMock,
+):
+    with (patch.object(Path, "exists", return_value=True),):
+        mock_hooks_scanner.pre_commit.get_preferred_pre_commit_config_path.return_value = (
+            test_folder_path / ".secureli" / ".pre-commit-config.yaml"
+        )
+        mock_hooks_scanner.pre_commit.get_pre_commit_config_path_is_correct.return_value = (
+            False
+        )
+        mock_hooks_scanner.pre_commit.pre_commit_config_exists.return_value = False
+        verify_result = action.verify_install(
+            test_folder_path, reset=False, always_yes=True, files=None
+        )
+        mock_echo.error.assert_called_once_with(
+            "seCureLI has not been initialized on this branch."
+        )
+        assert verify_result.outcome == VerifyOutcome.INSTALL_FAILED
+
+
 def test_that_update_secureli_pre_commit_config_location_moves_file(
     action: Action,
     mock_hooks_scanner: MagicMock,

@@ -114,6 +114,12 @@ class Action(ABC):
             else:
                 preferred_config_path = update_result.file_path
 
+        if not pre_commit_config_location_is_correct and not pre_commit_to_preserve:
+            self.action_deps.echo.error(
+                "seCureLI has not been initialized on this branch."
+            )
+            return VerifyResult(outcome=VerifyOutcome.INSTALL_FAILED)
+
         config = self.get_secureli_config(reset=reset)
         languages = []
 
