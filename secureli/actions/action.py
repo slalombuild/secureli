@@ -258,14 +258,14 @@ class Action(ABC):
         self, languages: list[str], always_yes: bool, new_install: bool
     ) -> bool:
         """
-        Prompts user to determine if secureli should be installed or not
+        Prompts user to determine if secureli should be initialized or not
         :param languages: List of language names to display
         :param always_yes: Assume "Yes" to all prompts
         :param new_install: Used to determine if the install is new or
         if additional languages are being added
         """
 
-        new_install_message = "seCureLI has not yet been installed, install now?"
+        new_install_message = "seCureLI has not yet been initialized, initialize now?"
         add_languages_message = (
             f"seCureLI has not been installed for the following language(s): "
             f"{format_sentence_list(languages)}, install now?"

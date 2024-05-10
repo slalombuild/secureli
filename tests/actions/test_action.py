@@ -794,7 +794,7 @@ def test_that_prompt_to_install_asks_new_install_msg(
     action._prompt_to_install(mock_languages, always_yes=False, new_install=True)
 
     mock_echo.confirm.assert_called_once_with(
-        "seCureLI has not yet been installed, install now?", default_response=True
+        "seCureLI has not yet been initialized, initialize now?", default_response=True
     )
 
 
