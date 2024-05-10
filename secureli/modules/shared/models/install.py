@@ -17,6 +17,11 @@ class VerifyOutcome(str, Enum):
     UP_TO_DATE = "up-to-date"
 
 
+class ActionSource(str, Enum):
+    INITIALIZER = "initializer"
+    SCAN = "scan"
+
+
 class VerifyResult(pydantic.BaseModel):
     """
     The outcomes of performing verification. Actions can use these results
