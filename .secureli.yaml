@@ -11,3 +11,6 @@ repo_files:
   max_file_size: 1000000
 telemetry:
   api_url: https://log-api.newrelic.com/log/v1
+scan_patterns:
+  custom_scan_patterns:
+  - test
