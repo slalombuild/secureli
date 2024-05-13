@@ -1,10 +1,11 @@
 import re
-from typing import Optional
+from typing import List, Optional
 from pathlib import Path
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.modules.observability.observability_services.logging import LoggingService
 from secureli.modules.core.core_services.updater import UpdaterService
 from secureli.actions.action import Action, ActionDependencies
+import secureli.modules.shared.models.repository as RepositoryModels
 
 from rich.progress import Progress
 from secureli.modules.shared.models.logging import LogAction
@@ -62,14 +63,59 @@ class UpdateAction(Action):
                     self.action_deps.echo.print("Update executed successfully.")
                     self.action_deps.logging.success(LogAction.update)
 
-    def add_pattern(self, new_pattern: str):
-        print(new_pattern)
+    def _validate_regex(self, pattern: str) -> bool:
+        """
+        Checks if a given string is a valid Regex pattern, returns a boolean indicator
+        param pattern: The string to be checked
+        """
         try:
-            re.compile(new_pattern)
+            re.compile(pattern)
+            return True
         except:
-            exit() #Invalid regex
-        else:
-            pass #store regex in yaml
-        #check pattern is a valid regex
-        #if so, 
-        #if not, exit with relevant message
+            print(f'WARNING: invalid regex pattern detected: "{pattern}"\nExcluding pattern.\n')
+            return False
+        
+    def _validate_pattern(self, pattern, patterns):
+        """
+        Checks the pattern is a valid Regex and is not already present in the patterns list
+        param pattern: A string to be checked
+        param patterns: A reference list to check for duplicate values
+        """
+        if pattern in patterns:
+            print(f'WARNING: duplicate scan pattern detected: "{pattern}"\nExcluding pattern.\n')
+            return False
+        
+        return self._validate_regex(pattern)
+
+    def add_pattern(self, folder_path, patterns: List[str]):
+        """
+        Validates user provided scan patterns and stores them for future use
+        :param folder_path: The folder secureli is operating in
+        :param patterns: A user provided list of regex patterns to be saved
+        """
+
+        #Algorithm Notes:
+        #for each pattern
+        #   Check pattern is a valid regex
+        #       if invalid, print warning and filter out pattern
+        #   Check pattern is not present in custom_scan_patterns list
+        #       if present, print warning and do not add duplicate
+        #   Prevent repeated flags from being added twice
+        #add new patterns to custom_scan_patterns list
+        #save updated custom_scan_patterns list to secureli yaml file
+
+        saved_patterns = []
+        settings = self.action_deps.settings.load(folder_path)
+        if settings.scan_patterns is not None:
+            saved_patterns = settings.scan_patterns.custom_scan_patterns
+
+        # Use a set comprehension to prevent flag duplicates
+        new_patterns = { pattern for pattern in patterns if self._validate_pattern(pattern, saved_patterns)}
+        saved_patterns.extend(new_patterns)
+
+        if len(saved_patterns) > 0:
+            settings.scan_patterns = RepositoryModels.CustomScanSettings(
+                custom_scan_patterns=saved_patterns
+            )
+            self.action_deps.settings.save(settings)
+
