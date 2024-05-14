@@ -119,3 +119,6 @@ class UpdateAction(Action):
             )
             self.action_deps.settings.save(settings)
 
+        print("Current custom scan patterns:")
+        print(*saved_patterns, sep="\n")
+
