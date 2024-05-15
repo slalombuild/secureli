@@ -21,6 +21,7 @@ class ScanFailure(pydantic.BaseModel):
     repo: str
     id: str
     file: str
+    exitCode: str
 
 
 class ScanOutput(pydantic.BaseModel):
