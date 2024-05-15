@@ -144,7 +144,10 @@ class PiiScannerService:
         for pii_found_file in pii_found_files:
             failures.append(
                 scan.ScanFailure(
-                    id="pii_scan", file=pii_found_file, repo=SECURELI_GITHUB
+                    id="pii_scan",
+                    file=pii_found_file,
+                    repo=SECURELI_GITHUB,
+                    exitCode="PII_SCAN_ISSUES_DETECTED",
                 )
             )
         return failures
