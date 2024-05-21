@@ -207,7 +207,4 @@ def test_preexisting_pattern_is_not_added(
     mock_echo.print.assert_any_call("\nCurrent custom scan patterns:")
     mock_echo.print.assert_called_with(*patternList, sep="\n")
 
-    #RT TODO: clean up action dependencies settings - are fixtures reset between tests?
-    update_action.action_deps = action_deps
-
 #RT TODO: Call private methods directly?
