@@ -231,4 +231,4 @@ def test_valid_pattern(
     expectedResult: bool
 ):
     assert update_action._validate_pattern(pattern, patterns) == expectedResult
-    pass
+
