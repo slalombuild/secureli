@@ -1,8 +1,6 @@
 import re
 from typing import List, Optional
 from pathlib import Path
-from secureli.modules.shared.abstractions.echo import EchoAbstraction
-from secureli.modules.observability.observability_services.logging import LoggingService
 from secureli.modules.core.core_services.updater import UpdaterService
 from secureli.actions.action import Action, ActionDependencies
 import secureli.modules.shared.models.repository as RepositoryModels
@@ -72,7 +70,7 @@ class UpdateAction(Action):
             re.compile(pattern)
             return True
         except:
-            print(f'WARNING: invalid regex pattern detected: "{pattern}"\nExcluding pattern.\n')
+            self.action_deps.echo.print(f'\nWARNING: invalid regex pattern detected: "{pattern}"\nExcluding pattern.\n')
             return False
         
     def _validate_pattern(self, pattern, patterns):
@@ -82,7 +80,7 @@ class UpdateAction(Action):
         param patterns: A reference list to check for duplicate values
         """
         if pattern in patterns:
-            print(f'WARNING: duplicate scan pattern detected: "{pattern}"\nExcluding pattern.\n')
+            self.action_deps.echo.print(f'\nWARNING: duplicate scan pattern detected: "{pattern}"\nExcluding pattern.\n')
             return False
         
         return self._validate_regex(pattern)
@@ -119,6 +117,6 @@ class UpdateAction(Action):
             )
             self.action_deps.settings.save(settings)
 
-        print("Current custom scan patterns:")
-        print(*saved_patterns, sep="\n")
+            self.action_deps.echo.print("\nCurrent custom scan patterns:")
+            self.action_deps.echo.print(*saved_patterns, sep="\n")
 

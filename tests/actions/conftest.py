@@ -3,6 +3,8 @@ from unittest.mock import MagicMock
 import pytest
 
 from secureli.modules.shared.models.language import AnalyzeResult, LanguageMetadata
+from secureli.modules.shared.models.repository import SecureliFile
+from secureli.repositories.repo_settings import SecureliRepository
 
 
 # Register generic mocks you'd like available for every test.
@@ -45,5 +47,6 @@ def mock_language_support() -> MagicMock:
 
 @pytest.fixture()
 def mock_settings() -> MagicMock:
-    mock_settings = MagicMock()
+    mock_settings = MagicMock(SecureliRepository)
+    mock_settings.load = MagicMock(return_value = SecureliFile())
     return mock_settings

@@ -4,6 +4,7 @@ import pytest
 
 from secureli.actions.action import ActionDependencies
 from secureli.actions.update import UpdateAction
+from secureli.modules.shared.models.repository import CustomScanSettings, SecureliFile
 from secureli.modules.shared.models.update import UpdateResult
 
 test_folder_path = Path("does-not-matter")
@@ -45,7 +46,7 @@ def action_deps(
         mock_logging_service,
     )
 
-
+#RT TODO: how are test files with multiple methods organized?
 @pytest.fixture()
 def update_action(
     action_deps: ActionDependencies,
@@ -105,3 +106,108 @@ def test_that_latest_flag_handles_failed_update(
     update_action.update_hooks(test_folder_path, latest=True)
 
     mock_echo.print.assert_called_with("Update failed")
+
+#Using a set in the 2nd scenario gets past order problems - not sure if there are other side effects
+@pytest.mark.parametrize('patternList', [ ["^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$"], ({"test_pattern", "^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$", })])
+def test_single_pattern_addition_succeeds(
+    update_action: UpdateAction,
+    mock_echo: MagicMock,
+    patternList: list[str]
+):
+    expected = SecureliFile()
+    expected.scan_patterns = CustomScanSettings(
+                custom_scan_patterns=patternList
+            )
+    update_action.add_pattern(test_folder_path, patternList)
+
+    update_action.action_deps.settings.save.assert_called_with(expected)
+    mock_echo.print.assert_any_call("\nCurrent custom scan patterns:")
+    mock_echo.print.assert_called_with(*patternList, sep="\n")
+
+def test_scan_pattern_object_is_initialized(
+        update_action: UpdateAction,
+        mock_echo: MagicMock
+):
+    patternList = ["Test_pattern"]
+    expected = SecureliFile()
+    expected.scan_patterns = CustomScanSettings(
+                custom_scan_patterns=patternList
+            )
+    
+    mock_secureli_file = SecureliFile()
+    mock_secureli_file.scan_patterns = CustomScanSettings(
+                custom_scan_patterns=patternList
+            )
+    update_action.action_deps.settings.load = MagicMock(return_value = mock_secureli_file)
+
+    update_action.add_pattern(test_folder_path, patternList)
+
+    update_action.action_deps.settings.save.assert_called_with(expected)
+
+def test_multiple_patern_addition_partial_success(
+    update_action: UpdateAction,
+    mock_echo: MagicMock,
+):
+    valid_pattern = 'Test_pattern'
+    malformed_pattern = '.[/'
+    patternList = [valid_pattern, malformed_pattern]
+    expected = SecureliFile()
+    expected.scan_patterns = CustomScanSettings(
+                custom_scan_patterns=[valid_pattern]
+            )
+    update_action.add_pattern(test_folder_path, patternList)
+
+    update_action.action_deps.settings.save.assert_called_with(expected)
+    mock_echo.print.assert_any_call(f'\nWARNING: invalid regex pattern detected: "{malformed_pattern}"\nExcluding pattern.\n')
+    mock_echo.print.assert_any_call("\nCurrent custom scan patterns:")
+    mock_echo.print.assert_called_with(*[valid_pattern], sep="\n")
+
+def test_malformed_regex_fails(
+    update_action: UpdateAction,
+    mock_echo: MagicMock
+):
+    malformed_input = [".[/"]
+    update_action.add_pattern(test_folder_path, malformed_input)
+
+    mock_echo.print.assert_called_once_with(f'\nWARNING: invalid regex pattern detected: "{malformed_input[0]}"\nExcluding pattern.\n')
+    
+
+def test_only_one_duplicate_flag_is_added(
+    update_action: UpdateAction,
+    mock_echo: MagicMock
+):
+    patternList = ["Test_pattern"]
+    duplicatedList = patternList*2
+    expected = SecureliFile()
+    expected.scan_patterns = CustomScanSettings(
+                custom_scan_patterns=patternList
+            )
+
+    update_action.add_pattern(test_folder_path, duplicatedList)
+
+    update_action.action_deps.settings.save.assert_called_with(expected)
+    mock_echo.print.assert_any_call("\nCurrent custom scan patterns:")
+    mock_echo.print.assert_called_with(*patternList, sep="\n")
+
+
+def test_preexisting_pattern_is_not_added(
+    update_action: UpdateAction,
+    mock_echo: MagicMock
+):
+    patternList = ["Test_pattern"]
+    mock_secureli_file = SecureliFile()
+    mock_secureli_file.scan_patterns = CustomScanSettings(
+                custom_scan_patterns=patternList
+            )
+    update_action.action_deps.settings.load = MagicMock(return_value = mock_secureli_file)
+
+    update_action.add_pattern(test_folder_path, patternList)
+
+    update_action.action_deps.settings.save.assert_called_with(mock_secureli_file)
+    mock_echo.print.assert_any_call("\nCurrent custom scan patterns:")
+    mock_echo.print.assert_called_with(*patternList, sep="\n")
+
+    #RT TODO: clean up action dependencies settings - are fixtures reset between tests?
+    update_action.action_deps = action_deps
+
+#RT TODO: Call private methods directly?
