@@ -110,7 +110,6 @@ def test_that_latest_flag_handles_failed_update(
 @pytest.mark.parametrize('patternList', [[r"^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$"], ({"test_pattern", r"^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$", })])
 def test_single_pattern_addition_succeeds(
     update_action: UpdateAction,
-    mock_echo: MagicMock,
     patternList: list[str]
 ):
     expected = SecureliFile()
@@ -120,12 +119,11 @@ def test_single_pattern_addition_succeeds(
     update_action.add_pattern(test_folder_path, patternList)
 
     update_action.action_deps.settings.save.assert_called_with(expected)
-    mock_echo.print.assert_any_call("\nCurrent custom scan patterns:")
-    mock_echo.print.assert_called_with(*patternList, sep="\n")
+    update_action.action_deps.echo.print.assert_any_call("\nCurrent custom scan patterns:")
+    update_action.action_deps.echo.print.assert_called_with(*patternList)
 
 def test_scan_pattern_object_is_initialized(
         update_action: UpdateAction,
-        mock_echo: MagicMock
 ):
     patternList = ["Test_pattern"]
     expected = SecureliFile()
@@ -157,23 +155,21 @@ def test_multiple_patern_addition_partial_success(
     update_action.add_pattern(test_folder_path, patternList)
 
     update_action.action_deps.settings.save.assert_called_with(expected)
-    mock_echo.print.assert_any_call(f'\nWARNING: invalid regex pattern detected: "{malformed_pattern}"\nExcluding pattern.\n')
-    mock_echo.print.assert_any_call("\nCurrent custom scan patterns:")
-    mock_echo.print.assert_called_with(*[valid_pattern], sep="\n")
+    update_action.action_deps.echo.warning.assert_any_call(f'\nWARNING: invalid regex pattern detected: "{malformed_pattern}"\nExcluding pattern.\n')
+    update_action.action_deps.echo.print.assert_any_call("\nCurrent custom scan patterns:")
+    update_action.action_deps.echo.print.assert_called_with(*[valid_pattern])
 
 def test_malformed_regex_fails(
     update_action: UpdateAction,
-    mock_echo: MagicMock
 ):
     malformed_input = [".[/"]
     update_action.add_pattern(test_folder_path, malformed_input)
 
-    mock_echo.print.assert_called_once_with(f'\nWARNING: invalid regex pattern detected: "{malformed_input[0]}"\nExcluding pattern.\n')
+    update_action.action_deps.echo.warning.assert_called_once_with(f'\nWARNING: invalid regex pattern detected: "{malformed_input[0]}"\nExcluding pattern.\n')
     
 
 def test_only_one_duplicate_flag_is_added(
     update_action: UpdateAction,
-    mock_echo: MagicMock
 ):
     patternList = ["Test_pattern"]
     duplicatedList = patternList*2
@@ -185,13 +181,12 @@ def test_only_one_duplicate_flag_is_added(
     update_action.add_pattern(test_folder_path, duplicatedList)
 
     update_action.action_deps.settings.save.assert_called_with(expected)
-    mock_echo.print.assert_any_call("\nCurrent custom scan patterns:")
-    mock_echo.print.assert_called_with(*patternList, sep="\n")
+    update_action.action_deps.echo.print.assert_any_call("\nCurrent custom scan patterns:")
+    update_action.action_deps.echo.print.assert_called_with(*patternList)
 
 
 def test_preexisting_pattern_is_not_added(
     update_action: UpdateAction,
-    mock_echo: MagicMock
 ):
     patternList = ["Test_pattern"]
     mock_secureli_file = SecureliFile()
@@ -203,8 +198,8 @@ def test_preexisting_pattern_is_not_added(
     update_action.add_pattern(test_folder_path, patternList)
 
     update_action.action_deps.settings.save.assert_called_with(mock_secureli_file)
-    mock_echo.print.assert_any_call("\nCurrent custom scan patterns:")
-    mock_echo.print.assert_called_with(*patternList, sep="\n")
+    update_action.action_deps.echo.print.assert_any_call("\nCurrent custom scan patterns:")
+    update_action.action_deps.echo.print.assert_called_with(*patternList)
 
 @pytest.mark.parametrize('pattern,expectedResult', [
     ('Test_pattern', True), 
