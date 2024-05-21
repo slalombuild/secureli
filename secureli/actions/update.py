@@ -70,7 +70,7 @@ class UpdateAction(Action):
             re.compile(pattern)
             return True
         except:
-            self.action_deps.echo.warning(f'\nWARNING: invalid regex pattern detected: "{pattern}"\nExcluding pattern.\n')
+            self.action_deps.echo.warning(f'Invalid regex pattern detected: "{pattern}". Excluding pattern.\n')
             return False
         
     def _validate_pattern(self, pattern, patterns):
@@ -80,7 +80,7 @@ class UpdateAction(Action):
         param patterns: A reference list to check for duplicate values
         """
         if pattern in patterns:
-            self.action_deps.echo.warning(f'\nWARNING: duplicate scan pattern detected: "{pattern}"\nExcluding pattern.\n')
+            self.action_deps.echo.warning(f'Duplicate scan pattern detected: "{pattern}". Excluding pattern.')
             return False
         
         return self._validate_regex(pattern)
@@ -117,5 +117,5 @@ class UpdateAction(Action):
             )
             self.action_deps.settings.save(settings)
 
-            self.action_deps.echo.print("\nCurrent custom scan patterns:")
-            self.action_deps.echo.print(*saved_patterns)
+            self.action_deps.echo.print("Current custom scan patterns:")
+            self.action_deps.echo.print(saved_patterns)

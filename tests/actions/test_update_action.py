@@ -119,8 +119,8 @@ def test_single_pattern_addition_succeeds(
     update_action.add_pattern(test_folder_path, patternList)
 
     update_action.action_deps.settings.save.assert_called_with(expected)
-    update_action.action_deps.echo.print.assert_any_call("\nCurrent custom scan patterns:")
-    update_action.action_deps.echo.print.assert_called_with(*patternList)
+    update_action.action_deps.echo.print.assert_any_call("Current custom scan patterns:")
+    update_action.action_deps.echo.print.assert_called_with(list(patternList))
 
 def test_scan_pattern_object_is_initialized(
         update_action: UpdateAction,
@@ -155,9 +155,9 @@ def test_multiple_patern_addition_partial_success(
     update_action.add_pattern(test_folder_path, patternList)
 
     update_action.action_deps.settings.save.assert_called_with(expected)
-    update_action.action_deps.echo.warning.assert_any_call(f'\nWARNING: invalid regex pattern detected: "{malformed_pattern}"\nExcluding pattern.\n')
-    update_action.action_deps.echo.print.assert_any_call("\nCurrent custom scan patterns:")
-    update_action.action_deps.echo.print.assert_called_with(*[valid_pattern])
+    update_action.action_deps.echo.warning.assert_any_call(f'Invalid regex pattern detected: "{malformed_pattern}". Excluding pattern.\n')
+    update_action.action_deps.echo.print.assert_any_call("Current custom scan patterns:")
+    update_action.action_deps.echo.print.assert_called_with([valid_pattern])
 
 def test_malformed_regex_fails(
     update_action: UpdateAction,
@@ -165,7 +165,7 @@ def test_malformed_regex_fails(
     malformed_input = [".[/"]
     update_action.add_pattern(test_folder_path, malformed_input)
 
-    update_action.action_deps.echo.warning.assert_called_once_with(f'\nWARNING: invalid regex pattern detected: "{malformed_input[0]}"\nExcluding pattern.\n')
+    update_action.action_deps.echo.warning.assert_called_once_with(f'Invalid regex pattern detected: "{malformed_input[0]}". Excluding pattern.\n')
     
 
 def test_only_one_duplicate_flag_is_added(
@@ -181,8 +181,8 @@ def test_only_one_duplicate_flag_is_added(
     update_action.add_pattern(test_folder_path, duplicatedList)
 
     update_action.action_deps.settings.save.assert_called_with(expected)
-    update_action.action_deps.echo.print.assert_any_call("\nCurrent custom scan patterns:")
-    update_action.action_deps.echo.print.assert_called_with(*patternList)
+    update_action.action_deps.echo.print.assert_any_call("Current custom scan patterns:")
+    update_action.action_deps.echo.print.assert_called_with(patternList)
 
 
 def test_preexisting_pattern_is_not_added(
@@ -198,8 +198,8 @@ def test_preexisting_pattern_is_not_added(
     update_action.add_pattern(test_folder_path, patternList)
 
     update_action.action_deps.settings.save.assert_called_with(mock_secureli_file)
-    update_action.action_deps.echo.print.assert_any_call("\nCurrent custom scan patterns:")
-    update_action.action_deps.echo.print.assert_called_with(*patternList)
+    update_action.action_deps.echo.print.assert_any_call("Current custom scan patterns:")
+    update_action.action_deps.echo.print.assert_called_with(patternList)
 
 @pytest.mark.parametrize('pattern,expectedResult', [
     ('Test_pattern', True), 
