@@ -46,7 +46,6 @@ def action_deps(
         mock_logging_service,
     )
 
-#RT TODO: how are test files with multiple methods organized?
 @pytest.fixture()
 def update_action(
     action_deps: ActionDependencies,
@@ -108,7 +107,7 @@ def test_that_latest_flag_handles_failed_update(
     mock_echo.print.assert_called_with("Update failed")
 
 #Using a set in the 2nd scenario gets past order problems - not sure if there are other side effects
-@pytest.mark.parametrize('patternList', [ ["^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$"], ({"test_pattern", "^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$", })])
+@pytest.mark.parametrize('patternList', [[r"^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$"], ({"test_pattern", r"^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$", })])
 def test_single_pattern_addition_succeeds(
     update_action: UpdateAction,
     mock_echo: MagicMock,
@@ -207,4 +206,29 @@ def test_preexisting_pattern_is_not_added(
     mock_echo.print.assert_any_call("\nCurrent custom scan patterns:")
     mock_echo.print.assert_called_with(*patternList, sep="\n")
 
-#RT TODO: Call private methods directly?
+@pytest.mark.parametrize('pattern,expectedResult', [
+    ('Test_pattern', True), 
+    ('./[invalid', False)
+    ]
+)
+def test_valid_regex(
+    update_action: UpdateAction,
+    pattern: str,
+    expectedResult: bool
+):
+    assert update_action._validate_regex(pattern) == expectedResult
+
+@pytest.mark.parametrize('pattern,patterns,expectedResult', [
+    ('Test_pattern', [], True), 
+    ('Test_pattern', ['Test_pattern'], False),
+    ('./[invalid', [], False)
+    ]
+)
+def test_valid_pattern(
+    update_action: UpdateAction,
+    pattern: str,
+    patterns: list[str],
+    expectedResult: bool
+):
+    assert update_action._validate_pattern(pattern, patterns) == expectedResult
+    pass
