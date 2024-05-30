@@ -207,18 +207,13 @@ class Action(ABC):
 
         # pre-install
         new_install = len(detected_languages) == len(install_languages)
-        should_install = self._prompt_to_install(
-            install_languages, always_yes, new_install
-        )
-        if not should_install:
-            if new_install:
-                self.action_deps.echo.error("User canceled install process")
-                return install.VerifyResult(
-                    outcome=install.VerifyOutcome.INSTALL_CANCELED,
-                )
 
-            self.action_deps.echo.warning("Newly detected languages were not installed")
-            return install.VerifyResult(outcome=install.VerifyOutcome.UP_TO_DATE)
+        pre_install_result = self._pre_install_checks(
+            new_install, install_languages, always_yes
+        )
+        did_pre_install_fail = pre_install_result is not None
+        if did_pre_install_fail:
+            return pre_install_result
 
         settings = self.action_deps.settings.load(folder_path)
 
@@ -266,6 +261,32 @@ class Action(ABC):
             outcome=install.VerifyOutcome.INSTALL_SUCCEEDED,
             config=config,
         )
+
+    def _pre_install_checks(
+        self,
+        new_install: bool,
+        install_languages: list[str],
+        always_yes: bool,
+    ) -> install.VerifyResult:
+        """
+        Checks if secureli should not be installed due to user cancelllation or failure to install newly detected languages
+        :param new_install: boolean flag to determine if this is a new install
+        :param install_languages: list of specific langugages to install secureli features for
+        :param always_yes: Assume "Yes" to all prompts
+        :return: None or an install.VerifyResult if secureli should not be insalled
+        """
+        should_install = self._prompt_to_install(
+            install_languages, always_yes, new_install
+        )
+        if not should_install:
+            if new_install:
+                self.action_deps.echo.error("User canceled install process")
+                return install.VerifyResult(
+                    outcome=install.VerifyOutcome.INSTALL_CANCELED,
+                )
+
+            self.action_deps.echo.warning("Newly detected languages were not installed")
+            return install.VerifyResult(outcome=install.VerifyOutcome.UP_TO_DATE)
 
     def _prompt_to_install(
         self, languages: list[str], always_yes: bool, new_install: bool
