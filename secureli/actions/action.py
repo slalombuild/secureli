@@ -78,16 +78,17 @@ class Action(ABC):
         :param files: A List of files to scope the install to. This allows language
         detection to run on only a selected list of files when scanning the repo.
         """
-        if (
+
+        is_config_out_of_date = (
             self.action_deps.secureli_config.verify()
             == ConfigModels.VerifyConfigOutcome.OUT_OF_DATE
-        ):
-            update_config = self._update_secureli_config_only(always_yes)
-            if update_config.outcome != install.VerifyOutcome.UPDATE_SUCCEEDED:
-                self.action_deps.echo.error("seCureLI could not be verified.")
-                return install.VerifyResult(
-                    outcome=update_config.outcome,
-                )
+        )
+        if is_config_out_of_date:
+            update_result = self._update_config(always_yes)
+            did_update_fail = update_result is not None
+            if did_update_fail:
+                return update_result
+
         pre_commit_config_location_is_correct = self.action_deps.hooks_scanner.pre_commit.get_pre_commit_config_path_is_correct(
             folder_path
         )
@@ -173,6 +174,18 @@ class Action(ABC):
             return install.VerifyResult(
                 outcome=install.VerifyOutcome.UP_TO_DATE,
                 config=config,
+            )
+
+    def _update_config(self, always_yes: bool) -> install.VerifyResult:
+        """
+        Updates the secureli config
+        :param always_yes: Assume "Yes" to all prompts
+        """
+        update_config = self._update_secureli_config_only(always_yes)
+        if update_config.outcome != install.VerifyOutcome.UPDATE_SUCCEEDED:
+            self.action_deps.echo.error("seCureLI could not be verified.")
+            return install.VerifyResult(
+                outcome=update_config.outcome,
             )
 
     def _install_secureli(
