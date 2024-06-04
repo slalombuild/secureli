@@ -141,6 +141,7 @@ class Container(containers.DeclarativeContainer):
         PiiScannerService,
         repo_files=repo_files_repository,
         echo=echo,
+        ignored_extensions=config.pii_scanner.ignored_extensions
     )
 
     updater_service = providers.Factory(

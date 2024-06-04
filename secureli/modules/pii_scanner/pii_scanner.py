@@ -35,9 +35,14 @@ class PiiScannerService:
         self,
         repo_files: RepoFilesRepository,
         echo: EchoAbstraction,
+        ignored_extensions: list[str],
     ):
         self.repo_files = repo_files
         self.echo = echo
+        self.ignored_extensions = ignored_extensions
+        if ignored_extensions != IGNORED_EXTENSIONS:
+            # Make sure the original ignored extensions are always present
+            self.ignored_extensions = list(set(ignored_extensions + IGNORED_EXTENSIONS))
 
     def scan_repo(
         self,
@@ -96,7 +101,7 @@ class PiiScannerService:
 
     def _file_extension_excluded(self, filename) -> bool:
         _, file_extension = os.path.splitext(filename)
-        if file_extension in IGNORED_EXTENSIONS:
+        if file_extension in self.ignored_extensions:
             return True
 
         return False
