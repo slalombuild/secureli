@@ -126,9 +126,9 @@ secureli update --latest
 
 ## Configuration
 
-seCureLI is configurable via a .secureli.yaml file present in the root of your local repository.
-
 ### .secureli.yaml
+
+seCureLI is configurable via a `.secureli.yaml` file present in the root of your local repository.
 
 #### top level
 
@@ -165,6 +165,40 @@ seCureLI is configurable via a .secureli.yaml file present in the root of your l
 | Key       | Description                                                                                                                                                                              |
 | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `api_url` | The url endpoint to post telemetry logs to. This value is an alternative to setting the url as an environment variable. Note: The environment variable will precede this setting value |
+
+### pre-commit
+
+[pre-commit](https://pre-commit.com/) is used for configuring pre-commit hooks. The configuration file is `.secureli/.pre-commit-config.yaml`, relative to the root of your repo. For details on modifying this file, see the pre-commit documentation on [configuring hooks](https://pre-commit.com/#pre-commit-configyaml---hooks).
+
+#### Passing arguments to pre-commit hooks
+
+Special care needs to be taken when passing arguments to pre-commit hooks in `.pre-commit-config.yaml`. In particular, if you're passing parameters which themselves take arguments, you must ensure that both the parameter and its arguments are separate items in the array.
+
+Examples:
+
+**BAD**
+
+```yaml
+- args:
+  - --exclude files *.md
+```
+
+This is an array with a single element, `["--exclude files *.md"]`. This probably won't work as you're expecting.
+
+**GOOD**
+
+```yaml
+- args:
+  - --exclude files
+  - *.md
+```
+
+This is an array where the parameter and its argument are separate items; `["--exclude files", "*.md"]`
+
+**ALSO GOOD**
+```yaml
+- args: ["--exclude-files", "*.md"]
+```
 
 ### Using Observability Platform to Show Secret Detection Statistics
 
