@@ -52,7 +52,9 @@ def mock_re(mocker: MockerFixture) -> MagicMock:
 def pii_scanner_service(
     mock_repo_files_repository: MagicMock, mock_echo: MagicMock
 ) -> PiiScannerService:
-    return PiiScannerService(mock_repo_files_repository, mock_echo, ignored_extensions=IGNORED_EXTENSIONS)
+    return PiiScannerService(
+        mock_repo_files_repository, mock_echo, ignored_extensions=IGNORED_EXTENSIONS
+    )
 
 
 def test_that_pii_scanner_service_finds_potential_pii(
