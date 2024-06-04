@@ -48,5 +48,5 @@ def mock_language_support() -> MagicMock:
 @pytest.fixture()
 def mock_settings() -> MagicMock:
     mock_settings = MagicMock(SecureliRepository)
-    mock_settings.load = MagicMock(return_value = SecureliFile())
+    mock_settings.load = MagicMock(return_value=SecureliFile())
     return mock_settings

@@ -70,9 +70,11 @@ class UpdateAction(Action):
             re.compile(pattern)
             return True
         except:
-            self.action_deps.echo.warning(f'Invalid regex pattern detected: "{pattern}". Excluding pattern.\n')
+            self.action_deps.echo.warning(
+                f'Invalid regex pattern detected: "{pattern}". Excluding pattern.\n'
+            )
             return False
-        
+
     def _validate_pattern(self, pattern, patterns):
         """
         Checks the pattern is a valid Regex and is not already present in the patterns list
@@ -80,9 +82,11 @@ class UpdateAction(Action):
         param patterns: A reference list to check for duplicate values
         """
         if pattern in patterns:
-            self.action_deps.echo.warning(f'Duplicate scan pattern detected: "{pattern}". Excluding pattern.')
+            self.action_deps.echo.warning(
+                f'Duplicate scan pattern detected: "{pattern}". Excluding pattern.'
+            )
             return False
-        
+
         return self._validate_regex(pattern)
 
     def add_pattern(self, folder_path, patterns: List[str]):
@@ -92,15 +96,15 @@ class UpdateAction(Action):
         :param patterns: A user provided list of regex patterns to be saved
         """
 
-        #Algorithm Notes:
-        #for each pattern
+        # Algorithm Notes:
+        # for each pattern
         #   Check pattern is a valid regex
         #       if invalid, print warning and filter out pattern
         #   Check pattern is not present in custom_scan_patterns list
         #       if present, print warning and do not add duplicate
         #   Prevent repeated flags from being added twice
-        #add new patterns to custom_scan_patterns list
-        #save updated custom_scan_patterns list to secureli yaml file
+        # add new patterns to custom_scan_patterns list
+        # save updated custom_scan_patterns list to secureli yaml file
 
         saved_patterns = []
         settings = self.action_deps.settings.load(folder_path)
@@ -108,7 +112,11 @@ class UpdateAction(Action):
             saved_patterns = settings.scan_patterns.custom_scan_patterns
 
         # Use a set comprehension to prevent flag duplicates
-        new_patterns = { pattern for pattern in patterns if self._validate_pattern(pattern, saved_patterns)}
+        new_patterns = {
+            pattern
+            for pattern in patterns
+            if self._validate_pattern(pattern, saved_patterns)
+        }
         saved_patterns.extend(new_patterns)
 
         if len(saved_patterns) > 0:

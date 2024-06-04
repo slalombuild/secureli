@@ -14,11 +14,14 @@ class RepoFilesSettings(BaseSettings):
     ignored_file_extensions: list[str] = Field(default=default_ignored_extensions)
     exclude_file_patterns: list[str] = Field(default=[])
 
+
 class CustomScanSettings(BaseSettings):
     """
     Settings that maintain user defined custom scan patterns
     """
+
     custom_scan_patterns: list[str] = Field(default=[])
+
 
 class EchoSettings(BaseSettings):
     """
