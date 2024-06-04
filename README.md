@@ -15,9 +15,9 @@ seCureLI isn’t a magic tool that makes things secure because you have it. It e
 
 Looking to contribute? Read our [CONTRIBUTING.md](https://github.com/slalombuild/secureli/blob/main/CONTRIBUTING.md)
 
-# Installation
+## Installation
 
-## Homebrew
+### Homebrew
 
 To install seCureLI via homebrew, issue the following commands
 
@@ -26,7 +26,7 @@ brew tap slalombuild/secureli
 brew install secureli
 ```
 
-## pip (Package Installer for Python)
+### pip (Package Installer for Python)
 
 To install seCureLI via pip, issue the following commands
 
@@ -34,9 +34,9 @@ To install seCureLI via pip, issue the following commands
 pip install secureli
 ```
 
-# Usage
+## Usage
 
-## Help
+### Help
 
 Once installed you can see the latest documentation for seCureLI by entering the following on a command prompt:
 
@@ -68,7 +68,7 @@ When invoking these commands, you can combine the short versions into a single f
 % secureli init -ry
 ```
 
-## Init
+### Init
 
 After seCureLI is installed, you can use it to configure your local git repository with a set of pre-commit hooks appropriate for your repo, based on the languages found in your repo's source code files.
 
@@ -80,7 +80,7 @@ All you need to do is run:
 
 Running `secureli init` will allow seCureLI to detect the languages in your repo, install pre-commit, install all the appropriate pre-commit hooks for your local repo, run a scan for secrets in your local repo, and update the installed hooks.
 
-## Scan
+### Scan
 
 To manually trigger a scan, run:
 
@@ -90,7 +90,7 @@ To manually trigger a scan, run:
 
 This will run through all hooks and custom scans, unless a `--specific-test` option is used. The default is to scan staged files only. To scan all files instead, use the `--mode all-files` option.
 
-### PII Scan
+#### PII Scan
 
 seCureLI utilizes its own PII scan, rather than using an existing pre-commit hook. To exclude a line from being flagged by the PII scanner, you can use a `disable-pii-scan` marker in a comment to disable the scan for that line.
 
@@ -98,9 +98,9 @@ seCureLI utilizes its own PII scan, rather than using an existing pre-commit hoo
 test_var = "some dummy data I don't want scanned" # disable-pii-scan
 ```
 
-# Upgrade
+## Upgrade
 
-## Upgrading seCureLI via Homebrew
+### Upgrading seCureLI via Homebrew
 
 If you installed seCureLI using Homebrew, you can use the standard homebrew update command to pull down the latest formula.
 
@@ -108,7 +108,7 @@ If you installed seCureLI using Homebrew, you can use the standard homebrew upda
 brew update
 ```
 
-## Upgrading via pip
+### Upgrading via pip
 
 If you installed seCureLI using pip, you can use the following command to upgrade to the latest version of seCureLI.
 
@@ -116,7 +116,7 @@ If you installed seCureLI using pip, you can use the following command to upgrad
 pip install --upgrade secureli
 ```
 
-## Upgrading pre-commit hooks for repo
+### Upgrading pre-commit hooks for repo
 
 In order to upgrade to the latest released version of each pre-commit hook configured for your repo, use the following command.
 
@@ -124,13 +124,13 @@ In order to upgrade to the latest released version of each pre-commit hook confi
 secureli update --latest
 ```
 
-# Configuration
+## Configuration
 
 seCureLI is configurable via a .secureli.yaml file present in the root of your local repository.
 
-## .secureli.yaml
+### .secureli.yaml
 
-### top level
+#### top level
 
 | Key                | Description                                                                                                        |
 |--------------------|--------------------------------------------------------------------------------------------------------------------|
@@ -140,7 +140,7 @@ seCureLI is configurable via a .secureli.yaml file present in the root of your l
 | `pii_scanner`      | Includes options for seCureLI's PII scanner                                                                        |
 | `telemetry`        | Includes options for seCureLI telemetry/api logging                                                                |
 
-### repo_files
+#### repo_files
 
 | Key                       | Description                                                                                                                                                                                                                                                             |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -148,30 +148,30 @@ seCureLI is configurable via a .secureli.yaml file present in the root of your l
 | `ignored_file_extensions` | Which file extensions not to consider during language analysis.                                                                                                                                                                                                         |
 | `exclude_file_patterns`   | Which file patterns to ignore during language analysis and code analysis execution. Use a typical file pattern you might find in a .gitignore file, such as `*.py` or `tests/`. Certain patterns you will have to wrap in double-quotes for the entry to be valid YAML. |
 
-### echo
+#### echo
 
 | Key     | Description                                                                                                                                        |
 | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `level` | The log level to display to the user. Defaults to ERROR, which includes `error` and `print` messages, without including warnings or info messages. |
 
-### pii_scanner
+#### pii_scanner
 
 | Key                  | Description                                                    |
 |----------------------|----------------------------------------------------------------|
 | `ignored_extensions` | The extensions of files to ignore in addition to the defaults. |
 
-### telemetry
+#### telemetry
 
 | Key       | Description                                                                                                                                                                              |
 | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `api_url` | The url endpoint to post telemetry logs to. This value is an alternative to setting the url as an environment variable. Note: The environment variable will precede this setting value |
 
-## Using Observability Platform to Show Secret Detection Statistics
+### Using Observability Platform to Show Secret Detection Statistics
 
 seCureLI can send secret detection events to an observability platform, such as New Relic. Other platforms may also work, but have not been tested.
 Should you need seCureLI to work with other platforms, please create a new issue in github, or contribute to the open source project.
 
-### Steps for New Relic
+#### Steps for New Relic
 
 - Assuming, seCureLI has been setup and installed, sign up to New Relic Log Platform https://docs.newrelic.com/docs/logs/log-api/introduction-log-api/
 - Retrieve API_KEY and API_ENDPOINT from New Relic. API_ENDPOINT for New Relic should be https://log-api.newrelic.com/log/v1
