@@ -5,6 +5,7 @@ import builtins
 import contextlib, io
 from pathlib import Path
 from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
+from secureli.modules.shared.consts.pii import IGNORED_EXTENSIONS
 from secureli.modules.shared.models.scan import ScanMode
 
 
@@ -51,7 +52,7 @@ def mock_re(mocker: MockerFixture) -> MagicMock:
 def pii_scanner_service(
     mock_repo_files_repository: MagicMock, mock_echo: MagicMock
 ) -> PiiScannerService:
-    return PiiScannerService(mock_repo_files_repository, mock_echo)
+    return PiiScannerService(mock_repo_files_repository, mock_echo, ignored_extensions=IGNORED_EXTENSIONS)
 
 
 def test_that_pii_scanner_service_finds_potential_pii(
