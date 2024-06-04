@@ -133,10 +133,11 @@ seCureLI is configurable via a .secureli.yaml file present in the root of your l
 ### top level
 
 | Key                | Description                                                                                                        |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------ |
+|--------------------|--------------------------------------------------------------------------------------------------------------------|
 | `repo_files`       | Affects how seCureLI will interpret the repository, both for language analysis and as it executes various linters. |
 | `echo`             | Adjusts how seCureLI will print information to the user.                                                           |
 | `language_support` | Affects seCureLI's language analysis and support phase.                                                            |
+| `pii_scanner`      | Includes options for seCureLI's PII scanner                                                                        |
 | `telemetry`        | Includes options for seCureLI telemetry/api logging                                                                |
 
 ### repo_files
@@ -152,6 +153,12 @@ seCureLI is configurable via a .secureli.yaml file present in the root of your l
 | Key     | Description                                                                                                                                        |
 | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `level` | The log level to display to the user. Defaults to ERROR, which includes `error` and `print` messages, without including warnings or info messages. |
+
+### pii_scanner
+
+| Key                  | Description                                                    |
+|----------------------|----------------------------------------------------------------|
+| `ignored_extensions` | The extensions of files to ignore in addition to the defaults. |
 
 ### telemetry
 
