@@ -180,7 +180,7 @@ Examples:
 
 ```yaml
 - args:
-  - --exclude files *.md
+  - --exclude-files *.md
 ```
 
 This is an array with a single element, `["--exclude files *.md"]`. This probably won't work as you're expecting.
@@ -189,7 +189,7 @@ This is an array with a single element, `["--exclude files *.md"]`. This probabl
 
 ```yaml
 - args:
-  - --exclude files
+  - --exclude-files
   - *.md
 ```
 
