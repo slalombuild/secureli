@@ -65,6 +65,15 @@ def mock_pii_scanner() -> MagicMock:
 
 
 @pytest.fixture()
+def mock_custom_scanner() -> MagicMock:
+    mock_custom_scanner = MagicMock()
+    mock_custom_scanner.scan_repo.return_value = ScanResult(
+        successful=True, failures=[]
+    )
+    return mock_custom_scanner
+
+
+@pytest.fixture()
 def mock_updater() -> MagicMock:
     mock_updater = MagicMock()
     return mock_updater
@@ -133,12 +142,14 @@ def action_deps(
 def scan_action(
     action_deps: ActionDependencies,
     mock_pii_scanner: MagicMock,
+    mock_custom_scanner: MagicMock,
     mock_git_repo: MagicMock,
 ) -> ScanAction:
     return ScanAction(
         action_deps=action_deps,
         hooks_scanner=action_deps.hooks_scanner,
         pii_scanner=mock_pii_scanner,
+        custom_scanner=mock_custom_scanner,
         git_repo=mock_git_repo,
     )
 
@@ -153,6 +164,7 @@ def test_that_scan_repo_errors_if_not_successful(
     scan_action: ScanAction,
     mock_hooks_scanner: MagicMock,
     mock_pii_scanner: MagicMock,
+    mock_custom_scanner: MagicMock,
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
@@ -164,6 +176,11 @@ def test_that_scan_repo_errors_if_not_successful(
     mock_pii_scanner.scan_repo.return_value = ScanResult(
         successful=False, output="So much PII", failures=[]
     )
+
+    mock_custom_scanner.scan_repo.return_vale = ScanResult(
+        successful=False, output="Horrible regex pattern matched", failures=[]
+    )
+
     mock_hooks_scanner.scan_repo.return_value = ScanResult(
         successful=False, output="Bad Error", failures=[]
     )

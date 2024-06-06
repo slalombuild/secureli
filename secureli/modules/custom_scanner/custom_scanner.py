@@ -89,13 +89,6 @@ class CustomScannerService:
             failures=scan_failures,
         )
 
-    def _file_excluded(self, filename) -> bool:
-        print("FILE name!!", filename)
-        _, file_extension = os.path.splitext(filename)
-        # return True
-
-        return False
-
     def _get_files_list(
         self,
         folder_path: Path,
