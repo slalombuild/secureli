@@ -137,7 +137,11 @@ class ScanAction(action.Action):
         )
 
         scan_result = utilities.merge_scan_results(
-            [pii_scan_result, hooks_scan_result, custom_scan_result]
+            [
+                pii_scan_result,
+                custom_scan_result,
+                hooks_scan_result,
+            ]
         )
 
         details = scan_result.output or "Unknown output during scan"
@@ -151,7 +155,6 @@ class ScanAction(action.Action):
         individual_failure_count = utilities.convert_failures_to_failure_count(
             scan_result.failures
         )
-        temp = "BLAGH.py"
 
         log_data = (
             self.action_deps.logging.success(LogAction.scan)
