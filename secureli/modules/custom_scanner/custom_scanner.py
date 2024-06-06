@@ -147,7 +147,7 @@ class CustomScannerService:
         """
         CHECK_STR = "check for custom RegEx"
         MAX_RESULT_LENGTH = (
-            82  # this aims to align with the results output by pre-commit hooks
+            93  # this aims to align with the results output by pre-commit hooks
         )
 
         result = (
