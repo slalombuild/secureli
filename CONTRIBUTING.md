@@ -2,6 +2,38 @@
 
 Thank you for making seCureLI better! We look forward to your contribution.
 
+## Table of Contents <!-- omit in toc -->
+
+- [Contributing to seCureLI](#contributing-to-secureli)
+  - [Pull Requests](#pull-requests)
+- [Environment Requirements](#environment-requirements)
+  - [Supported Languages](#supported-languages)
+  - [Python 3.9.9](#python-399)
+  - [Setup macOS](#setup-macos)
+  - [Setup Windows™](#setup-windows)
+  - [Setup Linux](#setup-linux)
+- [Setup (all Operating Systems)](#setup-all-operating-systems)
+- [Development with PyCharm](#development-with-pycharm)
+  - [Setup](#setup)
+  - [Create your first Run/Debug Configuration](#create-your-first-rundebug-configuration)
+  - [Testing your Init Configuration](#testing-your-init-configuration)
+  - [Creating the remaining Run/Debug Configurations](#creating-the-remaining-rundebug-configurations)
+- [Development with VS Code](#development-with-vs-code)
+- [Building seCureLI Docker Containers behind a corporate proxy](#building-secureli-docker-containers-behind-a-corporate-proxy)
+- [seCureLI Architecture](#secureli-architecture)
+  - [Main](#main)
+  - [Container](#container)
+  - [Actions](#actions)
+  - [Services](#services)
+    - [Scanning Services](#scanning-services)
+  - [Abstractions](#abstractions)
+  - [APIs \& Repositories](#apis--repositories)
+  - [Third Party Dependencies](#third-party-dependencies)
+    - [Dockerfiles](#dockerfiles)
+  - [Best Practices](#best-practices)
+- [Contributors](#contributors)
+
+
 ## Pull Requests
 
 This project requires a single approval
