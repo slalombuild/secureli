@@ -106,6 +106,16 @@ def mock_default_settings(mock_settings_repository: MagicMock) -> MagicMock:
 
 
 @pytest.fixture()
+def mock_settings_no_scan_patterns(mock_settings_repository: MagicMock) -> MagicMock:
+    mock_echo_settings = RepositoryModels.EchoSettings(level=Level.info)
+    mock_settings_file = repo_settings.SecureliFile(echo=mock_echo_settings)
+    mock_settings_file.scan_patterns = None
+    mock_settings_repository.load.return_value = mock_settings_file
+
+    return mock_settings_repository
+
+
+@pytest.fixture()
 def mock_pass_install_verification(
     mock_secureli_config: MagicMock, mock_language_support: MagicMock
 ):
@@ -201,6 +211,7 @@ def test_that_scan_repo_scans_if_installed(
     mock_language_support: MagicMock,
     mock_hooks_scanner: MagicMock,
     mock_language_analyzer: MagicMock,
+    mock_settings_no_scan_patterns: MagicMock,
 ):
     mock_language_analyzer.analyze.return_value = AnalyzeResult(
         language_proportions={"RadLang": 1.0},
