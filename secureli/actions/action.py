@@ -375,6 +375,7 @@ class Action(ABC):
         """
         Detects programming languages present in the repository
         :param folder_path: The folder path to initialize the repo for
+        :param files: A List of files to scope the install to. This allows language detection to run on only a selected list of files when scanning the repo.
         :return: A list of all languages found in the repository
         """
 
