@@ -69,7 +69,29 @@ _Note about the C Compiler: Certain dependencies are implemented as C extensions
 
 ## Setup Windows™
 
-Windows™ contributing setup will be coming soon.
+To develop on Windows, you'll first need to install WSL2 on your machine by running `wsl --install` from a PowerShell or Windows Command Prompt. By default, WSL2 will be installed instead of the older WSL1. WSL2 utilizes virtualization technology to run a complete Linux operating system environment, enabling us to develop against a Linux distribution (Ubuntu is used by default), rather than Windows.
+
+After WSL has been installed, open a WSL terminal by searching for WSL on your system.
+
+In the WSL terminal, run the following commands:
+
+- `sudo apt update`
+- `sudo apt install git curl`
+- `curl -sSL https://install.python-poetry.org | python3 -`
+- `curl -fsSL https://get.docker.com -o get-docker.sh`
+- `sudo sh get-docker.sh`
+- This next step may not be necessary in the future, but as of June 5, 2024, there is an issue with iptables when running Docker on new versions of Ubuntu, described here https://github.com/docker/for-linux/issues/1437. To remedy this, run the following: `sudo update-alternatives --config iptables` type `1` when prompted.
+
+Potential Issues:
+Unsupported Python version when exectuing secureli commands. If you already have WSL2 installed with an older version of Ubuntu, you may need to update Ubuntu so you have access to a newer version of Python required by secureli. To update Ubuntu to the latest version:
+  - in a WSL terminal, run `sudo apt update && sudo apt full-upgrade`
+  - in a PowerShell or Command Prompt terminal, run `wsl --terminate Ubuntu` this will close any open WSL terminals
+  - open a new WSL terminal, and run `sudo do-release-upgrade`
+
+IDE Issues:
+If you're planning on using Visual Studio Code as an IDE, you'll want to always start it from the WSL terminal.
+This can be done by running `code .` in a WSL terminal while in the root directory of your local secureli Git repository. Doing this will allow Visual Studio Code access to your poetry environment configured in WSL, which gives Visual Studio Code the ability to resolve dependency packages enabling features like auto-complete. See the Development with VS Code section for more info on configuring Visual Studio Code.
+
 
 ## Setup Linux
 
