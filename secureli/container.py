@@ -1,5 +1,6 @@
 from dependency_injector import containers, providers
 
+from secureli.modules.custom_scans import CustomScannersService
 from secureli.modules.shared.abstractions.echo import TyperEcho
 from secureli.modules.shared.abstractions.lexer_guesser import PygmentsLexerGuesser
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
@@ -144,6 +145,11 @@ class Container(containers.DeclarativeContainer):
         ignored_extensions=config.pii_scanner.ignored_extensions,
     )
 
+    """The service that orchestrates running custom scans (PII, Regex, etc.)"""
+    custom_scanner_service = providers.Factory(
+        CustomScannersService, pii_scanner=pii_scanner_service
+    )
+
     updater_service = providers.Factory(
         UpdaterService,
         pre_commit=pre_commit_abstraction,
@@ -183,7 +189,7 @@ class Container(containers.DeclarativeContainer):
         ScanAction,
         action_deps=action_deps,
         hooks_scanner=hooks_scanner_service,
-        pii_scanner=pii_scanner_service,
+        custom_scanners=custom_scanner_service,
         git_repo=git_repo,
     )
 
