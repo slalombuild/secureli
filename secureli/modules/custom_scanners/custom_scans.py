@@ -45,7 +45,9 @@ class CustomScannersService:
             pii_scan_result = self.pii_scanner.scan_repo(
                 folder_path, scan_mode, files=files
             )
-            regex_scan_result = None
+            regex_scan_result = self.custom_regex_scanner.scan_repo(
+                folder_path=folder_path, scan_mode=scan_mode, files=files
+            )
             custom_scan_results = utilities.merge_scan_results(
                 [pii_scan_result, regex_scan_result]
             )
@@ -56,14 +58,14 @@ class CustomScannersService:
             return None
 
         # Run the specified custom scan only
-        custom_scan_results = None
+        scan_results = None
         if custom_scan_id == CustomScanId.PII:
-            custom_scan_results = self.pii_scanner.scan_repo(
+            scan_results = self.pii_scanner.scan_repo(
                 folder_path, scan_mode, files=files
             )
         elif custom_scan_id == CustomScanId.CUSTOM_REGEX:
-            custom_scan_result = self.custom_regex_scanner.scan_repo(
+            scan_results = self.custom_regex_scanner.scan_repo(
                 folder_path=folder_path, scan_mode=scan_mode, files=files
             )
 
-        return custom_scan_results
+        return scan_results
