@@ -6,7 +6,7 @@ from secureli.modules.observability.observability_services.logging import Loggin
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.modules.observability.consts.logging import TELEMETRY_DEFAULT_ENDPOINT
 from secureli.modules.shared.models.echo import Color
-from secureli.modules.shared.models.install import VerifyOutcome, VerifyResult
+from secureli.modules.shared.models import install
 from secureli.modules.shared.models import language
 from secureli.modules.shared.models.logging import LogAction
 from secureli.modules.shared.models.scan import ScanMode
@@ -68,7 +68,8 @@ class Action(ABC):
         reset: bool,
         always_yes: bool,
         files: list[Path],
-    ) -> VerifyResult:
+        action_source: install.ActionSource,
+    ) -> install.VerifyResult:
         """
         Installs, upgrades or verifies the current seCureLI installation
         :param folder_path: The folder path to initialize the repo for
@@ -77,16 +78,17 @@ class Action(ABC):
         :param files: A List of files to scope the install to. This allows language
         detection to run on only a selected list of files when scanning the repo.
         """
-        if (
+
+        is_config_out_of_date = (
             self.action_deps.secureli_config.verify()
             == ConfigModels.VerifyConfigOutcome.OUT_OF_DATE
-        ):
-            update_config = self._update_secureli_config_only(always_yes)
-            if update_config.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
-                self.action_deps.echo.error("seCureLI could not be verified.")
-                return VerifyResult(
-                    outcome=update_config.outcome,
-                )
+        )
+        if is_config_out_of_date:
+            update_result = self._update_config(always_yes)
+            did_update_fail = update_result is not None
+            if did_update_fail:
+                return update_result
+
         pre_commit_config_location_is_correct = self.action_deps.hooks_scanner.pre_commit.get_pre_commit_config_path_is_correct(
             folder_path
         )
@@ -100,19 +102,29 @@ class Action(ABC):
             and not pre_commit_config_location_is_correct
         )
         if pre_commit_to_preserve:
-            update_result: VerifyResult = (
+            update_result: install.VerifyResult = (
                 self._update_secureli_pre_commit_config_location(
                     folder_path, always_yes
                 )
             )
 
-            if update_result.outcome != VerifyOutcome.UPDATE_SUCCEEDED:
+            if update_result.outcome != install.VerifyOutcome.UPDATE_SUCCEEDED:
                 self.action_deps.echo.error(
                     "seCureLI .pre-commit-config.yaml could not be moved."
                 )
                 return update_result
             else:
                 preferred_config_path = update_result.file_path
+
+        if (
+            not pre_commit_config_location_is_correct
+            and not pre_commit_to_preserve
+            and action_source == install.ActionSource.SCAN
+        ):
+            self.action_deps.echo.error(
+                "seCureLI has not been initialized on this branch."
+            )
+            return install.VerifyResult(outcome=install.VerifyOutcome.INSTALL_FAILED)
 
         config = self.get_secureli_config(reset=reset)
         languages = []
@@ -124,13 +136,15 @@ class Action(ABC):
                 self.action_deps.echo.warning(
                     f"Newly detected languages are unsupported by seCureLI"
                 )
-                return VerifyResult(outcome=VerifyOutcome.UP_TO_DATE, config=config)
+                return install.VerifyResult(
+                    outcome=install.VerifyOutcome.UP_TO_DATE, config=config
+                )
 
             self.action_deps.echo.error(
                 f"seCureLI could not be installed due to an error: {str(e)}"
             )
-            return VerifyResult(
-                outcome=VerifyOutcome.INSTALL_FAILED,
+            return install.VerifyResult(
+                outcome=install.VerifyOutcome.INSTALL_FAILED,
             )
 
         newly_detected_languages = [
@@ -157,9 +171,21 @@ class Action(ABC):
                     f"following language(s): {format_sentence_list(languages)}"
                 )
             )
-            return VerifyResult(
-                outcome=VerifyOutcome.UP_TO_DATE,
+            return install.VerifyResult(
+                outcome=install.VerifyOutcome.UP_TO_DATE,
                 config=config,
+            )
+
+    def _update_config(self, always_yes: bool) -> install.VerifyResult:
+        """
+        Updates the secureli config
+        :param always_yes: Assume "Yes" to all prompts
+        """
+        update_config = self._update_secureli_config_only(always_yes)
+        if update_config.outcome != install.VerifyOutcome.UPDATE_SUCCEEDED:
+            self.action_deps.echo.error("seCureLI could not be verified.")
+            return install.VerifyResult(
+                outcome=update_config.outcome,
             )
 
     def _install_secureli(
@@ -169,7 +195,7 @@ class Action(ABC):
         install_languages: list[str],
         always_yes: bool,
         pre_commit_config_location: Path = None,
-    ) -> VerifyResult:
+    ) -> install.VerifyResult:
         """
         Installs seCureLI into the given folder path and returns the new configuration
         :param folder_path: The folder path to initialize the repo for
@@ -181,18 +207,13 @@ class Action(ABC):
 
         # pre-install
         new_install = len(detected_languages) == len(install_languages)
-        should_install = self._prompt_to_install(
-            install_languages, always_yes, new_install
-        )
-        if not should_install:
-            if new_install:
-                self.action_deps.echo.error("User canceled install process")
-                return VerifyResult(
-                    outcome=VerifyOutcome.INSTALL_CANCELED,
-                )
 
-            self.action_deps.echo.warning("Newly detected languages were not installed")
-            return VerifyResult(outcome=VerifyOutcome.UP_TO_DATE)
+        pre_install_result = self._pre_install_checks(
+            new_install, install_languages, always_yes
+        )
+        did_pre_install_fail = pre_install_result is not None
+        if did_pre_install_fail:
+            return pre_install_result
 
         settings = self.action_deps.settings.load(folder_path)
 
@@ -236,23 +257,49 @@ class Action(ABC):
             color=Color.CYAN,
             bold=True,
         )
-        return VerifyResult(
-            outcome=VerifyOutcome.INSTALL_SUCCEEDED,
+        return install.VerifyResult(
+            outcome=install.VerifyOutcome.INSTALL_SUCCEEDED,
             config=config,
         )
+
+    def _pre_install_checks(
+        self,
+        new_install: bool,
+        install_languages: list[str],
+        always_yes: bool,
+    ) -> install.VerifyResult:
+        """
+        Checks if secureli should not be installed due to user cancelllation or failure to install newly detected languages
+        :param new_install: boolean flag to determine if this is a new install
+        :param install_languages: list of specific langugages to install secureli features for
+        :param always_yes: Assume "Yes" to all prompts
+        :return: None or an install.VerifyResult if secureli should not be insalled
+        """
+        should_install = self._prompt_to_install(
+            install_languages, always_yes, new_install
+        )
+        if not should_install:
+            if new_install:
+                self.action_deps.echo.error("User canceled install process")
+                return install.VerifyResult(
+                    outcome=install.VerifyOutcome.INSTALL_CANCELED,
+                )
+
+            self.action_deps.echo.warning("Newly detected languages were not installed")
+            return install.VerifyResult(outcome=install.VerifyOutcome.UP_TO_DATE)
 
     def _prompt_to_install(
         self, languages: list[str], always_yes: bool, new_install: bool
     ) -> bool:
         """
-        Prompts user to determine if secureli should be installed or not
+        Prompts user to determine if secureli should be initialized or not
         :param languages: List of language names to display
         :param always_yes: Assume "Yes" to all prompts
         :param new_install: Used to determine if the install is new or
         if additional languages are being added
         """
 
-        new_install_message = "seCureLI has not yet been installed, install now?"
+        new_install_message = "seCureLI has not yet been initialized, initialize now?"
         add_languages_message = (
             f"seCureLI has not been installed for the following language(s): "
             f"{format_sentence_list(languages)}, install now?"
@@ -379,7 +426,7 @@ class Action(ABC):
 
         return lint_languages
 
-    def _update_secureli(self, always_yes: bool) -> VerifyResult:
+    def _update_secureli(self, always_yes: bool) -> install.VerifyResult:
         """
         Prompts the user to update to the latest secureli install.
         :param always_yes: Assume "Yes" to all prompts
@@ -394,7 +441,7 @@ class Action(ABC):
 
         if not update_confirmed:
             self.action_deps.echo.print("\nUpdate declined.\n")
-            return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)
+            return install.VerifyResult(outcome=install.VerifyOutcome.UPDATE_CANCELED)
 
         update_result = self.action_deps.updater.update()
         details = update_result.output
@@ -402,11 +449,11 @@ class Action(ABC):
             self.action_deps.echo.print(details)
 
         if update_result.successful:
-            return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
+            return install.VerifyResult(outcome=install.VerifyOutcome.UPDATE_SUCCEEDED)
         else:
-            return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
+            return install.VerifyResult(outcome=install.VerifyOutcome.UPDATE_FAILED)
 
-    def _update_secureli_config_only(self, always_yes: bool) -> VerifyResult:
+    def _update_secureli_config_only(self, always_yes: bool) -> install.VerifyResult:
         self.action_deps.echo.print("seCureLI is using an out-of-date config.")
         response = always_yes or self.action_deps.echo.confirm(
             "Update configuration now?",
@@ -414,21 +461,21 @@ class Action(ABC):
         )
         if not response:
             self.action_deps.echo.error("User canceled update process")
-            return VerifyResult(
-                outcome=VerifyOutcome.UPDATE_CANCELED,
+            return install.VerifyResult(
+                outcome=install.VerifyOutcome.UPDATE_CANCELED,
             )
 
         try:
             updated_config = self.action_deps.secureli_config.update()
             self.action_deps.secureli_config.save(updated_config)
 
-            return VerifyResult(outcome=VerifyOutcome.UPDATE_SUCCEEDED)
+            return install.VerifyResult(outcome=install.VerifyOutcome.UPDATE_SUCCEEDED)
         except:
-            return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
+            return install.VerifyResult(outcome=install.VerifyOutcome.UPDATE_FAILED)
 
     def _update_secureli_pre_commit_config_location(
         self, folder_path: Path, always_yes: bool
-    ) -> VerifyResult:
+    ) -> install.VerifyResult:
         """
         In order to provide an upgrade path for existing users of secureli,
         we will prompt users to move their .pre-commit-config.yaml into the .secureli/ directory.
@@ -453,11 +500,12 @@ class Action(ABC):
                         folder_path
                     )
                 )
-                return VerifyResult(
-                    outcome=VerifyOutcome.UPDATE_SUCCEEDED, file_path=new_file_path
+                return install.VerifyResult(
+                    outcome=install.VerifyOutcome.UPDATE_SUCCEEDED,
+                    file_path=new_file_path,
                 )
             except:
-                return VerifyResult(outcome=VerifyOutcome.UPDATE_FAILED)
+                return install.VerifyResult(outcome=install.VerifyOutcome.UPDATE_FAILED)
         else:
             self.action_deps.echo.warning(".pre-commit-config.yaml migration declined")
             deprecated_location = (
@@ -465,8 +513,9 @@ class Action(ABC):
                     folder_path
                 )
             )
-            return VerifyResult(
-                outcome=VerifyOutcome.UPDATE_CANCELED, file_path=deprecated_location
+            return install.VerifyResult(
+                outcome=install.VerifyOutcome.UPDATE_CANCELED,
+                file_path=deprecated_location,
             )
 
     def _initial_hooks_update(self, folder_path: Path):

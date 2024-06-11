@@ -8,7 +8,7 @@ from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.actions import action
 from secureli.modules.shared.abstractions.repo import GitRepo
 from secureli.modules.shared.models.exit_codes import ExitCode
-from secureli.modules.shared.models.install import VerifyOutcome, VerifyResult
+from secureli.modules.shared.models import install
 from secureli.modules.shared.models.logging import LogAction
 from secureli.modules.shared.models.publish_results import PublishResultsOption
 from secureli.modules.shared.models.result import Result
@@ -30,10 +30,10 @@ class ScanAction(action.Action):
 
     """Any verification outcomes that would cause us to not proceed to scan."""
     halting_outcomes = [
-        VerifyOutcome.INSTALL_FAILED,
-        VerifyOutcome.INSTALL_CANCELED,
-        VerifyOutcome.UPDATE_FAILED,
-        VerifyOutcome.UPDATE_CANCELED,
+        install.VerifyOutcome.INSTALL_FAILED,
+        install.VerifyOutcome.INSTALL_CANCELED,
+        install.VerifyOutcome.UPDATE_FAILED,
+        install.VerifyOutcome.UPDATE_CANCELED,
     ]
 
     def __init__(
@@ -104,6 +104,7 @@ class ScanAction(action.Action):
             False,
             always_yes,
             scan_files,
+            action_source=install.ActionSource.SCAN,
         )
 
         # Check if pre-commit hooks are up-to-date
@@ -180,7 +181,7 @@ class ScanAction(action.Action):
         else:
             sys.exit(ExitCode.SCAN_ISSUES_DETECTED.value)
 
-    def _check_secureli_hook_updates(self, folder_path: Path) -> VerifyResult:
+    def _check_secureli_hook_updates(self, folder_path: Path) -> install.VerifyResult:
         """
         Queries repositories referenced by pre-commit hooks to check
         if we have the latest revisions listed in the .pre-commit-config.yaml file
@@ -198,7 +199,7 @@ class ScanAction(action.Action):
 
         if not repos_to_update:
             self.action_deps.echo.print("No hooks to update")
-            return VerifyResult(outcome=VerifyOutcome.UP_TO_DATE)
+            return install.VerifyResult(outcome=install.VerifyOutcome.UP_TO_DATE)
 
         for repo, revs in repos_to_update.items():
             self.action_deps.echo.debug(
@@ -208,7 +209,7 @@ class ScanAction(action.Action):
             "You have out-of-date pre-commit hooks. Run `secureli update` to update them."
         )
         # Since we don't actually perform the updates here, return an outcome of UPDATE_CANCELLED
-        return VerifyResult(outcome=VerifyOutcome.UPDATE_CANCELED)
+        return install.VerifyResult(outcome=install.VerifyOutcome.UPDATE_CANCELED)
 
     def _get_commited_files(self, scan_mode: ScanMode) -> list[Path]:
         """

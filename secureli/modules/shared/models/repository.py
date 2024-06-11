@@ -1,8 +1,18 @@
 from typing import Optional
 from pydantic import BaseModel, BaseSettings, Field
+
+from secureli.modules.shared.consts.pii import IGNORED_EXTENSIONS
 from secureli.modules.shared.consts.repository import default_ignored_extensions
 from secureli.modules.shared.models.echo import Level
 from secureli.modules.shared.models.language import LanguageSupportSettings
+
+
+class PiiScannerSettings(BaseSettings):
+    """
+    Settings that adjust how seCureLI evaluates the PII of the consuming repository.
+    """
+
+    ignored_extensions: list[str] = Field(default=IGNORED_EXTENSIONS)
 
 
 class RepoFilesSettings(BaseSettings):
@@ -84,3 +94,4 @@ class SecureliFile(BaseModel):
     language_support: Optional[LanguageSupportSettings] = Field(default=None)
     telemetry: Optional[TelemetrySettings] = None
     scan_patterns: Optional[CustomScanSettings] = None
+    pii_scanner: Optional[PiiScannerSettings] = None

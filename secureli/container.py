@@ -144,6 +144,7 @@ class Container(containers.DeclarativeContainer):
         PiiScannerService,
         repo_files=repo_files_repository,
         echo=echo,
+        ignored_extensions=config.pii_scanner.ignored_extensions,
     )
 
     custom_regex_scanner_service = providers.Factory(
