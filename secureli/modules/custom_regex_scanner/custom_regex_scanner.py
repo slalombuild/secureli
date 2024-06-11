@@ -14,7 +14,7 @@ from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.repositories.repo_files import RepoFilesRepository
 
 
-class CustomScanResult(pydantic.BaseModel):
+class CustomRegexScanResult(pydantic.BaseModel):
     """
     An individual result of potential custom RegEx found
     """
@@ -23,7 +23,7 @@ class CustomScanResult(pydantic.BaseModel):
     regex_pattern: str
 
 
-class CustomScannerService:
+class CustomRegexScannerService:
     """
     Scans the repo for potential custom RegEx
     """
@@ -56,7 +56,7 @@ class CustomScannerService:
             folder_path=folder_path, scan_mode=scan_mode, files=files
         )
         current_line_num = 0
-        custom_regex_found: dict[str, list[CustomScanResult]] = {}
+        custom_regex_found: dict[str, list[CustomRegexScanResult]] = {}
         custom_regex_found_files = set()
 
         for file_path in file_paths:
@@ -169,7 +169,7 @@ class CustomScannerService:
         return output
 
     def _generate_scan_output(
-        self, custom_regex_found: dict[str, list[CustomScanResult]], success: bool
+        self, custom_regex_found: dict[str, list[CustomRegexScanResult]], success: bool
     ) -> str:
         """
         Generates the scan output of the PII scan, listing all the areas where potential PII was found

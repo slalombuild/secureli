@@ -15,7 +15,9 @@ from secureli.modules.shared.models.result import Result
 from secureli.modules.observability.observability_services.logging import LoggingService
 from secureli.modules.core.core_services.scanner import HooksScannerService
 from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
-from secureli.modules.custom_scanner.custom_scanner import CustomScannerService
+from secureli.modules.custom_regex_scanner.custom_regex_scanner import (
+    CustomRegexScannerService,
+)
 from secureli.modules.shared.models.scan import ScanMode, ScanResult
 from secureli.settings import Settings
 from secureli.modules.shared import utilities
@@ -39,13 +41,13 @@ class ScanAction(action.Action):
         action_deps: action.ActionDependencies,
         hooks_scanner: HooksScannerService,
         pii_scanner: PiiScannerService,
-        custom_scanner: CustomScannerService,
+        custom_regex_scanner: CustomRegexScannerService,
         git_repo: GitRepo,
     ):
         super().__init__(action_deps)
         self.hooks_scanner = hooks_scanner
         self.pii_scanner = pii_scanner
-        self.custom_scanner = custom_scanner
+        self.custom_regex_scanner = custom_regex_scanner
         self.git_repo = git_repo
 
     def publish_results(
@@ -124,7 +126,7 @@ class ScanAction(action.Action):
                 folder_path, scan_mode, files=files
             )
 
-            custom_scan_result = self.custom_scanner.scan_repo(
+            custom_scan_result = self.custom_regex_scanner.scan_repo(
                 folder_path=folder_path,
                 scan_mode=scan_mode,
                 files=files,
