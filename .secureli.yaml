@@ -9,5 +9,8 @@ repo_files:
   - .png
   - .jpg
   max_file_size: 1000000
+scan_patterns:
+  custom_scan_patterns:
+  - foo
 telemetry:
   api_url: https://log-api.newrelic.com/log/v1

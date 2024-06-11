@@ -1,6 +1,6 @@
 import pytest
 from pytest_mock import MockerFixture
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 from pathlib import Path
 from secureli.modules.custom_regex_scanner.custom_regex_scanner import (
     CustomRegexScannerService,
@@ -26,7 +26,13 @@ def mock_echo() -> MagicMock:
 
 
 @pytest.fixture()
-def custom_regex_patterns() -> list[str]:
+def mock_settings() -> MagicMock:
+    mock_settings = MagicMock()
+    return mock_settings
+
+
+@pytest.fixture()
+def mock_custom_regex_patterns() -> list[str]:
     return [
         "\w*testing data"  # any mock files containing "testing data" should fail scan
     ]
@@ -56,22 +62,26 @@ def mock_re(mocker: MockerFixture) -> MagicMock:
 
 @pytest.fixture()
 def custom_regex_scanner_service(
-    mock_repo_files_repository: MagicMock, mock_echo: MagicMock
+    mock_repo_files_repository: MagicMock,
+    mock_echo: MagicMock,
+    mock_settings: MagicMock,
 ) -> CustomRegexScannerService:
-    return CustomRegexScannerService(mock_repo_files_repository, mock_echo)
+    return CustomRegexScannerService(
+        mock_repo_files_repository, mock_echo, mock_settings
+    )
 
 
 def test_that_custom_regex_scanner_service_finds_regex(
     custom_regex_scanner_service: CustomRegexScannerService,
     mock_repo_files_repository: MagicMock,
-    custom_regex_patterns: list[str],
-    mock_open_fn: MagicMock,
-    mock_re: MagicMock,
+    mock_custom_regex_patterns,
 ):
+    custom_regex_scanner_service._get_custom_scan_patterns = MagicMock()
+    custom_regex_scanner_service._get_custom_scan_patterns.return_value = (
+        mock_custom_regex_patterns
+    )
     scan_result = custom_regex_scanner_service.scan_repo(
-        folder_path=test_folder_path,
-        scan_mode=ScanMode.STAGED_ONLY,
-        custom_regex_patterns=custom_regex_patterns,
+        folder_path=test_folder_path, scan_mode=ScanMode.STAGED_ONLY
     )
 
     mock_repo_files_repository.list_staged_files.assert_called_once()
@@ -84,13 +94,9 @@ def test_that_custom_regex_scanner_service_finds_regex(
 def test_that_custom_regex_scanner_service_scans_all_files_when_specified(
     custom_regex_scanner_service: CustomRegexScannerService,
     mock_repo_files_repository: MagicMock,
-    custom_regex_patterns: list[str],
-    mock_open_fn: MagicMock,
 ):
     custom_regex_scanner_service.scan_repo(
-        folder_path=test_folder_path,
-        scan_mode=ScanMode.ALL_FILES,
-        custom_regex_patterns=custom_regex_patterns,
+        folder_path=test_folder_path, scan_mode=ScanMode.ALL_FILES
     )
 
     mock_repo_files_repository.list_repo_files.assert_called_once()
@@ -99,16 +105,11 @@ def test_that_custom_regex_scanner_service_scans_all_files_when_specified(
 def test_that_custom_regex_scanner_service_ignores_secureli_yaml(
     custom_regex_scanner_service: CustomRegexScannerService,
     mock_repo_files_repository: MagicMock,
-    custom_regex_patterns: list[str],
-    mock_open_fn: MagicMock,
-    mock_re: MagicMock,
 ):
     mock_repo_files_repository.list_staged_files.return_value = [".secureli.yaml"]
 
     scan_result = custom_regex_scanner_service.scan_repo(
-        folder_path=test_folder_path,
-        scan_mode=ScanMode.STAGED_ONLY,
-        custom_regex_patterns=custom_regex_patterns,
+        folder_path=test_folder_path, scan_mode=ScanMode.STAGED_ONLY
     )
 
     assert scan_result.successful == True
@@ -117,9 +118,6 @@ def test_that_custom_regex_scanner_service_ignores_secureli_yaml(
 def test_that_pii_scanner_service_only_scans_specific_files_if_provided(
     custom_regex_scanner_service: CustomRegexScannerService,
     mock_repo_files_repository: MagicMock,
-    custom_regex_patterns: list[str],
-    mock_open_fn: MagicMock,
-    mock_re: MagicMock,
 ):
     specified_file = "fake_file_path"
     ignored_file = "not-the-file-we-want"
@@ -131,7 +129,6 @@ def test_that_pii_scanner_service_only_scans_specific_files_if_provided(
         folder_path=test_folder_path,
         scan_mode=ScanMode.STAGED_ONLY,
         files=[specified_file],
-        custom_regex_patterns=custom_regex_patterns,
     )
 
     assert scan_result.successful == False
@@ -141,15 +138,12 @@ def test_that_pii_scanner_service_only_scans_specific_files_if_provided(
 
 def test_that_pii_scanner_prints_when_exceptions_encountered(
     custom_regex_scanner_service: CustomRegexScannerService,
-    custom_regex_patterns: list[str],
     mock_open_fn: MagicMock,
     mock_echo: MagicMock,
 ):
     mock_open_fn.side_effect = Exception("Oh no")
     custom_regex_scanner_service.scan_repo(
-        folder_path=test_folder_path,
-        scan_mode=ScanMode.STAGED_ONLY,
-        custom_regex_patterns=custom_regex_patterns,
+        folder_path=test_folder_path, scan_mode=ScanMode.STAGED_ONLY
     )
 
     mock_echo.print.assert_called_once()
