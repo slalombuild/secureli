@@ -17,7 +17,7 @@ class CustomScanId(str, Enum):
     """
 
     PII = "check-pii"
-    REGEX = "check-regex"
+    CUSTOM_REGEX = "check-regex"
 
 
 class CustomScannersService:
@@ -62,15 +62,9 @@ class CustomScannersService:
             custom_scan_results = self.pii_scanner.scan_repo(
                 folder_path, scan_mode, files=files
             )
-        elif custom_scan_id == CustomScanId.REGEX:
-            custom_regex_patterns = self.custom_regex_scanner._get_custom_scan_patterns(
-                folder_path=folder_path
-            )
+        elif custom_scan_id == CustomScanId.CUSTOM_REGEX:
             custom_scan_result = self.custom_regex_scanner.scan_repo(
-                folder_path=folder_path,
-                scan_mode=scan_mode,
-                files=files,
-                custom_regex_patterns=custom_regex_patterns,
+                folder_path=folder_path, scan_mode=scan_mode, files=files
             )
 
         return custom_scan_results
