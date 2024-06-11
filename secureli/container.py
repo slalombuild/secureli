@@ -20,7 +20,7 @@ from secureli.repositories.repo_settings import SecureliRepository
 from secureli.modules.shared.resources import read_resource
 from secureli.modules import language_analyzer
 from secureli.modules.observability.observability_services.logging import LoggingService
-from secureli.modules.core.core_services.scanner import HooksScannerService
+from secureli.modules.core.core_services.hook_scanner import HooksScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
 
 from secureli.modules.secureli_ignore import SecureliIgnoreService

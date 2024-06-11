@@ -12,7 +12,7 @@ from secureli.modules.shared.models import install
 from secureli.modules.shared.models.logging import LogAction
 from secureli.modules.shared.models.publish_results import PublishResultsOption
 from secureli.modules.shared.models.result import Result
-from secureli.modules.core.core_services.scanner import HooksScannerService
+from secureli.modules.core.core_services.hook_scanner import HooksScannerService
 from secureli.modules.shared.models.scan import ScanMode
 from secureli.settings import Settings
 from secureli.modules.shared import utilities
