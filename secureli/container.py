@@ -1,6 +1,10 @@
 from dependency_injector import containers, providers
 
-from secureli.modules.custom_scans import CustomScannersService
+from secureli.modules.custom_scanners.custom_regex_scanner.custom_regex_scanner import (
+    CustomRegexScannerService,
+)
+from secureli.modules.custom_scanners.custom_scans import CustomScannersService
+from secureli.modules.custom_scanners.pii_scanner.pii_scanner import PiiScannerService
 from secureli.modules.shared.abstractions.echo import TyperEcho
 from secureli.modules.shared.abstractions.lexer_guesser import PygmentsLexerGuesser
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
@@ -18,10 +22,7 @@ from secureli.modules import language_analyzer
 from secureli.modules.observability.observability_services.logging import LoggingService
 from secureli.modules.core.core_services.scanner import HooksScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
-from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
-from secureli.modules.custom_regex_scanner.custom_regex_scanner import (
-    CustomRegexScannerService,
-)
+
 from secureli.modules.secureli_ignore import SecureliIgnoreService
 from secureli.settings import Settings
 

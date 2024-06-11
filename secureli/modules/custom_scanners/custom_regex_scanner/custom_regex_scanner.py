@@ -212,16 +212,6 @@ class CustomRegexScannerService:
         return f"{start}{str}{end}"
 
     def _get_custom_scan_patterns(self, folder_path: Path) -> list[Path]:
-        settings = self.action_deps.settings.load(folder_path)
-        if (
-            settings.scan_patterns is not None
-            and settings.scan_patterns.custom_scan_patterns is not None
-        ):
-            custom_scan_patterns = settings.scan_patterns.custom_scan_patterns
-            return custom_scan_patterns
-        return []
-
-    def _get_custom_scan_patterns(self, folder_path: Path) -> list[Path]:
         settings = self.settings.load(folder_path)
         if (
             settings.scan_patterns is not None

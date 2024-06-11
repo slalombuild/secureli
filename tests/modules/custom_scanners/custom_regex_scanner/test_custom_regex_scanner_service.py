@@ -2,11 +2,14 @@ import pytest
 from pytest_mock import MockerFixture
 from unittest.mock import MagicMock, Mock, patch
 from pathlib import Path
-from secureli.modules.custom_regex_scanner.custom_regex_scanner import (
+
+from secureli.modules.custom_scanners.custom_regex_scanner.custom_regex_scanner import (
     CustomRegexScannerService,
 )
+from secureli.modules.shared.models.echo import Level
 from secureli.modules.shared.models.scan import ScanMode
-
+import secureli.modules.shared.models.repository as RepositoryModels
+from secureli.repositories import repo_settings
 
 test_folder_path = Path(".")
 
@@ -29,6 +32,16 @@ def mock_echo() -> MagicMock:
 def mock_settings() -> MagicMock:
     mock_settings = MagicMock()
     return mock_settings
+
+
+@pytest.fixture()
+def mock_settings_no_scan_patterns(mock_settings_repository: MagicMock) -> MagicMock:
+    mock_echo_settings = RepositoryModels.EchoSettings(level=Level.info)
+    mock_settings_file = repo_settings.SecureliFile(echo=mock_echo_settings)
+    mock_settings_file.scan_patterns = None
+    mock_settings_repository.load.return_value = mock_settings_file
+
+    return mock_settings_repository
 
 
 @pytest.fixture()
@@ -65,21 +78,23 @@ def custom_regex_scanner_service(
     mock_repo_files_repository: MagicMock,
     mock_echo: MagicMock,
     mock_settings: MagicMock,
+    mock_custom_regex_patterns: MagicMock,
 ) -> CustomRegexScannerService:
-    return CustomRegexScannerService(
+    regexService = CustomRegexScannerService(
         mock_repo_files_repository, mock_echo, mock_settings
     )
+    regexService._get_custom_scan_patterns = MagicMock()
+    regexService._get_custom_scan_patterns.return_value = mock_custom_regex_patterns
+    return regexService
 
 
 def test_that_custom_regex_scanner_service_finds_regex(
     custom_regex_scanner_service: CustomRegexScannerService,
     mock_repo_files_repository: MagicMock,
-    mock_custom_regex_patterns,
+    mock_open_fn: MagicMock,
+    mock_re: MagicMock,
 ):
-    custom_regex_scanner_service._get_custom_scan_patterns = MagicMock()
-    custom_regex_scanner_service._get_custom_scan_patterns.return_value = (
-        mock_custom_regex_patterns
-    )
+
     scan_result = custom_regex_scanner_service.scan_repo(
         folder_path=test_folder_path, scan_mode=ScanMode.STAGED_ONLY
     )
@@ -94,6 +109,7 @@ def test_that_custom_regex_scanner_service_finds_regex(
 def test_that_custom_regex_scanner_service_scans_all_files_when_specified(
     custom_regex_scanner_service: CustomRegexScannerService,
     mock_repo_files_repository: MagicMock,
+    mock_open_fn: MagicMock,
 ):
     custom_regex_scanner_service.scan_repo(
         folder_path=test_folder_path, scan_mode=ScanMode.ALL_FILES
@@ -105,6 +121,8 @@ def test_that_custom_regex_scanner_service_scans_all_files_when_specified(
 def test_that_custom_regex_scanner_service_ignores_secureli_yaml(
     custom_regex_scanner_service: CustomRegexScannerService,
     mock_repo_files_repository: MagicMock,
+    mock_open_fn: MagicMock,
+    mock_re: MagicMock,
 ):
     mock_repo_files_repository.list_staged_files.return_value = [".secureli.yaml"]
 
@@ -118,6 +136,8 @@ def test_that_custom_regex_scanner_service_ignores_secureli_yaml(
 def test_that_pii_scanner_service_only_scans_specific_files_if_provided(
     custom_regex_scanner_service: CustomRegexScannerService,
     mock_repo_files_repository: MagicMock,
+    mock_open_fn: MagicMock,
+    mock_re: MagicMock,
 ):
     specified_file = "fake_file_path"
     ignored_file = "not-the-file-we-want"
@@ -148,3 +168,31 @@ def test_that_pii_scanner_prints_when_exceptions_encountered(
 
     mock_echo.print.assert_called_once()
     assert "Error scanning for custom RegEx" in mock_echo.print.call_args.args[0]
+
+
+def test_coverage_that_get_regex_pattern_returns_custom_patterns(
+    mock_repo_files_repository: MagicMock,
+    mock_echo: MagicMock,
+    mock_settings: MagicMock,
+):
+    custom_regex_scanner_service = CustomRegexScannerService(
+        mock_repo_files_repository, mock_echo, mock_settings
+    )
+
+    custom_regex_scanner_service.scan_repo(
+        folder_path=test_folder_path, scan_mode=ScanMode.STAGED_ONLY
+    )
+
+
+def test_coverage_that_get_regex_pattern_returns_no_custom_patterns(
+    mock_repo_files_repository: MagicMock,
+    mock_echo: MagicMock,
+    mock_settings_no_scan_patterns,
+):
+    custom_regex_scanner_service = CustomRegexScannerService(
+        mock_repo_files_repository, mock_echo, mock_settings_no_scan_patterns
+    )
+
+    custom_regex_scanner_service.scan_repo(
+        folder_path=test_folder_path, scan_mode=ScanMode.STAGED_ONLY
+    )

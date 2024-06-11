@@ -4,7 +4,7 @@ from pathlib import Path
 from time import time
 from typing import Optional
 
-from secureli.modules.custom_scans import CustomScannersService
+from secureli.modules.custom_scanners.custom_scans import CustomScannersService
 from secureli.actions import action
 from secureli.modules.shared.abstractions.repo import GitRepo
 from secureli.modules.shared.models.exit_codes import ExitCode

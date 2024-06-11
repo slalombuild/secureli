@@ -2,13 +2,12 @@ from enum import Enum
 from typing import Optional
 from pathlib import Path
 
-from secureli.modules.custom_regex_scanner.custom_regex_scanner import (
+from secureli.modules.custom_scanners.custom_regex_scanner.custom_regex_scanner import (
     CustomRegexScannerService,
 )
-from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
+from secureli.modules.custom_scanners.pii_scanner.pii_scanner import PiiScannerService
 from secureli.modules.shared import utilities
 import secureli.modules.shared.models.scan as scan
-from secureli.repositories.repo_settings import SecureliRepository
 
 
 class CustomScanId(str, Enum):
