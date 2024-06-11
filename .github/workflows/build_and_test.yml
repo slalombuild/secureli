@@ -7,9 +7,8 @@ name: Build & Test
 
 on:
   push:
-    branches-ignore: [ main ]
+    branches-ignore: [main]
   workflow_call:
-
 
 jobs:
   build-windows:
@@ -20,13 +19,14 @@ jobs:
 
       - name: Set up Poetry
         run: pip install poetry
+          echo "This is a multi-line"
 
       - name: Set up Python 3.9
         id: setup-python
         uses: actions/setup-python@v5
         with:
           python-version: "3.9"
-          cache: 'poetry'
+          cache: "poetry"
 
       - name: Set Up Project
         run: |
@@ -36,9 +36,8 @@ jobs:
         run: |
           poetry run poe precommit
         # Both of these lines error when run on a windows image, more research required as to why
-          # poetry run poe coverage
-          # poetry run secureli build
-
+        # poetry run poe coverage
+        # poetry run secureli build
 
   build-linux:
     name: Linux
@@ -59,7 +58,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.9"
-          cache: 'poetry'
+          cache: "poetry"
 
       - name: Set Up Project
         run: |
@@ -82,10 +81,9 @@ jobs:
           poetry run secureli build
           poetry run poe e2e
 
-
   secureli-release-noop:
     name: Release Test
-    needs: [ build-linux, build-windows ]
+    needs: [build-linux, build-windows]
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     concurrency: release
