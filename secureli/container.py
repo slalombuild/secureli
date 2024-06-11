@@ -19,6 +19,9 @@ from secureli.modules.observability.observability_services.logging import Loggin
 from secureli.modules.core.core_services.scanner import HooksScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
 from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
+from secureli.modules.custom_regex_scanner.custom_regex_scanner import (
+    CustomRegexScannerService,
+)
 from secureli.modules.secureli_ignore import SecureliIgnoreService
 from secureli.settings import Settings
 
@@ -145,9 +148,18 @@ class Container(containers.DeclarativeContainer):
         ignored_extensions=config.pii_scanner.ignored_extensions,
     )
 
+    custom_regex_scanner_service = providers.Factory(
+        CustomRegexScannerService,
+        repo_files=repo_files_repository,
+        echo=echo,
+        settings=settings_repository,
+    )
+
     """The service that orchestrates running custom scans (PII, Regex, etc.)"""
     custom_scanner_service = providers.Factory(
-        CustomScannersService, pii_scanner=pii_scanner_service
+        CustomScannersService,
+        pii_scanner=pii_scanner_service,
+        custom_regex_scanner=custom_regex_scanner_service,
     )
 
     updater_service = providers.Factory(
