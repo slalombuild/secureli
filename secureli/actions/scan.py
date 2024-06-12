@@ -117,10 +117,12 @@ class ScanAction(action.Action):
             folder_path, scan_mode, specific_test, files=files
         )
 
-        # Execute hooks only if no custom scan results were returned or if running all scans.
-        # If a hook and custom scan exist with the same id, only the custom scan will run.
-        # Without this check, if we try to run a non-existant pre-commit hook that is a valid custom scan id,
-        # the final result won't be succesful as the pre-commit command will exit with return code 1.
+        """
+        Execute hooks only if no custom scan results were returned or if running all scans.
+        If a hook and custom scan exist with the same id, only the custom scan will run.
+        Without this check, if we specify a non-existant pre-commit hook id but a valid custom scan id,
+        the final result won't be succesful as the pre-commit command will exit with return code 1.
+        """
         hooks_scan_results = None
         if custom_scan_results is None or specific_test is None:
             hooks_scan_results = self.hooks_scanner.scan_repo(

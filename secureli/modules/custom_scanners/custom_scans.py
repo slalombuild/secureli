@@ -1,4 +1,5 @@
 from enum import Enum
+import logging
 from typing import Optional
 from pathlib import Path
 
@@ -63,7 +64,8 @@ class CustomScannersService:
             scan_results = self.pii_scanner.scan_repo(
                 folder_path, scan_mode, files=files
             )
-        elif custom_scan_id == CustomScanId.CUSTOM_REGEX:
+
+        if custom_scan_id == CustomScanId.CUSTOM_REGEX:
             scan_results = self.custom_regex_scanner.scan_repo(
                 folder_path=folder_path, scan_mode=scan_mode, files=files
             )

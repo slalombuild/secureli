@@ -1,6 +1,5 @@
 import pytest
-from pytest_mock import MockerFixture
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock
 from pathlib import Path
 
 from secureli.modules.custom_scanners.custom_regex_scanner.custom_regex_scanner import (
@@ -10,11 +9,7 @@ from secureli.modules.custom_scanners.custom_scans import (
     CustomScanId,
     CustomScannersService,
 )
-from secureli.modules.shared.models import scan
-from secureli.modules.shared.models.echo import Level
 from secureli.modules.shared.models.scan import ScanMode
-import secureli.modules.shared.models.repository as RepositoryModels
-from secureli.repositories import repo_settings
 
 test_folder_path = Path(".")
 
