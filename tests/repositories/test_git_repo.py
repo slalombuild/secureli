@@ -5,15 +5,13 @@ import pytest
 from pytest_mock import MockerFixture
 from subprocess import CompletedProcess
 
-from secureli.repositories.git_file_repository import GitFileRepository
+from secureli.repositories.git_repo import GitRepo
 
 
 @pytest.fixture()
 def mock_subprocess(mocker: MockerFixture) -> MagicMock:
     mock_subprocess = MagicMock()
-    mocker.patch(
-        "secureli.repositories.git_file_repository.subprocess", mock_subprocess
-    )
+    mocker.patch("secureli.repositories.git_repo.subprocess", mock_subprocess)
     return mock_subprocess
 
 
@@ -139,9 +137,9 @@ def binary_file_with_size_file_path(mock_open_resource_with_binary_file) -> Magi
 
 
 @pytest.fixture()
-def repo_files_repository() -> GitFileRepository:
+def repo_files_repository() -> GitRepo:
     all_mov_files = "^(?:.+/)?[^/]*\\.mov(?:(?P<ps_d>/).*)?$"
-    return GitFileRepository(
+    return GitRepo(
         max_file_size=10000,
         ignored_file_extensions="",
         ignored_file_patterns=[all_mov_files],
@@ -149,14 +147,14 @@ def repo_files_repository() -> GitFileRepository:
 
 
 def test_that_list_repo_files_raises_value_error_without_git_repo(
-    repo_files_repository: GitFileRepository, git_not_exists_folder_path: MagicMock
+    repo_files_repository: GitRepo, git_not_exists_folder_path: MagicMock
 ):
     with pytest.raises(ValueError):
         repo_files_repository.list_repo_files(git_not_exists_folder_path)
 
 
 def test_that_list_staged_files_returns_list_of_staged_files(
-    repo_files_repository: GitFileRepository,
+    repo_files_repository: GitRepo,
     mock_subprocess: MagicMock,
 ):
     fake_file_1 = "i/am/staged"
@@ -172,7 +170,7 @@ def test_that_list_staged_files_returns_list_of_staged_files(
 
 
 def test_that_list_repo_files_raises_value_error_if_dot_git_is_a_file_somehow(
-    repo_files_repository: GitFileRepository,
+    repo_files_repository: GitRepo,
     git_a_file_for_some_reason_folder_path: MagicMock,
 ):
     with pytest.raises(ValueError):
@@ -180,7 +178,7 @@ def test_that_list_repo_files_raises_value_error_if_dot_git_is_a_file_somehow(
 
 
 def test_that_list_repo_files_filters_out_invisible_files_and_folders(
-    repo_files_repository: GitFileRepository, good_folder_path: MagicMock
+    repo_files_repository: GitRepo, good_folder_path: MagicMock
 ):
     files = repo_files_repository.list_repo_files(good_folder_path)
 
@@ -189,7 +187,7 @@ def test_that_list_repo_files_filters_out_invisible_files_and_folders(
 
 
 def test_that_load_file_loads_data(
-    repo_files_repository: GitFileRepository, good_file_path: MagicMock
+    repo_files_repository: GitRepo, good_file_path: MagicMock
 ):
     data = repo_files_repository.load_file(good_file_path)
 
@@ -197,35 +195,35 @@ def test_that_load_file_loads_data(
 
 
 def test_that_load_file_raises_value_error_for_nonexistent_file(
-    repo_files_repository: GitFileRepository, nonexistent_file_path: MagicMock
+    repo_files_repository: GitRepo, nonexistent_file_path: MagicMock
 ):
     with pytest.raises(ValueError):
         repo_files_repository.load_file(nonexistent_file_path)
 
 
 def test_that_load_file_raises_value_error_for_file_that_is_too_big(
-    repo_files_repository: GitFileRepository, too_big_file_path: MagicMock
+    repo_files_repository: GitRepo, too_big_file_path: MagicMock
 ):
     with pytest.raises(ValueError):
         repo_files_repository.load_file(too_big_file_path)
 
 
 def test_that_load_file_raises_value_error_for_file_if_io_error_occurs(
-    repo_files_repository: GitFileRepository, io_error_occurs_file_path: MagicMock
+    repo_files_repository: GitRepo, io_error_occurs_file_path: MagicMock
 ):
     with pytest.raises(ValueError):
         repo_files_repository.load_file(io_error_occurs_file_path)
 
 
 def test_that_load_file_raises_value_error_for_file_if_value_error_occurs(
-    repo_files_repository: GitFileRepository, value_error_occurs_file_path: MagicMock
+    repo_files_repository: GitRepo, value_error_occurs_file_path: MagicMock
 ):
     with pytest.raises(ValueError):
         repo_files_repository.load_file(value_error_occurs_file_path)
 
 
 def test_that_load_file_raises_value_error_for_binary_file_with_size(
-    repo_files_repository: GitFileRepository,
+    repo_files_repository: GitRepo,
     binary_file_with_size_file_path: MagicMock,
 ):
     with pytest.raises(

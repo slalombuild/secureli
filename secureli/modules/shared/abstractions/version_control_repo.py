@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 
-class VersionControlFileRepositoryAbstraction(ABC):
+class VersionControlRepoAbstraction(ABC):
     """
     Abstracts common version control repository functions
     """

@@ -8,10 +8,10 @@ from secureli.actions.initializer import InitializerAction
 from secureli.actions.scan import ScanAction
 from secureli.actions.build import BuildAction
 from secureli.actions.update import UpdateAction
-from secureli.modules.shared.abstractions.version_control_file_repository import (
-    VersionControlFileRepositoryAbstraction,
+from secureli.modules.shared.abstractions.version_control_repo import (
+    VersionControlRepoAbstraction,
 )
-from secureli.repositories.git_file_repository import GitFileRepository
+from secureli.repositories.git_repo import GitRepo
 from secureli.repositories.secureli_config import SecureliConfigRepository
 from secureli.repositories.repo_settings import SecureliRepository
 from secureli.modules.shared.resources import read_resource
@@ -55,13 +55,11 @@ class Container(containers.DeclarativeContainer):
 
     # Repositories
     """Abstraction for interacting with a version control file repo"""
-    version_control_file_repository = providers.Factory(
-        VersionControlFileRepositoryAbstraction
-    )
+    version_control_file_repository = providers.Factory(VersionControlRepoAbstraction)
 
     """Git implementation of version control file repo"""
     git_files_repository = providers.Factory(
-        GitFileRepository,
+        GitRepo,
         max_file_size=config.repo_files.max_file_size.as_int(),
         ignored_file_extensions=config.repo_files.ignored_file_extensions,
         ignored_file_patterns=combined_ignored_file_patterns,

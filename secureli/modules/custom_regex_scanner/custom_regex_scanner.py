@@ -11,8 +11,8 @@ import pydantic
 
 import secureli.modules.shared.models.scan as scan
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
-from secureli.modules.shared.abstractions.version_control_file_repository import (
-    VersionControlFileRepositoryAbstraction,
+from secureli.modules.shared.abstractions.version_control_repo import (
+    VersionControlRepoAbstraction,
 )
 
 
@@ -32,7 +32,7 @@ class CustomRegexScannerService:
 
     def __init__(
         self,
-        repo_files: VersionControlFileRepositoryAbstraction,
+        repo_files: VersionControlRepoAbstraction,
         echo: EchoAbstraction,
     ):
         self.repo_files = repo_files

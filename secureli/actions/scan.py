@@ -6,8 +6,8 @@ from typing import Optional
 
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.actions import action
-from secureli.modules.shared.abstractions.version_control_file_repository import (
-    VersionControlFileRepositoryAbstraction,
+from secureli.modules.shared.abstractions.version_control_repo import (
+    VersionControlRepoAbstraction,
 )
 from secureli.modules.shared.models.exit_codes import ExitCode
 from secureli.modules.shared.models import install
@@ -44,7 +44,7 @@ class ScanAction(action.Action):
         hooks_scanner: HooksScannerService,
         pii_scanner: PiiScannerService,
         custom_regex_scanner: CustomRegexScannerService,
-        file_repo: VersionControlFileRepositoryAbstraction,
+        file_repo: VersionControlRepoAbstraction,
     ):
         super().__init__(action_deps)
         self.hooks_scanner = hooks_scanner
