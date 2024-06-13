@@ -15,6 +15,9 @@ from secureli.modules.shared.models.result import Result
 from secureli.modules.observability.observability_services.logging import LoggingService
 from secureli.modules.core.core_services.scanner import HooksScannerService
 from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
+from secureli.modules.custom_regex_scanner.custom_regex_scanner import (
+    CustomRegexScannerService,
+)
 from secureli.modules.shared.models.scan import ScanMode, ScanResult
 from secureli.settings import Settings
 from secureli.modules.shared import utilities
@@ -38,11 +41,13 @@ class ScanAction(action.Action):
         action_deps: action.ActionDependencies,
         hooks_scanner: HooksScannerService,
         pii_scanner: PiiScannerService,
+        custom_regex_scanner: CustomRegexScannerService,
         git_repo: GitRepo,
     ):
         super().__init__(action_deps)
         self.hooks_scanner = hooks_scanner
         self.pii_scanner = pii_scanner
+        self.custom_regex_scanner = custom_regex_scanner
         self.git_repo = git_repo
 
     def publish_results(
@@ -116,9 +121,18 @@ class ScanAction(action.Action):
 
         # Execute PII scan (unless `specific_test` is provided, in which case it will be for a hook below)
         pii_scan_result: ScanResult | None = None
+        custom_regex_patterns = self._get_custom_scan_patterns(folder_path=folder_path)
+        custom_scan_result: ScanResult | None = None
         if not specific_test:
             pii_scan_result = self.pii_scanner.scan_repo(
                 folder_path, scan_mode, files=files
+            )
+
+            custom_scan_result = self.custom_regex_scanner.scan_repo(
+                folder_path=folder_path,
+                scan_mode=scan_mode,
+                files=files,
+                custom_regex_patterns=custom_regex_patterns,
             )
 
         # Execute hooks
@@ -126,7 +140,13 @@ class ScanAction(action.Action):
             folder_path, scan_mode, specific_test, files=files
         )
 
-        scan_result = utilities.merge_scan_results([pii_scan_result, hooks_scan_result])
+        scan_result = utilities.merge_scan_results(
+            [
+                pii_scan_result,
+                custom_scan_result,
+                hooks_scan_result,
+            ]
+        )
 
         details = scan_result.output or "Unknown output during scan"
         self.action_deps.echo.print(details)
@@ -209,3 +229,13 @@ class ScanAction(action.Action):
             return [Path(file) for file in committed_files]
         except:
             return None
+
+    def _get_custom_scan_patterns(self, folder_path: Path) -> list[Path]:
+        settings = self.action_deps.settings.load(folder_path)
+        if (
+            settings.scan_patterns is not None
+            and settings.scan_patterns.custom_scan_patterns is not None
+        ):
+            custom_scan_patterns = settings.scan_patterns.custom_scan_patterns
+            return custom_scan_patterns
+        return []

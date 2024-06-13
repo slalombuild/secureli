@@ -165,3 +165,9 @@ def test_that_scan_implements_multiple_file_args(mock_container: MagicMock):
         specific_test=None,
         files=["test.py", "test2.py"],
     )
+
+
+def test_that_update_with_new_pattern_succeeds():
+    result = CliRunner().invoke(secureli.main.app, ["update", "--new-pattern", "foo"])
+    assert result.exit_code == 0
+    assert result.stdout == ""

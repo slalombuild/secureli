@@ -25,6 +25,14 @@ class RepoFilesSettings(BaseSettings):
     exclude_file_patterns: list[str] = Field(default=[])
 
 
+class CustomScanSettings(BaseSettings):
+    """
+    Settings that maintain user defined custom scan patterns
+    """
+
+    custom_scan_patterns: list[str] = Field(default=[])
+
+
 class EchoSettings(BaseSettings):
     """
     Settings that affect how seCureLI provides information to the user.
@@ -85,4 +93,5 @@ class SecureliFile(BaseModel):
     echo: Optional[EchoSettings] = None
     language_support: Optional[LanguageSupportSettings] = Field(default=None)
     telemetry: Optional[TelemetrySettings] = None
+    scan_patterns: Optional[CustomScanSettings] = None
     pii_scanner: Optional[PiiScannerSettings] = None

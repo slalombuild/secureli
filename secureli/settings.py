@@ -39,6 +39,7 @@ class Settings(pydantic.BaseSettings):
     echo: repo_settings.EchoSettings = repo_settings.EchoSettings()
     language_support: LanguageSupportSettings = LanguageSupportSettings()
     telemetry: repo_settings.TelemetrySettings = repo_settings.TelemetrySettings()
+    scan_patterns: repo_settings.CustomScanSettings = repo_settings.CustomScanSettings()
     pii_scanner: repo_settings.PiiScannerSettings = repo_settings.PiiScannerSettings()
 
     class Config:
