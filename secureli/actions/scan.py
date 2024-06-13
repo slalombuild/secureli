@@ -6,7 +6,9 @@ from typing import Optional
 
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.actions import action
-from secureli.modules.shared.abstractions.repo import GitRepo
+from secureli.modules.shared.abstractions.version_control_file_repository import (
+    VersionControlFileRepositoryAbstraction,
+)
 from secureli.modules.shared.models.exit_codes import ExitCode
 from secureli.modules.shared.models import install
 from secureli.modules.shared.models.logging import LogAction
@@ -42,13 +44,13 @@ class ScanAction(action.Action):
         hooks_scanner: HooksScannerService,
         pii_scanner: PiiScannerService,
         custom_regex_scanner: CustomRegexScannerService,
-        git_repo: GitRepo,
+        file_repo: VersionControlFileRepositoryAbstraction,
     ):
         super().__init__(action_deps)
         self.hooks_scanner = hooks_scanner
         self.pii_scanner = pii_scanner
         self.custom_regex_scanner = custom_regex_scanner
-        self.git_repo = git_repo
+        self.file_repo = file_repo
 
     def publish_results(
         self,
@@ -97,7 +99,7 @@ class ScanAction(action.Action):
         """
 
         scan_files = [Path(file) for file in files or []] or self._get_commited_files(
-            scan_mode
+            scan_mode, folder_path
         )
         verify_result = self.verify_install(
             folder_path,
@@ -211,7 +213,7 @@ class ScanAction(action.Action):
         # Since we don't actually perform the updates here, return an outcome of UPDATE_CANCELLED
         return install.VerifyResult(outcome=install.VerifyOutcome.UPDATE_CANCELED)
 
-    def _get_commited_files(self, scan_mode: ScanMode) -> list[Path]:
+    def _get_commited_files(self, scan_mode: ScanMode, folder_path: Path) -> list[Path]:
         """
         Attempts to build a list of commited files for use in language detection if
         the user is scanning staged files for an existing installation
@@ -224,7 +226,7 @@ class ScanAction(action.Action):
         if not installed or scan_mode != ScanMode.STAGED_ONLY:
             return None
         try:
-            committed_files = self.git_repo.get_commit_diff()
+            committed_files = self.file_repo.list_staged_files(folder_path)
             return [Path(file) for file in committed_files]
         except:
             return None

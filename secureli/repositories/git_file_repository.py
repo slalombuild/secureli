@@ -3,6 +3,9 @@ import re
 import subprocess
 import chardet
 
+from secureli.modules.shared.abstractions.version_control_file_repository import (
+    VersionControlFileRepositoryAbstraction,
+)
 from secureli.modules.shared.utilities import combine_patterns
 
 
@@ -16,9 +19,10 @@ class BinaryFileError(ValueError):
         super().__init__(self.message)
 
 
-class RepoFilesRepository:
+class GitFileRepository(VersionControlFileRepositoryAbstraction):
     """
-    Loads files in a given repository, or raises ValueError if the provided path is not a git repo
+    The Git implementation of a version control file repository.
+    Lists staged files and all files in repository. Reads a file by path to a utf-8 string
     """
 
     def __init__(
