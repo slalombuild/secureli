@@ -129,6 +129,13 @@ seCureLI utilizes its own PII scan, rather than using an existing pre-commit hoo
 ```
 test_var = "some dummy data I don't want scanned" # disable-pii-scan
 ```
+### Custom Regex Scan
+
+seCureLI utilizes its own custom regex scan to flag any text that matches a user provided regex pattern. To include a regex pattern in the scan simply add the pattern to your `.secureli.yaml` by running
+
+```
+secureli update --new-pattern <your-custom-regex>
+```
 
 ## Upgrade
 

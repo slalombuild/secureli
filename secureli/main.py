@@ -183,12 +183,23 @@ def update(
             help="Run secureli against a specific directory",
         ),
     ] = Path("."),
+    new_patterns: Annotated[
+        Optional[List[str]],
+        Option(
+            "--new-pattern",
+            "-n",
+            help="Add a new Regex to the custom scan pattern list",
+        ),
+    ] = None,
 ):
     """
-    Update linters, configuration, and all else needed to maintain a secure repository.
+    Update linters, configuration, custom scan patterns and all else needed to maintain a secure repository.
     """
-    SecureliConfig.FOLDER_PATH = Path(directory)
-    container.update_action().update_hooks(Path(directory), latest)
+    if new_patterns is not None:
+        container.update_action().add_pattern(Path(directory), new_patterns)
+    else:
+        SecureliConfig.FOLDER_PATH = Path(directory)
+        container.update_action().update_hooks(Path(directory), latest)
 
 
 if __name__ == "__main__":
