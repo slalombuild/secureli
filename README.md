@@ -27,8 +27,10 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one -
   - [Help](#help)
   - [Init](#init)
   - [Scan](#scan)
+    - [Scanned Files](#scanned-files)
     - [PII Scan](#pii-scan)
   - [Custom Regex Scan](#custom-regex-scan)
+  - [Supported Languages](#supported-languages)
 - [Upgrade](#upgrade)
   - [Upgrading seCureLI via Homebrew](#upgrading-secureli-via-homebrew)
   - [Upgrading via pip](#upgrading-via-pip)
@@ -41,6 +43,7 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one -
     - [pii\_scanner](#pii_scanner)
     - [telemetry](#telemetry)
   - [pre-commit](#pre-commit)
+    - [Custom pre-commit configuration](#custom-pre-commit-configuration)
     - [Passing arguments to pre-commit hooks](#passing-arguments-to-pre-commit-hooks)
   - [`.secureli/repo-config.yaml`](#securelirepo-configyaml)
   - [Using Observability Platform to Show Secret Detection Statistics](#using-observability-platform-to-show-secret-detection-statistics)
@@ -123,6 +126,10 @@ To manually trigger a scan, run:
 
 This will run through all hooks and custom scans, unless a `--specific-test` option is used. The default is to scan staged files only. To scan all files instead, use the `--mode all-files` option.
 
+#### Scanned Files
+
+By default, seCureLI will only scan files that are staged for commit. If you want to scan a different set of files, you can use the `--file` parameter. You can specify multiple files by passing the parameter multiple times, e.g. `--file file1 --file file2`.
+
 #### PII Scan
 
 seCureLI utilizes its own PII scan, rather than using an existing pre-commit hook. To exclude a line from being flagged by the PII scanner, you can use a `disable-pii-scan` marker in a comment to disable the scan for that line.
@@ -137,6 +144,20 @@ seCureLI utilizes its own custom regex scan to flag any text that matches a user
 ```
 secureli update --new-pattern <your-custom-regex>
 ```
+
+### Supported Languages
+
+seCureLI has Slalom-maintained templates for security management of the following languages.
+
+- Java
+- Python
+- Terraform
+- JavaScript
+- TypeScript
+- C#
+- Swift
+- Golang
+- Kotlin
 
 ## Upgrade
 
@@ -209,6 +230,10 @@ seCureLI is configurable via a `.secureli.yaml` file present in the root of your
 ### pre-commit
 
 [pre-commit](https://pre-commit.com/) is used for configuring pre-commit hooks. The configuration file is `.secureli/.pre-commit-config.yaml`, relative to the root of your repo. For details on modifying this file, see the pre-commit documentation on [configuring hooks](https://pre-commit.com/#pre-commit-configyaml---hooks).
+
+#### Custom pre-commit configuration
+
+If there is a `.pre-commit-config` file in your root when you initialize seCureLI, it will be merged with the default configuration written to `.secureli/.pre-commit-config.yaml`.
 
 #### Passing arguments to pre-commit hooks
 

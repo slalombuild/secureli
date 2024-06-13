@@ -10,7 +10,6 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one -
 - [Contributing to seCureLI](#contributing-to-secureli)
   - [Pull Requests](#pull-requests)
 - [Environment Requirements](#environment-requirements)
-  - [Supported Languages](#supported-languages)
   - [Python 3.9.9](#python-399)
   - [Setup macOS](#setup-macos)
   - [Setup Windows™](#setup-windows)
@@ -57,20 +56,6 @@ Refer to the [angular documentation](https://github.com/angular/angular/blob/mai
 > Note that "build", "chore", "ci", "docs", "style", "refactor", and "test" do not create a release._
 
 # Environment Requirements
-
-## Supported Languages
-
-seCureLI has Slalom-maintained templates for security management of the following languages.
-
-- Java
-- Python
-- Terraform
-- JavaScript
-- TypeScript
-- C#
-- Swift
-- Golang
-- Kotlin
 
 ## Python 3.9.9
 
