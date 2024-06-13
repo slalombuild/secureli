@@ -86,7 +86,8 @@ class ScanAction(action.Action):
         :param scan_mode: How we should scan the files in the repo (i.e. staged only or all)
         :param always_yes: Assume "Yes" to all prompts
         :param specific_test: If set, limits scanning to the single pre-commit hook or custom scan.
-        Otherwise, scans with all hooks and custom scans.
+        :param files: If set, scans only the files provided.
+        Otherwise, scans with all hooks.
         """
 
         scan_files = [Path(file) for file in files or []] or self._get_commited_files(

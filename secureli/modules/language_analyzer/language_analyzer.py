@@ -24,6 +24,7 @@ class LanguageAnalyzerService:
         """
         Analyzes the folder structure and lists languages found
         :param folder_path: The path to the repository to analyze
+        :param files: A list of files to analyze. If not provided, all files in the repo will be analyzed
         :return: Produces an ordered dictionary of languages detected and what percentage
         of the repo is each language. For example, if 60% of the repo is Python files and
         40% of the repo is JavaScript, the result will be a dictionary containing keys
