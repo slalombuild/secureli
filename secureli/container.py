@@ -1,5 +1,10 @@
 from dependency_injector import containers, providers
 
+from secureli.modules.custom_scanners.custom_regex_scanner.custom_regex_scanner import (
+    CustomRegexScannerService,
+)
+from secureli.modules.custom_scanners.custom_scans import CustomScannersService
+from secureli.modules.custom_scanners.pii_scanner.pii_scanner import PiiScannerService
 from secureli.modules.shared.abstractions.echo import TyperEcho
 from secureli.modules.shared.abstractions.lexer_guesser import PygmentsLexerGuesser
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
@@ -17,12 +22,9 @@ from secureli.repositories.repo_settings import SecureliRepository
 from secureli.modules.shared.resources import read_resource
 from secureli.modules import language_analyzer
 from secureli.modules.observability.observability_services.logging import LoggingService
-from secureli.modules.core.core_services.scanner import HooksScannerService
+from secureli.modules.core.core_services.hook_scanner import HooksScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
-from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
-from secureli.modules.custom_regex_scanner.custom_regex_scanner import (
-    CustomRegexScannerService,
-)
+
 from secureli.modules.secureli_ignore import SecureliIgnoreService
 from secureli.settings import Settings
 
@@ -152,7 +154,17 @@ class Container(containers.DeclarativeContainer):
     )
 
     custom_regex_scanner_service = providers.Factory(
-        CustomRegexScannerService, repo_files=version_control_file_repository, echo=echo
+        CustomRegexScannerService,
+        repo_files=version_control_file_repository,
+        echo=echo,
+        settings=settings_repository,
+    )
+
+    """The service that orchestrates running custom scans (PII, Regex, etc.)"""
+    custom_scanner_service = providers.Factory(
+        CustomScannersService,
+        pii_scanner=pii_scanner_service,
+        custom_regex_scanner=custom_regex_scanner_service,
     )
 
     updater_service = providers.Factory(
@@ -194,8 +206,7 @@ class Container(containers.DeclarativeContainer):
         ScanAction,
         action_deps=action_deps,
         hooks_scanner=hooks_scanner_service,
-        pii_scanner=pii_scanner_service,
-        custom_regex_scanner=custom_regex_scanner_service,
+        custom_scanners=custom_scanner_service,
         file_repo=version_control_file_repository,
     )
 

@@ -11,7 +11,7 @@ from secureli.modules.shared.models import language
 from secureli.modules.shared.models.logging import LogAction
 from secureli.modules.shared.models.scan import ScanMode
 from secureli.modules.language_analyzer import language_analyzer, language_support
-from secureli.modules.core.core_services.scanner import HooksScannerService
+from secureli.modules.core.core_services.hook_scanner import HooksScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
 
 from secureli.modules.shared.utilities import format_sentence_list
@@ -375,6 +375,7 @@ class Action(ABC):
         """
         Detects programming languages present in the repository
         :param folder_path: The folder path to initialize the repo for
+        :param files: A List of files to scope the install to. This allows language detection to run on only a selected list of files when scanning the repo.
         :return: A list of all languages found in the repository
         """
 

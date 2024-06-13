@@ -58,19 +58,12 @@ def mock_pre_commit() -> MagicMock:
 
 
 @pytest.fixture()
-def mock_pii_scanner() -> MagicMock:
-    mock_pii_scanner = MagicMock()
-    mock_pii_scanner.scan_repo.return_value = ScanResult(successful=True, failures=[])
-    return mock_pii_scanner
-
-
-@pytest.fixture()
-def mock_custom_regex_scanner() -> MagicMock:
-    mock_custom_regex_scanner = MagicMock()
-    mock_custom_regex_scanner.scan_repo.return_value = ScanResult(
+def mock_custom_scanners() -> MagicMock:
+    mock_custom_scanners = MagicMock()
+    mock_custom_scanners.scan_repo.return_value = ScanResult(
         successful=True, failures=[]
     )
-    return mock_custom_regex_scanner
+    return mock_custom_scanners
 
 
 @pytest.fixture()
@@ -151,15 +144,13 @@ def action_deps(
 @pytest.fixture()
 def scan_action(
     action_deps: ActionDependencies,
-    mock_pii_scanner: MagicMock,
-    mock_custom_regex_scanner: MagicMock,
+    mock_custom_scanners: MagicMock,
     mock_file_repo: MagicMock,
 ) -> ScanAction:
     return ScanAction(
         action_deps=action_deps,
         hooks_scanner=action_deps.hooks_scanner,
-        pii_scanner=mock_pii_scanner,
-        custom_regex_scanner=mock_custom_regex_scanner,
+        custom_scanners=mock_custom_scanners,
         file_repo=mock_file_repo,
     )
 
@@ -173,8 +164,7 @@ def mock_post_log(mocker: MockerFixture) -> MagicMock:
 def test_that_scan_repo_errors_if_not_successful(
     scan_action: ScanAction,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
-    mock_custom_regex_scanner: MagicMock,
+    mock_custom_scanners: MagicMock,
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
@@ -183,14 +173,9 @@ def test_that_scan_repo_errors_if_not_successful(
         language_proportions={f"{mock_language}": 1.0},
         skipped_files=[],
     )
-    mock_pii_scanner.scan_repo.return_value = ScanResult(
+    mock_custom_scanners.scan_repo.return_value = ScanResult(
         successful=False, output="So much PII", failures=[]
     )
-
-    mock_custom_regex_scanner.scan_repo.return_vale = ScanResult(
-        successful=False, output="Horrible regex pattern matched", failures=[]
-    )
-
     mock_hooks_scanner.scan_repo.return_value = ScanResult(
         successful=False, output="Bad Error", failures=[]
     )
@@ -209,7 +194,7 @@ def test_that_scan_repo_scans_if_installed(
     scan_action: ScanAction,
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
-    mock_hooks_scanner: MagicMock,
+    mock_custom_scanners: MagicMock,
     mock_language_analyzer: MagicMock,
     mock_settings_no_scan_patterns: MagicMock,
 ):
@@ -226,7 +211,7 @@ def test_that_scan_repo_scans_if_installed(
         test_folder_path, ScanMode.STAGED_ONLY, False, None, "detect-secrets"
     )
 
-    mock_hooks_scanner.scan_repo.assert_called_once()
+    mock_custom_scanners.scan_repo.assert_called_once()
 
 
 @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
@@ -235,7 +220,7 @@ def test_that_scan_repo_conducts_all_scans_and_merges_results(
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
+    mock_custom_scanners: MagicMock,
     mock_language_analyzer: MagicMock,
     mock_echo: MagicMock,
 ):
@@ -252,14 +237,14 @@ def test_that_scan_repo_conducts_all_scans_and_merges_results(
     mock_hooks_scanner.scan_repo.return_value = ScanResult(
         successful=False, failures=[], output=mock_failure_1
     )
-    mock_pii_scanner.scan_repo.return_value = ScanResult(
+    mock_custom_scanners.scan_repo.return_value = ScanResult(
         successful=False, failures=[], output=mock_failure_2
     )
 
     with pytest.raises(SystemExit):
         scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
         mock_hooks_scanner.scan_repo.assert_called_once()
-        mock_pii_scanner.scan_repo.assert_called_once()
+        mock_custom_scanners.scan_repo.assert_called_once()
         mock_echo.print.assert_called_once_with(f"\n{mock_failure_1}\n{mock_failure_2}")
 
 
@@ -269,7 +254,7 @@ def test_that_scan_repo_continue_scan_if_upgrade_canceled(
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
+    mock_custom_scanners: MagicMock,
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
@@ -286,14 +271,14 @@ def test_that_scan_repo_continue_scan_if_upgrade_canceled(
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
 
     mock_hooks_scanner.scan_repo.assert_called_once()
-    mock_pii_scanner.scan_repo.assert_called_once()
+    mock_custom_scanners.scan_repo.assert_called_once()
 
 
 @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_does_not_scan_if_not_installed(
     scan_action: ScanAction,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
+    mock_custom_scanners: MagicMock,
     mock_secureli_config: MagicMock,
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
@@ -308,7 +293,7 @@ def test_that_scan_repo_does_not_scan_if_not_installed(
         scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
 
         mock_hooks_scanner.scan_repo.assert_not_called()
-        mock_pii_scanner.scan_repo.assert_not_called()
+        mock_custom_scanners.scan_repo.assert_not_called()
 
 
 def test_that_scan_checks_for_updates(
