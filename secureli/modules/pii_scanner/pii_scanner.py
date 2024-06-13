@@ -14,7 +14,7 @@ import pydantic
 
 import secureli.modules.shared.models.scan as scan
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
-from secureli.repositories.git_file_repository import (
+from secureli.modules.shared.abstractions.version_control_file_repository import (
     VersionControlFileRepositoryAbstraction,
 )
 

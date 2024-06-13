@@ -3,7 +3,7 @@ from pathlib import Path
 
 from secureli.modules.shared.abstractions.lexer_guesser import LexerGuesser
 from secureli.modules.shared.models.language import AnalyzeResult, SkippedFile
-from secureli.repositories.git_file_repository import (
+from secureli.modules.shared.abstractions.version_control_file_repository import (
     VersionControlFileRepositoryAbstraction,
 )
 from secureli.modules.shared.consts.language import supported_languages
