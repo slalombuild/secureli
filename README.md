@@ -28,6 +28,7 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one -
   - [Init](#init)
   - [Scan](#scan)
     - [PII Scan](#pii-scan)
+  - [Custom Regex Scan](#custom-regex-scan)
 - [Upgrade](#upgrade)
   - [Upgrading seCureLI via Homebrew](#upgrading-secureli-via-homebrew)
   - [Upgrading via pip](#upgrading-via-pip)
