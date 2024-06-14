@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, Mock
 import builtins
 import contextlib, io
 from pathlib import Path
-from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
+from secureli.modules.custom_scanners.pii_scanner.pii_scanner import PiiScannerService
 from secureli.modules.shared.consts.pii import IGNORED_EXTENSIONS
 from secureli.modules.shared.models.scan import ScanMode
 

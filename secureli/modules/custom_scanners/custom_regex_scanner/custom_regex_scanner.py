@@ -12,6 +12,7 @@ import pydantic
 import secureli.modules.shared.models.scan as scan
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.repositories.repo_files import RepoFilesRepository
+from secureli.repositories.repo_settings import SecureliRepository
 
 
 class CustomRegexScanResult(pydantic.BaseModel):
@@ -32,15 +33,16 @@ class CustomRegexScannerService:
         self,
         repo_files: RepoFilesRepository,
         echo: EchoAbstraction,
+        settings: SecureliRepository,
     ):
         self.repo_files = repo_files
         self.echo = echo
+        self.settings = settings
 
     def scan_repo(
         self,
         folder_path: Path,
         scan_mode: scan.ScanMode,
-        custom_regex_patterns: list[str],
         files: Optional[list[str]] = None,
     ) -> scan.ScanResult:
         """
@@ -51,6 +53,8 @@ class CustomRegexScannerService:
         :param files: A specified list of files to scan
         :return: A ScanResult object with details of whether the scan succeeded and, if not, details of the failures
         """
+
+        custom_regex_patterns = self._get_custom_scan_patterns(folder_path)
 
         file_paths = self._get_files_list(
             folder_path=folder_path, scan_mode=scan_mode, files=files
@@ -206,3 +210,13 @@ class CustomRegexScannerService:
         end = f"{RESULT_FORMAT[Format.DEFAULT]}{RESULT_FORMAT[Format.REG_WEIGHT]}"
 
         return f"{start}{str}{end}"
+
+    def _get_custom_scan_patterns(self, folder_path: Path) -> list[Path]:
+        settings = self.settings.load(folder_path)
+        if (
+            settings.scan_patterns is not None
+            and settings.scan_patterns.custom_scan_patterns is not None
+        ):
+            custom_scan_patterns = settings.scan_patterns.custom_scan_patterns
+            return custom_scan_patterns
+        return []

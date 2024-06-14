@@ -4,7 +4,7 @@ from pathlib import Path
 from time import time
 from typing import Optional
 
-from secureli.modules.shared.abstractions.echo import EchoAbstraction
+from secureli.modules.custom_scanners.custom_scans import CustomScannersService
 from secureli.actions import action
 from secureli.modules.shared.abstractions.repo import GitRepo
 from secureli.modules.shared.models.exit_codes import ExitCode
@@ -12,13 +12,8 @@ from secureli.modules.shared.models import install
 from secureli.modules.shared.models.logging import LogAction
 from secureli.modules.shared.models.publish_results import PublishResultsOption
 from secureli.modules.shared.models.result import Result
-from secureli.modules.observability.observability_services.logging import LoggingService
-from secureli.modules.core.core_services.scanner import HooksScannerService
-from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
-from secureli.modules.custom_regex_scanner.custom_regex_scanner import (
-    CustomRegexScannerService,
-)
-from secureli.modules.shared.models.scan import ScanMode, ScanResult
+from secureli.modules.core.core_services.hook_scanner import HooksScannerService
+from secureli.modules.shared.models.scan import ScanMode
 from secureli.settings import Settings
 from secureli.modules.shared import utilities
 
@@ -40,14 +35,12 @@ class ScanAction(action.Action):
         self,
         action_deps: action.ActionDependencies,
         hooks_scanner: HooksScannerService,
-        pii_scanner: PiiScannerService,
-        custom_regex_scanner: CustomRegexScannerService,
+        custom_scanners: CustomScannersService,
         git_repo: GitRepo,
     ):
         super().__init__(action_deps)
         self.hooks_scanner = hooks_scanner
-        self.pii_scanner = pii_scanner
-        self.custom_regex_scanner = custom_regex_scanner
+        self.custom_scanners = custom_scanners
         self.git_repo = git_repo
 
     def publish_results(
@@ -92,7 +85,7 @@ class ScanAction(action.Action):
         :param folder_path: The folder path to initialize the repo for
         :param scan_mode: How we should scan the files in the repo (i.e. staged only or all)
         :param always_yes: Assume "Yes" to all prompts
-        :param specific_test: If set, limits scanning to the single pre-commit hook.
+        :param specific_test: If set, limits scanning to the single pre-commit hook or custom scan.
         :param files: If set, scans only the files provided.
         Otherwise, scans with all hooks.
         """
@@ -119,33 +112,26 @@ class ScanAction(action.Action):
         if verify_result.outcome in self.halting_outcomes:
             return
 
-        # Execute PII scan (unless `specific_test` is provided, in which case it will be for a hook below)
-        pii_scan_result: ScanResult | None = None
-        custom_regex_patterns = self._get_custom_scan_patterns(folder_path=folder_path)
-        custom_scan_result: ScanResult | None = None
-        if not specific_test:
-            pii_scan_result = self.pii_scanner.scan_repo(
-                folder_path, scan_mode, files=files
-            )
-
-            custom_scan_result = self.custom_regex_scanner.scan_repo(
-                folder_path=folder_path,
-                scan_mode=scan_mode,
-                files=files,
-                custom_regex_patterns=custom_regex_patterns,
-            )
-
-        # Execute hooks
-        hooks_scan_result = self.hooks_scanner.scan_repo(
+        # Execute custom scans
+        custom_scan_results = None
+        custom_scan_results = self.custom_scanners.scan_repo(
             folder_path, scan_mode, specific_test, files=files
         )
 
+        """
+        Execute hooks only if no custom scan results were returned or if running all scans.
+        If a hook and custom scan exist with the same id, only the custom scan will run.
+        Without this check, if we specify a non-existant pre-commit hook id but a valid custom scan id,
+        the final result won't be succesful as the pre-commit command will exit with return code 1.
+        """
+        hooks_scan_results = None
+        if custom_scan_results is None or specific_test is None:
+            hooks_scan_results = self.hooks_scanner.scan_repo(
+                folder_path, scan_mode, specific_test, files=files
+            )
+
         scan_result = utilities.merge_scan_results(
-            [
-                pii_scan_result,
-                custom_scan_result,
-                hooks_scan_result,
-            ]
+            [custom_scan_results, hooks_scan_results]
         )
 
         details = scan_result.output or "Unknown output during scan"
@@ -229,13 +215,3 @@ class ScanAction(action.Action):
             return [Path(file) for file in committed_files]
         except:
             return None
-
-    def _get_custom_scan_patterns(self, folder_path: Path) -> list[Path]:
-        settings = self.action_deps.settings.load(folder_path)
-        if (
-            settings.scan_patterns is not None
-            and settings.scan_patterns.custom_scan_patterns is not None
-        ):
-            custom_scan_patterns = settings.scan_patterns.custom_scan_patterns
-            return custom_scan_patterns
-        return []
