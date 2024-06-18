@@ -180,9 +180,31 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully(
     pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
     mock_subprocess: MagicMock,
 ):
-    with (um.patch.object(Path, "exists") as mock_exists,):
-        mock_exists.return_value = True
+    with (
+        um.patch.object(Path, "exists") as mock_exists,
+        um.patch("builtins.open", um.mock_open()) as mock_open,
+        um.patch(
+            "secureli.modules.shared.abstractions.pre_commit.HookRepoRevInfo.from_config"
+        ) as mock_hook_repo_rev_info,
+    ):
         mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+        mock_exists.return_value = True
+        mock_open.return_value.read.return_value = (
+            "repos:\n"
+            "  - repo: my-repo\n"
+            "    rev: tag1\n"
+            "    hooks:\n"
+            "      - id: detect-secrets\n"
+            "        args: ['--foo', '--bar']\n"
+        )
+        pre_commit_config_repo = RepositoryModels.PreCommitRepo(
+            repo="http://example-repo.com/",
+            rev="tag1",
+            hooks=[RepositoryModels.PreCommitHook(id="hook-id")],
+        )
+        rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
+        mock_hook_repo_rev_info.return_value = rev_info_mock
+        rev_info_mock.update.return_value = rev_info_mock
         execute_result = pre_commit.autoupdate_hooks(test_folder_path)
 
         assert execute_result.successful
@@ -193,9 +215,12 @@ def test_that_pre_commit_autoupdate_hooks_properly_handles_failed_executions(
     mock_subprocess: MagicMock,
 ):
     with (um.patch.object(Path, "exists") as mock_exists,):
-        mock_exists.return_value = True
         mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=1)
-        execute_result = pre_commit.autoupdate_hooks(test_folder_path)
+        mock_exists.return_value = True
+
+        execute_result = pre_commit.autoupdate_hooks(
+            test_folder_path, force_update=True
+        )
 
         assert not execute_result.successful
 
@@ -205,10 +230,11 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_bleeding_ed
     mock_subprocess: MagicMock,
 ):
     with (um.patch.object(Path, "exists") as mock_exists,):
-        mock_exists.return_value = True
         mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+        mock_exists.return_value = True
+
         execute_result = pre_commit.autoupdate_hooks(
-            test_folder_path, bleeding_edge=True
+            test_folder_path, bleeding_edge=True, repos=["test"], force_update=True
         )
 
         assert execute_result.successful
@@ -222,7 +248,9 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_freeze(
     with (um.patch.object(Path, "exists") as mock_exists,):
         mock_exists.return_value = True
         mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-        execute_result = pre_commit.autoupdate_hooks(test_folder_path, freeze=True)
+        execute_result = pre_commit.autoupdate_hooks(
+            test_folder_path, freeze=True, force_update=True
+        )
 
         assert execute_result.successful
         assert "--freeze" in mock_subprocess.run.call_args_list[0].args[0]
@@ -236,10 +264,13 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_repos(
     with (um.patch.object(Path, "exists") as mock_exists,):
         mock_exists.return_value = True
         mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
-        execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
+        execute_result = pre_commit.autoupdate_hooks(
+            test_folder_path, repos=test_repos, force_update=True
+        )
 
         assert execute_result.successful
-        assert "--repo some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
+        assert "--repo" in mock_subprocess.run.call_args_list[0].args[0]
+        assert "some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
 
 
 def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_multiple_repos(
@@ -250,14 +281,14 @@ def test_that_pre_commit_autoupdate_hooks_executes_successfully_with_multiple_re
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
     with (um.patch.object(Path, "exists") as mock_exists,):
         mock_exists.return_value = True
-        execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
+        execute_result = pre_commit.autoupdate_hooks(
+            test_folder_path, repos=test_repos, force_update=True
+        )
 
         assert execute_result.successful
-        assert "--repo some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
-        assert (
-            "--repo some-other-repo-url"
-            in mock_subprocess.run.call_args_list[0].args[0]
-        )
+        assert mock_subprocess.run.call_args_list[0].args[0].count("--repo") == 2
+        assert "some-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
+        assert "some-other-repo-url" in mock_subprocess.run.call_args_list[0].args[0]
 
 
 def test_that_pre_commit_autoupdate_hooks_fails_with_repos_containing_non_strings(
@@ -268,7 +299,9 @@ def test_that_pre_commit_autoupdate_hooks_fails_with_repos_containing_non_string
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
     with (um.patch.object(Path, "exists") as mock_exists,):
         mock_exists.return_value = True
-        execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)
+        execute_result = pre_commit.autoupdate_hooks(
+            test_folder_path, repos=test_repos, force_update=True
+        )
 
         assert not execute_result.successful
 
@@ -281,7 +314,7 @@ def test_that_pre_commit_autoupdate_hooks_ignores_repos_when_repos_is_a_dict(
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
     with (um.patch.object(Path, "exists") as mock_exists,):
         mock_exists.return_value = True
-        execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)  # type: ignore
+        execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos, force_update=True)  # type: ignore
 
         assert execute_result.successful
         assert "--repo {}" not in mock_subprocess.run.call_args_list[0].args[0]
@@ -295,10 +328,84 @@ def test_that_pre_commit_autoupdate_hooks_converts_repos_when_repos_is_a_string(
     mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
     with (um.patch.object(Path, "exists") as mock_exists,):
         mock_exists.return_value = True
-        execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos)  # type: ignore
+        execute_result = pre_commit.autoupdate_hooks(test_folder_path, repos=test_repos, force_update=True)  # type: ignore
 
         assert execute_result.successful
-        assert "--repo string" in mock_subprocess.run.call_args_list[0].args[0]
+        assert "--repo" in mock_subprocess.run.call_args_list[0].args[0]
+        assert "string" in mock_subprocess.run.call_args_list[0].args[0]
+
+
+def test_that_pre_commit_autoupdate_hooks_executes_successfully_when_not_forcing_updates(
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
+    mock_subprocess: MagicMock,
+):
+    with (
+        um.patch.object(Path, "exists") as mock_exists,
+        um.patch("builtins.open", um.mock_open()) as mock_open,
+        um.patch(
+            "secureli.modules.shared.abstractions.pre_commit.HookRepoRevInfo.from_config"
+        ) as mock_hook_repo_rev_info,
+    ):
+        mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+        mock_exists.return_value = True
+        mock_open.return_value.read.return_value = (
+            "repos:\n"
+            "  - repo: my-repo\n"
+            "    rev: tag1\n"
+            "    hooks:\n"
+            "      - id: detect-secrets\n"
+            "        args: ['--foo', '--bar']\n"
+        )
+        pre_commit_config_repo = RepositoryModels.PreCommitRepo(
+            repo="http://example-repo.com/",
+            rev="tag1",
+            hooks=[RepositoryModels.PreCommitHook(id="hook-id")],
+        )
+        rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
+        mock_hook_repo_rev_info.return_value = rev_info_mock
+        rev_info_mock.update.return_value = rev_info_mock
+        execute_result = pre_commit.autoupdate_hooks(
+            test_folder_path, force_update=False
+        )
+
+        assert execute_result.successful
+
+
+def test_that_pre_commit_autoupdate_hooks_executes_successfully_when_not_forcing_updates_with_repos(
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
+    mock_subprocess: MagicMock,
+):
+    with (
+        um.patch.object(Path, "exists") as mock_exists,
+        um.patch("builtins.open", um.mock_open()) as mock_open,
+        um.patch(
+            "secureli.modules.shared.abstractions.pre_commit.HookRepoRevInfo.from_config"
+        ) as mock_hook_repo_rev_info,
+    ):
+        mock_subprocess.run.return_value = CompletedProcess(args=[], returncode=0)
+        mock_exists.return_value = True
+        mock_open.return_value.read.return_value = (
+            "repos:\n"
+            "  - repo: my-repo\n"
+            "    rev: tag1\n"
+            "    hooks:\n"
+            "      - id: detect-secrets\n"
+            "        args: ['--foo', '--bar']\n"
+        )
+        pre_commit_config_repo = RepositoryModels.PreCommitRepo(
+            repo="http://example-repo.com/",
+            rev="tag1",
+            hooks=[RepositoryModels.PreCommitHook(id="hook-id")],
+        )
+        rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
+        mock_hook_repo_rev_info.return_value = rev_info_mock
+        rev_info_mock.update.return_value = rev_info_mock
+
+        execute_result = pre_commit.autoupdate_hooks(
+            test_folder_path, force_update=False, repos=[pre_commit_config_repo]
+        )
+
+        assert execute_result.successful
 
 
 ##### update #####

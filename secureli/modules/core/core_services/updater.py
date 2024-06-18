@@ -25,6 +25,7 @@ class UpdaterService:
         bleeding_edge: bool = False,
         freeze: bool = False,
         repos: Optional[list] = None,
+        force_update: Optional[bool] = False,
     ):
         """
         Updates the precommit hooks but executing precommit's autoupdate command.  Additional info at
@@ -34,10 +35,11 @@ class UpdaterService:
         the latest tagged version (which is the default behavior)
         :param freeze: Set to True to store "frozen" hashes in rev instead of tag names.
         :param repos: Dectionary of repos to update. This is used to target specific repos instead of all repos.
+        :param force_update: set to True to download updates for hooks whose versions aren't out of date. False means only out-of-date repos are updated
         :return: ExecuteResult, indicating success or failure.
         """
         update_result = self.pre_commit.autoupdate_hooks(
-            folder_path, bleeding_edge, freeze, repos
+            folder_path, bleeding_edge, freeze, repos, force_update
         )
         output = update_result.output
 

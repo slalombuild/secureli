@@ -208,6 +208,7 @@ class PreCommitAbstraction:
         bleeding_edge: bool = False,
         freeze: bool = False,
         repos: Optional[list] = None,
+        force_update: Optional[bool] = False,
     ) -> ExecuteResult:
         """
         Updates the precommit hooks by executing precommit's autoupdate command. Additional info at
@@ -217,8 +218,17 @@ class PreCommitAbstraction:
         the latest tagged version (which is the default behavior)
         :param freeze: Set to True to store "frozen" hashes in rev instead of tag names.
         :param repos: List of repos (url as a string) to update. This is used to target specific repos instead of all repos.
+        :param force_update: set to True to download updates for hooks whose versions aren't out of date. False means only out-of-date repos are updated
         :return: ExecuteResult, indicating success or failure.
         """
+        if not force_update:
+            repos = self._get_outdated_repos(folder_path, bleeding_edge, freeze, repos)
+
+        # if there's no outdated repos and we're not forcing updates then there's nothing more to do
+        if not repos and not force_update:
+            output = "No changes necessary.\n"
+            return ExecuteResult(successful=True, output=output)
+
         subprocess_args = [
             "pre-commit",
             "autoupdate",
@@ -240,7 +250,9 @@ class PreCommitAbstraction:
 
             for repo in repos:
                 if isinstance(repo, str):
-                    arg = "--repo {}".format(repo)
+                    arg = "--repo"
+                    repo_args.append(arg)
+                    arg = format(repo)
                     repo_args.append(arg)
                 else:
                     output = "Unable to update repo, string validation failed. Repo parameter should be a dictionary of strings."
@@ -390,3 +402,26 @@ class PreCommitAbstraction:
         """
         path_to_config = folder_path / ".pre-commit-config.yaml"
         return path_to_config.exists()
+
+    def _get_outdated_repos(
+        self,
+        folder_path: Path,
+        bleeding_edge: bool = False,
+        freeze: bool = False,
+        repos: Optional[list] = None,
+    ) -> list:
+        # if no repos are specified then use the pre commit config to get a list of all possible repos to update
+        if not repos:
+            precommit_config = self.get_pre_commit_config(folder_path)
+            outdated_repos = self.check_for_hook_updates(
+                precommit_config, not bleeding_edge, freeze
+            )
+            repos = [key for key in outdated_repos.keys()]
+        # Only check for updates for the specified repos
+        else:
+            outdated_repos = self.check_for_hook_updates(
+                PreCommitSettings(repos=repos), not bleeding_edge, freeze
+            )
+            repos = [key for key in outdated_repos.keys()]
+
+        return repos
