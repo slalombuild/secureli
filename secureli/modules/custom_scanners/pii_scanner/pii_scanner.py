@@ -14,7 +14,9 @@ import pydantic
 
 import secureli.modules.shared.models.scan as scan
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
-from secureli.repositories.repo_files import RepoFilesRepository
+from secureli.modules.shared.abstractions.version_control_repo import (
+    VersionControlRepoAbstraction,
+)
 
 
 class PiiResult(pydantic.BaseModel):
@@ -33,7 +35,7 @@ class PiiScannerService:
 
     def __init__(
         self,
-        repo_files: RepoFilesRepository,
+        repo_files: VersionControlRepoAbstraction,
         echo: EchoAbstraction,
         ignored_extensions: list[str],
     ):
