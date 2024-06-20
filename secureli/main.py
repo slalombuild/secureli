@@ -91,6 +91,11 @@ def init(
             help="Run secureli against a specific directory",
         ),
     ] = Path("."),
+    preserve_precommit_config: bool = Option(
+        False,
+        "--preserve-precommit-config",
+        help="Preserve the existing pre-commit configuration",
+    ),
 ):
     """
     Detect languages and initialize pre-commit hooks and linters for the project
@@ -98,7 +103,7 @@ def init(
     SecureliConfig.FOLDER_PATH = Path(directory)
 
     init_result = container.initializer_action().initialize_repo(
-        Path(directory), reset, yes
+        Path(directory), reset, yes, preserve_precommit_config
     )
     if init_result.outcome in [
         VerifyOutcome.UP_TO_DATE,

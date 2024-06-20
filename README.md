@@ -26,6 +26,7 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one -
 - [Usage](#usage)
   - [Help](#help)
   - [Init](#init)
+    - [Preserving Pre-Commit Config](#preserving-pre-commit-config)
   - [Scan](#scan)
     - [Scanned Files](#scanned-files)
     - [PII Scan](#pii-scan)
@@ -115,6 +116,10 @@ All you need to do is run:
 ```
 
 Running `secureli init` will allow seCureLI to detect the languages in your repo, install pre-commit, install all the appropriate pre-commit hooks for your local repo, run a scan for secrets in your local repo, and update the installed hooks.
+
+#### Preserving Pre-Commit Config
+
+If you have an existing pre-commit config file you want to preserve when running `secureli init`, you can use the `--preserve-precommit-config` flag. This is useful for example when checking out a repo with an existing pre-commit config file.
 
 ### Scan
 

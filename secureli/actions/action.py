@@ -69,6 +69,7 @@ class Action(ABC):
         always_yes: bool,
         files: list[Path],
         action_source: install.ActionSource,
+        preserve_precommit_config: bool = False,
     ) -> install.VerifyResult:
         """
         Installs, upgrades or verifies the current seCureLI installation
@@ -77,6 +78,8 @@ class Action(ABC):
         :param always_yes: Assume "Yes" to all prompts
         :param files: A List of files to scope the install to. This allows language
         detection to run on only a selected list of files when scanning the repo.
+        :param action_source: The source of the action
+        :param preserve_precommit_config: If true, preserve the existing pre-commit configuration
         """
 
         is_config_out_of_date = (
@@ -163,6 +166,7 @@ class Action(ABC):
                 newly_detected_languages,
                 always_yes,
                 preferred_config_path if pre_commit_to_preserve else None,
+                preserve_precommit_config,
             )
         else:
             self.action_deps.echo.print(
@@ -195,6 +199,7 @@ class Action(ABC):
         install_languages: list[str],
         always_yes: bool,
         pre_commit_config_location: Path = None,
+        preserve_precommit_config: bool = False,
     ) -> install.VerifyResult:
         """
         Installs seCureLI into the given folder path and returns the new configuration
@@ -202,6 +207,8 @@ class Action(ABC):
         :param detected_languages: list of all languages found in the repo
         :param install_languages: list of specific langugages to install secureli features for
         :param always_yes: Assume "Yes" to all prompts
+        :param pre_commit_config_location: The location of the pre-commit config file
+        :param preserve_precommit_config: If true, preserve the existing pre-commit configuration
         :return: The new SecureliConfig after install or None if installation did not complete
         """
 
@@ -230,6 +237,7 @@ class Action(ABC):
             install_languages,
             language_config_result,
             new_install,
+            preserve_precommit_config,
         )
 
         for error_msg in metadata.linter_config_write_errors:

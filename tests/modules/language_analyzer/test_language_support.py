@@ -272,7 +272,56 @@ def test_that_language_support_writes_linter_config_files(
     )
 
     metadata = language_support_service.apply_support(
-        ["RadLang"], build_config_result, overwrite_pre_commit=True
+        ["RadLang"],
+        build_config_result,
+        overwrite_pre_commit=True,
+    )
+
+    assert metadata.security_hook_id == "baddie-finder"
+
+
+def test_that_language_support_preserves_precommit_config(
+    language_support_service: language_support.LanguageSupportService,
+    mock_language_config_service: MagicMock,
+    mock_data_loader: MagicMock,
+    mock_open: MagicMock,
+    mock_pre_commit_hook: MagicMock,
+):
+    def mock_loader_side_effect(resource):
+        return """
+            http://sample-repo.com/baddie-finder:
+                - baddie-finder
+        """
+
+    mock_language_config_service.get_language_config.return_value = language.LanguagePreCommitResult(
+        language="Python",
+        version="abc123",
+        linter_config=language.LoadLinterConfigsResult(
+            successful=True,
+            linter_data=[{"filename": "test.txt", "settings": {}}],
+        ),
+        config_data="""
+            repos:
+            -   repo: http://sample-repo.com/baddie-finder
+                hooks:
+                -    id: baddie-finder
+            """,
+    )
+
+    mock_data_loader.side_effect = mock_loader_side_effect
+
+    languages = ["RadLang"]
+    lint_languages = [*languages]
+
+    build_config_result = language_support_service.build_pre_commit_config(
+        languages, lint_languages
+    )
+
+    metadata = language_support_service.apply_support(
+        ["RadLang"],
+        build_config_result,
+        overwrite_pre_commit=True,
+        preserve_precommit_config=True,
     )
 
     assert metadata.security_hook_id == "baddie-finder"
