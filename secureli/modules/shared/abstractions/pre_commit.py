@@ -192,7 +192,7 @@ class PreCommitAbstraction:
             old_rev_info = HookRepoRevInfo.from_config(repo_config_dict)
 
             # if the repo isn't a valid uri, don't try to download updates for it
-            if not self.is_valid_uri(old_rev_info.repo):
+            if not self._is_valid_uri(old_rev_info.repo):
                 continue
             # if the revision currently specified in .pre-commit-config.yaml looks like a full git SHA
             # (40-character hex string), then set freeze to True
