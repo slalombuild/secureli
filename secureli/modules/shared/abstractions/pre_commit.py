@@ -432,7 +432,7 @@ class PreCommitAbstraction:
 
         return repos
 
-    def is_valid_uri(self, uri_string):
+    def _is_valid_uri(self, uri_string):
         try:
             result = urlparse(uri_string)
             return all([result.scheme, result.netloc])
