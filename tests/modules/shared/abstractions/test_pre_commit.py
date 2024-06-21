@@ -550,10 +550,14 @@ def test_check_for_hook_updates_infers_freeze_param_when_not_provided(
         pre_commit_config = RepositoryModels.PreCommitSettings(
             repos=[pre_commit_config_repo]
         )
-        rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
+        rev_info_mock = MagicMock(
+            rev=pre_commit_config_repo.rev, repo="http://example-repo.com/"
+        )
         mock_hook_repo_rev_info.return_value = rev_info_mock
         rev_info_mock.update.return_value = rev_info_mock  # Returning the same revision info on update means the hook will be considered up to date
-        pre_commit.check_for_hook_updates(pre_commit_config)
+        pre_commit.check_for_hook_updates(
+            pre_commit_config,
+        )
         rev_info_mock.update.assert_called_with(tags_only=True, freeze=rev_is_sha)
 
 
@@ -575,7 +579,9 @@ def test_check_for_hook_updates_respects_freeze_param_when_false(
         pre_commit_config = RepositoryModels.PreCommitSettings(
             repos=[pre_commit_config_repo]
         )
-        rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
+        rev_info_mock = MagicMock(
+            rev=pre_commit_config_repo.rev, repo="http://example-repo.com/"
+        )
         mock_hook_repo_rev_info.return_value = rev_info_mock
         rev_info_mock.update.return_value = rev_info_mock  # Returning the same revision info on update means the hook will be considered up to date
         pre_commit.check_for_hook_updates(pre_commit_config, freeze=False)
@@ -596,7 +602,9 @@ def test_check_for_hook_updates_respects_freeze_param_when_true(
         pre_commit_config = RepositoryModels.PreCommitSettings(
             repos=[pre_commit_config_repo]
         )
-        rev_info_mock = MagicMock(rev=pre_commit_config_repo.rev)
+        rev_info_mock = MagicMock(
+            rev=pre_commit_config_repo.rev, repo="http://example-repo.com/"
+        )
         mock_hook_repo_rev_info.return_value = rev_info_mock
         rev_info_mock.update.return_value = rev_info_mock  # Returning the same revision info on update means the hook will be considered up to date
         pre_commit.check_for_hook_updates(pre_commit_config, freeze=True)
@@ -636,6 +644,29 @@ def test_check_for_hook_updates_returns_repos_with_new_revs(
         assert len(updated_repos) == 1  # only the first repo should be returned
         assert updated_repos[repo_urls[0]].oldRev == "tag1"
         assert updated_repos[repo_urls[0]].newRev == "tag2"
+
+
+def test_check_for_hook_updates_does_not_updated_repos_with_urls(
+    pre_commit: PreCommitAbstractionModels.PreCommitAbstraction,
+):
+    with um.patch(
+        "secureli.modules.shared.abstractions.pre_commit.HookRepoRevInfo.from_config"
+    ) as mock_hook_repo_rev_info:
+        pre_commit_config_repo = RepositoryModels.PreCommitRepo(
+            repo="local",
+            rev="tag1",
+            hooks=[RepositoryModels.PreCommitHook(id="hook-id")],
+        )
+        pre_commit_config = RepositoryModels.PreCommitSettings(
+            repos=[pre_commit_config_repo]
+        )
+        rev_info_mock = MagicMock(
+            rev=pre_commit_config_repo.rev, repo="http://example-repo.com/"
+        )
+        mock_hook_repo_rev_info.return_value = rev_info_mock
+        rev_info_mock.update.return_value = rev_info_mock  # Returning the same revision info on update means the hook will be considered up to date
+        pre_commit.check_for_hook_updates(pre_commit_config, freeze=True)
+        rev_info_mock.update.assert_called_with(tags_only=True, freeze=True)
 
 
 def test_pre_commit_config_exists(
