@@ -193,7 +193,7 @@ class PreCommitAbstraction:
             old_rev_info = HookRepoRevInfo.from_config(repo_config_dict)
 
             # if the repo doesn't appear to be valid, don't try to update it
-            if not self._is_potential_git_repo(old_rev_info.repo):
+            if old_rev_info.repo == "local":
                 continue
 
             # if the revision currently specified in .pre-commit-config.yaml looks like a full git SHA
@@ -433,14 +433,3 @@ class PreCommitAbstraction:
             repos = [key for key in outdated_repos.keys()]
 
         return repos
-
-    def _is_potential_git_repo(self, path):
-        try:
-            urlparse(path)
-        except Exception:
-            try:
-                _ = Repo(path).git_dir
-            except:
-                return False
-
-        return True
