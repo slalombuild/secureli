@@ -436,11 +436,11 @@ class PreCommitAbstraction:
 
     def _is_potential_git_repo(self, path):
         try:
-            result = urlparse(path)
-            return all([result.scheme, result.netloc])
+            urlparse(path)
         except Exception:
             try:
                 _ = Repo(path).git_dir
-                return True
             except:
                 return False
+
+        return True
