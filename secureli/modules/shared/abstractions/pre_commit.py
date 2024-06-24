@@ -2,6 +2,7 @@ import datetime
 from pathlib import Path
 import shutil
 from urllib.parse import urlparse
+from git import Repo
 
 # Note that this import is pulling from the pre-commit tool's internals.
 # A cleaner approach would be to update pre-commit
@@ -191,9 +192,10 @@ class PreCommitAbstraction:
             }  # PreCommitSettings uses "url" instead of "repo", so we need to copy that value over
             old_rev_info = HookRepoRevInfo.from_config(repo_config_dict)
 
-            # if the repo isn't a valid uri, don't try to download updates for it
-            if not self._is_valid_uri(old_rev_info.repo):
+            # if the repo doesn't appear to be valid, don't try to update it
+            if not self._is_potential_git_repo(old_rev_info.repo):
                 continue
+
             # if the revision currently specified in .pre-commit-config.yaml looks like a full git SHA
             # (40-character hex string), then set freeze to True
 
@@ -432,9 +434,13 @@ class PreCommitAbstraction:
 
         return repos
 
-    def _is_valid_uri(self, uri_string):
+    def _is_potential_git_repo(self, path):
         try:
-            result = urlparse(uri_string)
+            result = urlparse(path)
             return all([result.scheme, result.netloc])
         except Exception:
-            return False
+            try:
+                _ = Repo(path).git_dir
+                return True
+            except:
+                return False
