@@ -192,7 +192,7 @@ class PreCommitAbstraction:
             }  # PreCommitSettings uses "url" instead of "repo", so we need to copy that value over
             old_rev_info = HookRepoRevInfo.from_config(repo_config_dict)
 
-            # if the repo doesn't appear to be valid, don't try to update it
+            # don't try and update the local repo
             if old_rev_info.repo == "local":
                 continue
 
