@@ -3,7 +3,9 @@ from pathlib import Path
 
 from secureli.modules.shared.abstractions.lexer_guesser import LexerGuesser
 from secureli.modules.shared.models.language import AnalyzeResult, SkippedFile
-from secureli.repositories.repo_files import RepoFilesRepository
+from secureli.modules.shared.abstractions.version_control_repo import (
+    VersionControlRepoAbstraction,
+)
 from secureli.modules.shared.consts.language import supported_languages
 
 
@@ -14,7 +16,7 @@ class LanguageAnalyzerService:
 
     def __init__(
         self,
-        repo_files: RepoFilesRepository,
+        repo_files: VersionControlRepoAbstraction,
         lexer_guesser: LexerGuesser,
     ):
         self.repo_files = repo_files
@@ -24,6 +26,7 @@ class LanguageAnalyzerService:
         """
         Analyzes the folder structure and lists languages found
         :param folder_path: The path to the repository to analyze
+        :param files: A list of files to analyze. If not provided, all files in the repo will be analyzed
         :return: Produces an ordered dictionary of languages detected and what percentage
         of the repo is each language. For example, if 60% of the repo is Python files and
         40% of the repo is JavaScript, the result will be a dictionary containing keys

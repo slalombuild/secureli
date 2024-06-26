@@ -1,9 +1,18 @@
-from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, BaseSettings, Field
+
+from secureli.modules.shared.consts.pii import IGNORED_EXTENSIONS
 from secureli.modules.shared.consts.repository import default_ignored_extensions
 from secureli.modules.shared.models.echo import Level
 from secureli.modules.shared.models.language import LanguageSupportSettings
+
+
+class PiiScannerSettings(BaseSettings):
+    """
+    Settings that adjust how seCureLI evaluates the PII of the consuming repository.
+    """
+
+    ignored_extensions: list[str] = Field(default=IGNORED_EXTENSIONS)
 
 
 class RepoFilesSettings(BaseSettings):
@@ -14,6 +23,14 @@ class RepoFilesSettings(BaseSettings):
     max_file_size: int = Field(default=100000)
     ignored_file_extensions: list[str] = Field(default=default_ignored_extensions)
     exclude_file_patterns: list[str] = Field(default=[])
+
+
+class CustomScanSettings(BaseSettings):
+    """
+    Settings that maintain user defined custom scan patterns
+    """
+
+    custom_scan_patterns: list[str] = Field(default=[])
 
 
 class EchoSettings(BaseSettings):
@@ -76,3 +93,5 @@ class SecureliFile(BaseModel):
     echo: Optional[EchoSettings] = None
     language_support: Optional[LanguageSupportSettings] = Field(default=None)
     telemetry: Optional[TelemetrySettings] = None
+    scan_patterns: Optional[CustomScanSettings] = None
+    pii_scanner: Optional[PiiScannerSettings] = None

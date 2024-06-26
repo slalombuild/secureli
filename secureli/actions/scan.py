@@ -4,18 +4,18 @@ from pathlib import Path
 from time import time
 from typing import Optional
 
-from secureli.modules.shared.abstractions.echo import EchoAbstraction
+from secureli.modules.custom_scanners.custom_scans import CustomScannersService
 from secureli.actions import action
-from secureli.modules.shared.abstractions.repo import GitRepo
+from secureli.modules.shared.abstractions.version_control_repo import (
+    VersionControlRepoAbstraction,
+)
 from secureli.modules.shared.models.exit_codes import ExitCode
 from secureli.modules.shared.models import install
 from secureli.modules.shared.models.logging import LogAction
 from secureli.modules.shared.models.publish_results import PublishResultsOption
 from secureli.modules.shared.models.result import Result
-from secureli.modules.observability.observability_services.logging import LoggingService
-from secureli.modules.core.core_services.scanner import HooksScannerService
-from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
-from secureli.modules.shared.models.scan import ScanMode, ScanResult
+from secureli.modules.core.core_services.hook_scanner import HooksScannerService
+from secureli.modules.shared.models.scan import ScanMode
 from secureli.settings import Settings
 from secureli.modules.shared import utilities
 
@@ -37,13 +37,13 @@ class ScanAction(action.Action):
         self,
         action_deps: action.ActionDependencies,
         hooks_scanner: HooksScannerService,
-        pii_scanner: PiiScannerService,
-        git_repo: GitRepo,
+        custom_scanners: CustomScannersService,
+        file_repo: VersionControlRepoAbstraction,
     ):
         super().__init__(action_deps)
         self.hooks_scanner = hooks_scanner
-        self.pii_scanner = pii_scanner
-        self.git_repo = git_repo
+        self.custom_scanners = custom_scanners
+        self.file_repo = file_repo
 
     def publish_results(
         self,
@@ -87,12 +87,13 @@ class ScanAction(action.Action):
         :param folder_path: The folder path to initialize the repo for
         :param scan_mode: How we should scan the files in the repo (i.e. staged only or all)
         :param always_yes: Assume "Yes" to all prompts
-        :param specific_test: If set, limits scanning to the single pre-commit hook.
+        :param specific_test: If set, limits scanning to the single pre-commit hook or custom scan.
+        :param files: If set, scans only the files provided.
         Otherwise, scans with all hooks.
         """
 
         scan_files = [Path(file) for file in files or []] or self._get_commited_files(
-            scan_mode
+            scan_mode, folder_path
         )
         verify_result = self.verify_install(
             folder_path,
@@ -113,19 +114,27 @@ class ScanAction(action.Action):
         if verify_result.outcome in self.halting_outcomes:
             return
 
-        # Execute PII scan (unless `specific_test` is provided, in which case it will be for a hook below)
-        pii_scan_result: ScanResult | None = None
-        if not specific_test:
-            pii_scan_result = self.pii_scanner.scan_repo(
-                folder_path, scan_mode, files=files
-            )
-
-        # Execute hooks
-        hooks_scan_result = self.hooks_scanner.scan_repo(
+        # Execute custom scans
+        custom_scan_results = None
+        custom_scan_results = self.custom_scanners.scan_repo(
             folder_path, scan_mode, specific_test, files=files
         )
 
-        scan_result = utilities.merge_scan_results([pii_scan_result, hooks_scan_result])
+        """
+        Execute hooks only if no custom scan results were returned or if running all scans.
+        If a hook and custom scan exist with the same id, only the custom scan will run.
+        Without this check, if we specify a non-existant pre-commit hook id but a valid custom scan id,
+        the final result won't be succesful as the pre-commit command will exit with return code 1.
+        """
+        hooks_scan_results = None
+        if custom_scan_results is None or specific_test is None:
+            hooks_scan_results = self.hooks_scanner.scan_repo(
+                folder_path, scan_mode, specific_test, files=files
+            )
+
+        scan_result = utilities.merge_scan_results(
+            [custom_scan_results, hooks_scan_results]
+        )
 
         details = scan_result.output or "Unknown output during scan"
         self.action_deps.echo.print(details)
@@ -191,7 +200,7 @@ class ScanAction(action.Action):
         # Since we don't actually perform the updates here, return an outcome of UPDATE_CANCELLED
         return install.VerifyResult(outcome=install.VerifyOutcome.UPDATE_CANCELED)
 
-    def _get_commited_files(self, scan_mode: ScanMode) -> list[Path]:
+    def _get_commited_files(self, scan_mode: ScanMode, folder_path: Path) -> list[Path]:
         """
         Attempts to build a list of commited files for use in language detection if
         the user is scanning staged files for an existing installation
@@ -204,7 +213,7 @@ class ScanAction(action.Action):
         if not installed or scan_mode != ScanMode.STAGED_ONLY:
             return None
         try:
-            committed_files = self.git_repo.get_commit_diff()
+            committed_files = self.file_repo.list_staged_files(folder_path)
             return [Path(file) for file in committed_files]
         except:
             return None

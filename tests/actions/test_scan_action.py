@@ -58,10 +58,12 @@ def mock_pre_commit() -> MagicMock:
 
 
 @pytest.fixture()
-def mock_pii_scanner() -> MagicMock:
-    mock_pii_scanner = MagicMock()
-    mock_pii_scanner.scan_repo.return_value = ScanResult(successful=True, failures=[])
-    return mock_pii_scanner
+def mock_custom_scanners() -> MagicMock:
+    mock_custom_scanners = MagicMock()
+    mock_custom_scanners.scan_repo.return_value = ScanResult(
+        successful=True, failures=[]
+    )
+    return mock_custom_scanners
 
 
 @pytest.fixture()
@@ -71,7 +73,7 @@ def mock_updater() -> MagicMock:
 
 
 @pytest.fixture()
-def mock_git_repo() -> MagicMock:
+def mock_file_repo() -> MagicMock:
     return MagicMock()
 
 
@@ -91,6 +93,16 @@ def mock_get_time_far_from_epoch(mocker: MockerFixture) -> MagicMock:
 def mock_default_settings(mock_settings_repository: MagicMock) -> MagicMock:
     mock_echo_settings = RepositoryModels.EchoSettings(level=Level.info)
     mock_settings_file = repo_settings.SecureliFile(echo=mock_echo_settings)
+    mock_settings_repository.load.return_value = mock_settings_file
+
+    return mock_settings_repository
+
+
+@pytest.fixture()
+def mock_settings_no_scan_patterns(mock_settings_repository: MagicMock) -> MagicMock:
+    mock_echo_settings = RepositoryModels.EchoSettings(level=Level.info)
+    mock_settings_file = repo_settings.SecureliFile(echo=mock_echo_settings)
+    mock_settings_file.scan_patterns = None
     mock_settings_repository.load.return_value = mock_settings_file
 
     return mock_settings_repository
@@ -132,14 +144,14 @@ def action_deps(
 @pytest.fixture()
 def scan_action(
     action_deps: ActionDependencies,
-    mock_pii_scanner: MagicMock,
-    mock_git_repo: MagicMock,
+    mock_custom_scanners: MagicMock,
+    mock_file_repo: MagicMock,
 ) -> ScanAction:
     return ScanAction(
         action_deps=action_deps,
         hooks_scanner=action_deps.hooks_scanner,
-        pii_scanner=mock_pii_scanner,
-        git_repo=mock_git_repo,
+        custom_scanners=mock_custom_scanners,
+        file_repo=mock_file_repo,
     )
 
 
@@ -152,7 +164,7 @@ def mock_post_log(mocker: MockerFixture) -> MagicMock:
 def test_that_scan_repo_errors_if_not_successful(
     scan_action: ScanAction,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
+    mock_custom_scanners: MagicMock,
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
@@ -161,7 +173,7 @@ def test_that_scan_repo_errors_if_not_successful(
         language_proportions={f"{mock_language}": 1.0},
         skipped_files=[],
     )
-    mock_pii_scanner.scan_repo.return_value = ScanResult(
+    mock_custom_scanners.scan_repo.return_value = ScanResult(
         successful=False, output="So much PII", failures=[]
     )
     mock_hooks_scanner.scan_repo.return_value = ScanResult(
@@ -182,8 +194,9 @@ def test_that_scan_repo_scans_if_installed(
     scan_action: ScanAction,
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
-    mock_hooks_scanner: MagicMock,
+    mock_custom_scanners: MagicMock,
     mock_language_analyzer: MagicMock,
+    mock_settings_no_scan_patterns: MagicMock,
 ):
     mock_language_analyzer.analyze.return_value = AnalyzeResult(
         language_proportions={"RadLang": 1.0},
@@ -198,7 +211,7 @@ def test_that_scan_repo_scans_if_installed(
         test_folder_path, ScanMode.STAGED_ONLY, False, None, "detect-secrets"
     )
 
-    mock_hooks_scanner.scan_repo.assert_called_once()
+    mock_custom_scanners.scan_repo.assert_called_once()
 
 
 @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
@@ -207,7 +220,7 @@ def test_that_scan_repo_conducts_all_scans_and_merges_results(
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
+    mock_custom_scanners: MagicMock,
     mock_language_analyzer: MagicMock,
     mock_echo: MagicMock,
 ):
@@ -224,14 +237,14 @@ def test_that_scan_repo_conducts_all_scans_and_merges_results(
     mock_hooks_scanner.scan_repo.return_value = ScanResult(
         successful=False, failures=[], output=mock_failure_1
     )
-    mock_pii_scanner.scan_repo.return_value = ScanResult(
+    mock_custom_scanners.scan_repo.return_value = ScanResult(
         successful=False, failures=[], output=mock_failure_2
     )
 
     with pytest.raises(SystemExit):
         scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
         mock_hooks_scanner.scan_repo.assert_called_once()
-        mock_pii_scanner.scan_repo.assert_called_once()
+        mock_custom_scanners.scan_repo.assert_called_once()
         mock_echo.print.assert_called_once_with(f"\n{mock_failure_1}\n{mock_failure_2}")
 
 
@@ -241,7 +254,7 @@ def test_that_scan_repo_continue_scan_if_upgrade_canceled(
     mock_secureli_config: MagicMock,
     mock_language_support: MagicMock,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
+    mock_custom_scanners: MagicMock,
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
@@ -258,14 +271,14 @@ def test_that_scan_repo_continue_scan_if_upgrade_canceled(
     scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
 
     mock_hooks_scanner.scan_repo.assert_called_once()
-    mock_pii_scanner.scan_repo.assert_called_once()
+    mock_custom_scanners.scan_repo.assert_called_once()
 
 
 @mock.patch.dict(os.environ, {"API_KEY": "", "API_ENDPOINT": ""}, clear=True)
 def test_that_scan_repo_does_not_scan_if_not_installed(
     scan_action: ScanAction,
     mock_hooks_scanner: MagicMock,
-    mock_pii_scanner: MagicMock,
+    mock_custom_scanners: MagicMock,
     mock_secureli_config: MagicMock,
     mock_echo: MagicMock,
     mock_language_analyzer: MagicMock,
@@ -280,7 +293,7 @@ def test_that_scan_repo_does_not_scan_if_not_installed(
         scan_action.scan_repo(test_folder_path, ScanMode.STAGED_ONLY, False)
 
         mock_hooks_scanner.scan_repo.assert_not_called()
-        mock_pii_scanner.scan_repo.assert_not_called()
+        mock_custom_scanners.scan_repo.assert_not_called()
 
 
 def test_that_scan_checks_for_updates(
@@ -406,7 +419,7 @@ def test_publish_results_on_fail_and_action_not_successful(
 
 def test_verify_install_is_called_with_commted_files(
     scan_action: ScanAction,
-    mock_git_repo: MagicMock,
+    mock_file_repo: MagicMock,
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
@@ -416,7 +429,7 @@ def test_verify_install_is_called_with_commted_files(
 
     mock_files = ["file1.py", "file2.py"]
 
-    mock_git_repo.get_commit_diff.return_value = mock_files
+    mock_file_repo.list_staged_files.return_value = mock_files
     scan_action.scan_repo(
         folder_path=Path(""),
         scan_mode=ScanMode.STAGED_ONLY,
@@ -433,7 +446,7 @@ def test_verify_install_is_called_with_commted_files(
 
 def test_verify_install_is_called_with_user_specified_files(
     scan_action: ScanAction,
-    mock_git_repo: MagicMock,
+    mock_file_repo: MagicMock,
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
@@ -443,7 +456,7 @@ def test_verify_install_is_called_with_user_specified_files(
 
     mock_files = ["file1.py", "file2.py"]
 
-    mock_git_repo.get_commit_diff.return_value = None
+    mock_file_repo.list_staged_files.return_value = None
     scan_action.scan_repo(
         folder_path=Path(""),
         scan_mode=ScanMode.STAGED_ONLY,
@@ -460,7 +473,7 @@ def test_verify_install_is_called_with_user_specified_files(
 
 def test_verify_install_is_called_with_no_specified_files(
     scan_action: ScanAction,
-    mock_git_repo: MagicMock,
+    mock_file_repo: MagicMock,
     mock_secureli_config: MagicMock,
     mock_language_analyzer: MagicMock,
 ):
@@ -468,7 +481,7 @@ def test_verify_install_is_called_with_no_specified_files(
         languages=["RadLang"], version_installed=1
     )
 
-    mock_git_repo.get_commit_diff.return_value = None
+    mock_file_repo.list_staged_files.return_value = None
     scan_action.scan_repo(
         folder_path=Path(""),
         scan_mode=ScanMode.STAGED_ONLY,
@@ -483,15 +496,17 @@ def test_verify_install_is_called_with_no_specified_files(
 
 def test_get_commited_files_returns_commit_diff(
     scan_action: ScanAction,
-    mock_git_repo: MagicMock,
+    mock_file_repo: MagicMock,
     mock_secureli_config: MagicMock,
 ):
     mock_secureli_config.load.return_value = ConfigModels.SecureliConfig(
         languages=["RadLang"], version_installed=1
     )
     mock_files = [Path("file1.py"), Path("file2.py")]
-    mock_git_repo.get_commit_diff.return_value = mock_files
-    result = scan_action._get_commited_files(scan_mode=ScanMode.STAGED_ONLY)
+    mock_file_repo.list_staged_files.return_value = mock_files
+    result = scan_action._get_commited_files(
+        scan_mode=ScanMode.STAGED_ONLY, folder_path=test_folder_path
+    )
     assert result == mock_files
 
 
@@ -502,7 +517,9 @@ def test_get_commited_files_returns_none_when_not_installed(
     mock_secureli_config.load.return_value = ConfigModels.SecureliConfig(
         languages=[], version_installed=None
     )
-    result = scan_action._get_commited_files(scan_mode=ScanMode.STAGED_ONLY)
+    result = scan_action._get_commited_files(
+        scan_mode=ScanMode.STAGED_ONLY, folder_path=test_folder_path
+    )
     assert result is None
 
 
@@ -513,5 +530,7 @@ def test_get_commited_files_returns_when_scan_mode_is_not_staged_only(
     mock_secureli_config.load.return_value = ConfigModels.SecureliConfig(
         languages=["RadLang"], version_installed=1
     )
-    result = scan_action._get_commited_files(scan_mode=ScanMode.ALL_FILES)
+    result = scan_action._get_commited_files(
+        scan_mode=ScanMode.ALL_FILES, folder_path=test_folder_path
+    )
     assert result is None

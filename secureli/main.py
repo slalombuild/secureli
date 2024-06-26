@@ -91,6 +91,11 @@ def init(
             help="Run secureli against a specific directory",
         ),
     ] = Path("."),
+    preserve_precommit_config: bool = Option(
+        False,
+        "--preserve-precommit-config",
+        help="Preserve the existing pre-commit configuration",
+    ),
 ):
     """
     Detect languages and initialize pre-commit hooks and linters for the project
@@ -98,7 +103,7 @@ def init(
     SecureliConfig.FOLDER_PATH = Path(directory)
 
     init_result = container.initializer_action().initialize_repo(
-        Path(directory), reset, yes
+        Path(directory), reset, yes, preserve_precommit_config
     )
     if init_result.outcome in [
         VerifyOutcome.UP_TO_DATE,
@@ -183,12 +188,23 @@ def update(
             help="Run secureli against a specific directory",
         ),
     ] = Path("."),
+    new_patterns: Annotated[
+        Optional[List[str]],
+        Option(
+            "--new-pattern",
+            "-n",
+            help="Add a new Regex to the custom scan pattern list",
+        ),
+    ] = None,
 ):
     """
-    Update linters, configuration, and all else needed to maintain a secure repository.
+    Update linters, configuration, custom scan patterns and all else needed to maintain a secure repository.
     """
-    SecureliConfig.FOLDER_PATH = Path(directory)
-    container.update_action().update_hooks(Path(directory), latest)
+    if new_patterns is not None:
+        container.update_action().add_pattern(Path(directory), new_patterns)
+    else:
+        SecureliConfig.FOLDER_PATH = Path(directory)
+        container.update_action().update_hooks(Path(directory), latest)
 
 
 if __name__ == "__main__":

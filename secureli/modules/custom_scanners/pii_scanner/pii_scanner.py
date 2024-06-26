@@ -14,7 +14,9 @@ import pydantic
 
 import secureli.modules.shared.models.scan as scan
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
-from secureli.repositories.repo_files import RepoFilesRepository
+from secureli.modules.shared.abstractions.version_control_repo import (
+    VersionControlRepoAbstraction,
+)
 
 
 class PiiResult(pydantic.BaseModel):
@@ -33,11 +35,16 @@ class PiiScannerService:
 
     def __init__(
         self,
-        repo_files: RepoFilesRepository,
+        repo_files: VersionControlRepoAbstraction,
         echo: EchoAbstraction,
+        ignored_extensions: list[str],
     ):
         self.repo_files = repo_files
         self.echo = echo
+        self.ignored_extensions = ignored_extensions
+        if ignored_extensions != IGNORED_EXTENSIONS:
+            # Make sure the original ignored extensions are always present
+            self.ignored_extensions = list(set(ignored_extensions + IGNORED_EXTENSIONS))
 
     def scan_repo(
         self,
@@ -96,7 +103,7 @@ class PiiScannerService:
 
     def _file_extension_excluded(self, filename) -> bool:
         _, file_extension = os.path.splitext(filename)
-        if file_extension in IGNORED_EXTENSIONS:
+        if file_extension in self.ignored_extensions:
             return True
 
         return False

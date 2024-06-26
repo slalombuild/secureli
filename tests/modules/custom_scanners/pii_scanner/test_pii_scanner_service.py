@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, Mock
 import builtins
 import contextlib, io
 from pathlib import Path
-from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
+from secureli.modules.custom_scanners.pii_scanner.pii_scanner import PiiScannerService
+from secureli.modules.shared.consts.pii import IGNORED_EXTENSIONS
 from secureli.modules.shared.models.scan import ScanMode
 
 
@@ -51,7 +52,18 @@ def mock_re(mocker: MockerFixture) -> MagicMock:
 def pii_scanner_service(
     mock_repo_files_repository: MagicMock, mock_echo: MagicMock
 ) -> PiiScannerService:
-    return PiiScannerService(mock_repo_files_repository, mock_echo)
+    return PiiScannerService(
+        mock_repo_files_repository, mock_echo, ignored_extensions=IGNORED_EXTENSIONS
+    )
+
+
+@pytest.fixture()
+def pii_scanner_service_alternate_extensions(
+    mock_repo_files_repository: MagicMock, mock_echo: MagicMock
+) -> PiiScannerService:
+    return PiiScannerService(
+        mock_repo_files_repository, mock_echo, ignored_extensions=["go.mod", "go.sum"]
+    )
 
 
 def test_that_pii_scanner_service_finds_potential_pii(
@@ -127,3 +139,14 @@ def test_that_pii_scanner_prints_when_exceptions_encountered(
 
     mock_echo.print.assert_called_once()
     assert "Error PII scanning" in mock_echo.print.call_args.args[0]
+
+
+def test_that_pii_scanner_accepts_alternate_ignored_extensions(
+    pii_scanner_service_alternate_extensions: PiiScannerService,
+    mock_open_fn: MagicMock,
+    mock_echo: MagicMock,
+):
+    # Assert that both the custom extensions and the standard defaults
+    # are present in the initialized ignored extensions.
+    assert "go.mod" in pii_scanner_service_alternate_extensions.ignored_extensions
+    assert ".jpeg" in pii_scanner_service_alternate_extensions.ignored_extensions

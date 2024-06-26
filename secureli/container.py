@@ -1,5 +1,10 @@
 from dependency_injector import containers, providers
 
+from secureli.modules.custom_scanners.custom_regex_scanner.custom_regex_scanner import (
+    CustomRegexScannerService,
+)
+from secureli.modules.custom_scanners.custom_scans import CustomScannersService
+from secureli.modules.custom_scanners.pii_scanner.pii_scanner import PiiScannerService
 from secureli.modules.shared.abstractions.echo import TyperEcho
 from secureli.modules.shared.abstractions.lexer_guesser import PygmentsLexerGuesser
 from secureli.modules.shared.abstractions.pre_commit import PreCommitAbstraction
@@ -8,16 +13,18 @@ from secureli.actions.initializer import InitializerAction
 from secureli.actions.scan import ScanAction
 from secureli.actions.build import BuildAction
 from secureli.actions.update import UpdateAction
-from secureli.modules.shared.abstractions.repo import GitRepo
-from secureli.repositories.repo_files import RepoFilesRepository
+from secureli.modules.shared.abstractions.version_control_repo import (
+    VersionControlRepoAbstraction,
+)
+from secureli.repositories.git_repo import GitRepo
 from secureli.repositories.secureli_config import SecureliConfigRepository
 from secureli.repositories.repo_settings import SecureliRepository
 from secureli.modules.shared.resources import read_resource
 from secureli.modules import language_analyzer
 from secureli.modules.observability.observability_services.logging import LoggingService
-from secureli.modules.core.core_services.scanner import HooksScannerService
+from secureli.modules.core.core_services.hook_scanner import HooksScannerService
 from secureli.modules.core.core_services.updater import UpdaterService
-from secureli.modules.pii_scanner.pii_scanner import PiiScannerService
+
 from secureli.modules.secureli_ignore import SecureliIgnoreService
 from secureli.settings import Settings
 
@@ -49,14 +56,19 @@ class Container(containers.DeclarativeContainer):
     )
 
     # Repositories
+    """Abstraction for interacting with a version control file repo"""
+    version_control_file_repository = providers.Factory(VersionControlRepoAbstraction)
 
-    """Loads files from the repository folder, filtering out invisible files"""
-    repo_files_repository = providers.Factory(
-        RepoFilesRepository,
+    """Git implementation of version control file repo"""
+    git_files_repository = providers.Factory(
+        GitRepo,
         max_file_size=config.repo_files.max_file_size.as_int(),
         ignored_file_extensions=config.repo_files.ignored_file_extensions,
         ignored_file_patterns=combined_ignored_file_patterns,
     )
+
+    """Override all injections of version control repo with the git implementation"""
+    version_control_file_repository.override(git_files_repository)
 
     """
     Loads and saves the seCureLI output configuration, which stores the outcomes of
@@ -83,9 +95,6 @@ class Container(containers.DeclarativeContainer):
         command_timeout_seconds=config.language_support.command_timeout_seconds,
         echo=echo,
     )
-
-    """Wraps the execution and management of git commands"""
-    git_repo = providers.Factory(GitRepo)
 
     # Services
 
@@ -119,7 +128,7 @@ class Container(containers.DeclarativeContainer):
     """Analyzes a given repo to try to identify the most common language"""
     language_analyzer_service = providers.Factory(
         language_analyzer.language_analyzer.LanguageAnalyzerService,
-        repo_files=repo_files_repository,
+        repo_files=version_control_file_repository,
         lexer_guesser=lexer_guesser,
     )
 
@@ -139,8 +148,23 @@ class Container(containers.DeclarativeContainer):
     """The service that scans the repository for potential PII"""
     pii_scanner_service = providers.Factory(
         PiiScannerService,
-        repo_files=repo_files_repository,
+        repo_files=version_control_file_repository,
         echo=echo,
+        ignored_extensions=config.pii_scanner.ignored_extensions,
+    )
+
+    custom_regex_scanner_service = providers.Factory(
+        CustomRegexScannerService,
+        repo_files=version_control_file_repository,
+        echo=echo,
+        settings=settings_repository,
+    )
+
+    """The service that orchestrates running custom scans (PII, Regex, etc.)"""
+    custom_scanner_service = providers.Factory(
+        CustomScannersService,
+        pii_scanner=pii_scanner_service,
+        custom_regex_scanner=custom_regex_scanner_service,
     )
 
     updater_service = providers.Factory(
@@ -182,8 +206,8 @@ class Container(containers.DeclarativeContainer):
         ScanAction,
         action_deps=action_deps,
         hooks_scanner=hooks_scanner_service,
-        pii_scanner=pii_scanner_service,
-        git_repo=git_repo,
+        custom_scanners=custom_scanner_service,
+        file_repo=version_control_file_repository,
     )
 
     """Update Action, representing what happens when the update command is invoked"""
