@@ -12,6 +12,7 @@ from typing import Optional
 from pathlib import Path
 import pydantic
 
+from secureli.modules.shared.models.exit_codes import ExitCode
 import secureli.modules.shared.models.scan as scan
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.modules.shared.abstractions.version_control_repo import (
@@ -154,7 +155,7 @@ class PiiScannerService:
                     id="pii_scan",
                     file=pii_found_file,
                     repo=SECURELI_GITHUB,
-                    exitCode="PII_SCAN_ISSUES_DETECTED",
+                    exitCode=ExitCode.PII_SCAN_ISSUES_DETECTED.name,
                 )
             )
         return failures

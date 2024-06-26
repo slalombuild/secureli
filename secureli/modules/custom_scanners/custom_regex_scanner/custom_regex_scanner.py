@@ -9,6 +9,7 @@ from typing import Optional
 from pathlib import Path
 import pydantic
 
+from secureli.modules.shared.models.exit_codes import ExitCode
 import secureli.modules.shared.models.scan as scan
 from secureli.modules.shared.abstractions.echo import EchoAbstraction
 from secureli.modules.shared.abstractions.version_control_repo import (
@@ -140,7 +141,10 @@ class CustomRegexScannerService:
         for file in custom_regex_found_files:
             failures.append(
                 scan.ScanFailure(
-                    id="custom_regex_scan", file=file, repo=SECURELI_GITHUB
+                    id="custom_regex_scan",
+                    file=file,
+                    repo=SECURELI_GITHUB,
+                    exitCode=ExitCode.CUSTOM_REGEX_SCAN_ISSUES_DETECTED.name,
                 )
             )
         return failures
