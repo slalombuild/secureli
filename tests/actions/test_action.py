@@ -138,7 +138,11 @@ def test_that_initialize_repo_install_flow_displays_security_analysis_results(
     mock_hooks_scanner.scan_repo.return_value = ScanResult(
         successful=False,
         output="Detect secrets...Failed",
-        failures=[ScanFailure(repo="repo", id="id", file="file")],
+        failures=[
+            ScanFailure(
+                repo="repo", id="id", file="file", exitCode="PII_SCAN_ISSUES_DETECTED"
+            )
+        ],
     )
     action.verify_install(
         test_folder_path,

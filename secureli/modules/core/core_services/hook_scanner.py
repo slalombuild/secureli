@@ -82,7 +82,9 @@ class HooksScannerService:
             files = self._find_file_names(failure_output_list=failure_output_list)
 
             for file in files:
-                failures.append(scan.ScanFailure(id=id, file=file, repo=repo))
+                failures.append(
+                    scan.ScanFailure(id=id, file=file, repo=repo, exitCode=id)
+                )
 
         return scan.ScanOutput(failures=failures)
 

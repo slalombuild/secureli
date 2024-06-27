@@ -13,9 +13,24 @@ import os
 
 def test_that_convert_failures_to_failure_count_returns_correct_count():
     list_of_failure = [
-        ScanFailure(id="testfailid1", file="testfile1", repo="testrepo1"),
-        ScanFailure(id="testfailid1", file="testfile2", repo="testrepo1"),
-        ScanFailure(id="testfailid2", file="testfile1", repo="testrepo1"),
+        ScanFailure(
+            id="testfailid1",
+            file="testfile1",
+            repo="testrepo1",
+            exitCode="SCAN_ISSUES_DETECTED",
+        ),
+        ScanFailure(
+            id="testfailid1",
+            file="testfile2",
+            repo="testrepo1",
+            exitCode="PII_SCAN_ISSUES_DETECTED",
+        ),
+        ScanFailure(
+            id="testfailid2",
+            file="testfile1",
+            repo="testrepo1",
+            exitCode="VALIDATION_ERROR",
+        ),
     ]
 
     result = utilities.convert_failures_to_failure_count(list_of_failure)
