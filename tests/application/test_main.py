@@ -167,7 +167,19 @@ def test_that_scan_implements_multiple_file_args(mock_container: MagicMock):
     )
 
 
-def test_that_update_with_new_pattern_succeeds():
+@pytest.fixture()
+def mock_secureli_yaml_open_fn(mocker: MockerFixture) -> MagicMock:
+    mock_open = mocker.mock_open(
+        read_data="""
+        {}
+      """
+    )
+    return mocker.patch("builtins.open", mock_open)
+
+
+def test_that_update_with_new_pattern_succeeds(
+    mock_secureli_yaml_open_fn: MagicMock,  # so we don't open and write to the actual secureli.yaml file
+):
     result = CliRunner().invoke(secureli.main.app, ["update", "--new-pattern", "foo"])
     assert result.exit_code == 0
     assert result.stdout == ""
