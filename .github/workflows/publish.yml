@@ -12,18 +12,16 @@ name: Publish
 
 on:
   push:
-    branches: [ main ]
-
+    branches: [main]
 
 jobs:
   build-test:
     name: Build & Test
     uses: ./.github/workflows/build_and_test.yml
 
-
   secureli-release:
     name: GH Release
-    needs: [ build-test ]
+    needs: [build-test]
     runs-on: ubuntu-latest
     environment: publish
     concurrency: release
@@ -70,14 +68,13 @@ jobs:
       - name: Display Output
         run: echo uploaded=${{ steps.upload.outputs.uploaded }}
 
-
   secureli-publish:
     name: PyPI Publish
     if: needs.secureli-release.outputs.uploaded == 'true'
     runs-on: ubuntu-latest
     needs: secureli-release
     permissions:
-      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
       - name: Display Inputs
         run: echo uploaded=${{ needs.secureli-release.outputs.uploaded }}
@@ -103,7 +100,6 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           skip-existing: true
-
 
   deploy:
     name: Upload Homebrew Formula
@@ -136,15 +132,39 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Homebrew Formula Generation
+      - name: Get Latest Release Version
+        id: get_latest_version
+        run: |
+          latest_version=$(curl -s https://api.github.com/repos/slalombuild/secureli/releases/latest | jq -r .tag_name)
+          echo "latest_version=$latest_version" >> $GITHUB_ENV
+
+      - name: Download Latest Tarball
+        run: |
+          curl -L "https://github.com/slalombuild/secureli/releases/download/$latest_version/secureli-$latest_version.tar.gz" -o secureli-$latest_version.tar.gz
+
+      - name: Modify Formula for Local Test
+        run: |
+          tarball_path=$(pwd)/secureli-$latest_version.tar.gz
+          sed -i 's|url "{{ secureliPackageUrl }}"|url "file://$tarball_path"|' ./homebrew-secureli/secureli.rb
+          sha256=$(shasum -a 256 secureli-$latest_version.tar.gz | awk '{ print $1 }')
+          sed -i 's|sha256 "{{ secureliSha256 }}"|sha256 "$sha256"|' ./homebrew-secureli/secureli.rb
+
+      - name: Install Homebrew Formula
+        run: |
+          brew install --build-from-source ./homebrew-secureli/secureli.rb
+
+      - name: Test Homebrew Formula
+        run: |
+          secureli init
+
+      - name: Homebrew Formula Publish
         env:
           GH_TOKEN: ${{ steps.app_token.outputs.token }}
         run: ./scripts/secureli-deployment.sh
 
-
   smoke-testing:
     name: Smoke Testing
-    needs: [ build-test, secureli-release, secureli-publish, deploy ]
+    needs: [build-test, secureli-release, secureli-publish, deploy]
     if: |
       always() &&
       (needs.secureli-publish.result == 'success' || needs.secureli-publish.result == 'skipped') &&
